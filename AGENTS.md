@@ -316,10 +316,23 @@ Repository settings (Settings → Secrets and variables → Actions):
 rclone needs an OAuth client of your own Google Cloud project. rclone's shared client stops working in 2026. Do these steps in the [Google Cloud Console](https://console.cloud.google.com). Add `?project=<project-id>` to each link.
 
 1. Enable the Google Drive API: [APIs & Services → Library → Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) → "Enable".
-2. Google Auth Platform → [Branding](https://console.cloud.google.com/auth/branding): app name `pocket-apps`, your email as support and developer contact.
-3. Google Auth Platform → [Audience](https://console.cloud.google.com/auth/audience): user type "External". Click "Publish app" so that the status is "In production". In "Testing", Google ends the login after 7 days.
-4. Google Auth Platform → [Data access](https://console.cloud.google.com/auth/scopes): add the scope `https://www.googleapis.com/auth/drive.file`. It is a non-sensitive scope, so Google does not need to verify the app.
-5. Google Auth Platform → [Clients](https://console.cloud.google.com/auth/clients/create): create a client of type "Desktop app", name `rclone pocket-apps`. Copy the client ID and the client secret.
+2. Google Auth Platform → "Get started": app name `pocket-apps`, your email as support email, user type "External", your email as contact. Click "Create".
+3. Google Auth Platform → [Branding](https://console.cloud.google.com/auth/branding). Google needs these fields before it lets you publish the app:
+
+   | Field                           | Value                                           |
+   | ------------------------------- | ----------------------------------------------- |
+   | App logo                        | Leave empty. A logo needs a verification.       |
+   | Application home page           | A public page, e.g. `https://github.com/<user>` |
+   | Application privacy policy link | A public page, e.g. `https://github.com/<user>` |
+   | Authorised domains              | The domain of these pages, e.g. `github.com`    |
+
+   Click "Save". Google checks the content of these pages only in a verification. This app needs no verification.
+
+4. Google Auth Platform → [Audience](https://console.cloud.google.com/auth/audience): click "Publish app" and confirm. The status must be "In production". In "Testing", Google ends the login after 7 days.
+5. Google Auth Platform → [Data access](https://console.cloud.google.com/auth/scopes): "Add or remove scopes" → add `https://www.googleapis.com/auth/drive.file` → "Update" → "Save". It must show under "Your non-sensitive scopes". Thus Google does not need to verify the app.
+6. Google Auth Platform → [Clients](https://console.cloud.google.com/auth/clients/create): create a client of type "Desktop app", name `rclone pocket-apps`. Copy the client ID and the client secret. Google shows the full secret only once.
+
+"Authorised domains" give nobody access to the Drive. They only list the domains that the consent screen can show. Only the token gives access, and only the owner of the Drive can create it with a login.
 
 `drive.file` gives access per OAuth client. A new client cannot see the folder of the old client. The setup script then creates a new folder.
 
@@ -344,6 +357,10 @@ The script does these steps:
 
 1. It asks for the client ID and the client secret (or reads `GDRIVE_CLIENT_ID` and `GDRIVE_CLIENT_SECRET` from the environment).
 2. It creates the rclone remote `pocket-apps` with scope `drive.file` and your client. Your browser opens. Log in with the Google account that must own the folder. The consent screen shows `pocket-apps`. Allow the access.
+   - If Google shows "Google hasn't verified this app": click "Advanced" → "Go to pocket-apps (unsafe)". This is correct for your own app.
+   - If rclone asks "Token already configured - replace it?": answer `y`.
+   - If rclone asks "Use web browser to automatically authenticate?": answer `y`.
+   - If rclone asks "Configure this as a Shared Drive (Team Drive)?": answer `n`.
 3. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set and the client did not change, it uses that folder.
 4. It writes the token, the client ID and the client secret into the secrets. It does not print them.
 5. It writes the folder ID into the variable `GDRIVE_FOLDER_ID`.

@@ -9,6 +9,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Why:** rclone's shared client ID stops working in 2026. rclone showed this warning at the first upload.
 - **Detail:** The consent screen is "In production" with only the non-sensitive scope `drive.file`. Thus the login does not end after 7 days, and Google does not need to verify the app.
 - **Consequence:** `drive.file` gives access per client. The switch needed a new folder.
+- **Detail:** To publish the app, Google needs a home page URL, a privacy policy URL and their domain as "Authorised domain". We use the public GitHub profile and `github.com`. Authorised domains give no access to the Drive.
 
 ## 2026-11-09: CD to Google Drive with rclone and scope drive.file
 
