@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROTOTYP Drive-API</title>
+    <link rel="stylesheet" href="./prototype.css" />
+    <script src="./prototype-drive-store.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async></script>
+    <script src="https://apis.google.com/js/api.js" async></script>
+  </head>
+  <body>
+    <div class="banner">PROTOTYP zum Wegwerfen – Google-Login und Drive-API, für jeden Browser (auch iPhone).</div>
+    <main>
+      <div>
+        <h1>Datenordner über die Drive-API</h1>
+        <p class="muted">
+          Frage: Funktionieren Nutzer und Daten im geteilten Drive-Ordner auch auf dem iPhone – über
+          einen Google-Login statt über einen Ordner auf dem Gerät? Sieht ein zweites Google-Konto die
+          Dateien? Wie schnell ist es, und wie oft muss man sich anmelden?
+        </p>
+      </div>
+
+      <section>
+        <details id="settings">
+          <summary><strong>Einstellungen</strong> (einmalig, bleiben in diesem Browser)</summary>
+          <div style="display: grid; gap: 8px; margin-top: 10px">
+            <label>OAuth-Client-ID (Typ „Web“)<br /><input id="client-id" style="width: 100%" /></label>
+            <label>API-Schlüssel (für die Ordnerauswahl)<br /><input id="api-key" style="width: 100%" /></label>
+            <label>Projektnummer<br /><input id="app-id" style="width: 100%" /></label>
+            <div class="row"><button id="save-settings">Speichern</button></div>
+          </div>
+        </details>
+      </section>
+
+      <section>
+        <h2>Aktueller Stand</h2>
+        <dl id="state"></dl>
+        <div class="row" style="margin-top: 10px">
+          <button class="primary" id="login">Mit Google anmelden</button>
+          <button id="pick">Ordner wählen …</button>
+          <button id="reload">Neu laden</button>
+          <button id="logout">Abmelden</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Sichtbare Dateien im Ordner</h2>
+        <p class="muted">Was diese App mit deinem Konto im gewählten Ordner sehen darf. Wichtig für den Test mit einem zweiten Konto.</p>
+        <ul class="plain" id="children"></ul>
+      </section>
+
+      <section>
+        <h2>Nutzer und Notizen</h2>
+        <div class="row" style="margin-bottom: 8px">
+          <label>Nutzer: <select id="user"></select></label>
+          <button id="add-user">Nutzer hinzufügen …</button>
+        </div>
+        <div class="row" style="margin-bottom: 8px">
+          <button class="primary" id="add-note">Notiz hinzufügen</button>
+          <span class="muted" id="timing">Letzte Aktion: —</span>
+        </div>
+        <ul class="plain" id="notes"></ul>
+      </section>
+
+      <section>
+        <h2>Protokoll</h2>
+        <div class="row" style="margin-bottom: 8px">
+          <button id="copy">Protokoll kopieren</button>
+          <button id="clear">Protokoll leeren</button>
+        </div>
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script>
+      const SCOPES = "https://www.googleapis.com/auth/drive.file email";
+      const LOG_KEY = "proto-drive-log";
+      const $ = (id) => document.getElementById(id);
+      const settings = () => ({ clientId: localStorage.getItem("proto-client-id") ?? "", apiKey: localStorage.getItem("proto-api-key") ?? "", appId: localStorage.getItem("proto-app-id") ?? "" });
+      const state = {
+        token: null, expiresAt: 0, email: null,
+        folder: JSON.parse(localStorage.getItem("proto-drive-folder") ?? "null"),
+        children: [], users: [], activeUser: localStorage.getItem("proto-drive-user"), notes: null, busy: "",
+      };
+
+      function log(text, kind = "info") {
+        const entries = JSON.parse(localStorage.getItem(LOG_KEY) ?? "[]");
+        entries.push({ time: new Date().toLocaleTimeString("de-DE"), text, kind });
+        localStorage.setItem(LOG_KEY, JSON.stringify(entries.slice(-200)));
+        renderLog();
+      }
+      function renderLog() {
+        $("log").innerHTML = JSON.parse(localStorage.getItem(LOG_KEY) ?? "[]").map((e) => `<span class="log-${e.kind}">${e.time} ${e.text}</span>`).join("\n") || "—";
+      }
+
+      const store = DriveProto.createDriveStore(() => state.token, (label, ms) => log(`⏱ ${label} in ${ms} ms`));
+
+      // Token for the session (an access token lives about one hour).
+      const saved = JSON.parse(sessionStorage.getItem("proto-drive-token") ?? "null");
+      if (saved && saved.expiresAt > Date.now() + 60000) Object.assign(state, saved);
+
+      function render() {
+        const s = settings();
+        const minutes = state.token ? Math.round((state.expiresAt - Date.now()) / 60000) : 0;
+        $("state").innerHTML = `
+          <dt>Browser</dt><dd>${navigator.userAgent.includes("iPhone") ? "iPhone" : navigator.userAgent.includes("Android") ? "Android" : "Computer"}</dd>
+          <dt>Einstellungen</dt><dd>${s.clientId && s.apiKey && s.appId ? '<span class="ok">vollständig</span>' : '<span class="bad">fehlen – oben eintragen</span>'}</dd>
+          <dt>Angemeldet</dt><dd>${state.token ? `<span class="ok">${state.email ?? "ja"}</span> <span class="muted">(noch ${minutes} min gültig)</span>` : '<span class="warn">nein</span>'}</dd>
+          <dt>Gewählter Ordner</dt><dd>${state.folder ? `${state.folder.name}` : "—"}</dd>
+          <dt>Nutzer in users.json</dt><dd>${state.users.map((u) => u.name).join(", ") || "—"}</dd>
+          ${state.busy ? `<dt>Status</dt><dd class="warn">${state.busy}</dd>` : ""}`;
+        $("login").disabled = !(s.clientId) || Boolean(state.token);
+        $("pick").disabled = !state.token || !(s.apiKey && s.appId);
+        $("reload").disabled = !state.token || !state.folder;
+        $("logout").disabled = !state.token;
+        $("add-user").disabled = !state.token || !state.folder;
+        $("add-note").disabled = !state.activeUser || state.notes === null;
+        $("user").innerHTML = state.users.map((u) => `<option value="${u.id}" ${u.id === state.activeUser ? "selected" : ""}>${u.name}</option>`).join("") || "<option>—</option>";
+        $("user").disabled = state.users.length === 0;
+        $("children").innerHTML = state.children.map((f) => `<li>${f.mimeType.endsWith("folder") ? "📁" : "📄"} ${f.name} <span class="muted">(${f.owners?.[0]?.emailAddress ?? "?"})</span></li>`).join("") || '<li class="muted">—</li>';
+        $("notes").innerHTML = state.notes ? (state.notes.map((n) => `<li>${n}</li>`).join("") || '<li class="muted">Noch keine Notizen.</li>') : '<li class="muted">—</li>';
+      }
+
+      async function loadAll() {
+        if (!state.token || !state.folder) return render();
+        const start = performance.now();
+        state.busy = "lädt …"; render();
+        try {
+          const [children, usersFile] = await Promise.all([store.listChildren(state.folder.id), store.readJson(state.folder.id, "users.json")]);
+          state.children = children;
+          state.users = usersFile?.users ?? [];
+          if (!state.users.some((u) => u.id === state.activeUser)) state.activeUser = state.users[0]?.id ?? null;
+          state.notes = state.activeUser ? ((await store.readJson(state.folder.id, `${state.activeUser}/prototype-app.json`))?.notes ?? []) : null;
+          log(`Alles geladen in ${Math.round(performance.now() - start)} ms (${children.length} sichtbare Einträge im Ordner)`);
+        } catch (error) {
+          log(`Fehler beim Laden: ${error.message}`, "error");
+        }
+        state.busy = ""; render();
+      }
+
+      function login() {
+        const s = settings();
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: s.clientId,
+          scope: SCOPES,
+          callback: async (response) => {
+            if (response.error) return log(`Anmeldung: ${response.error}`, "error");
+            state.token = response.access_token;
+            state.expiresAt = Date.now() + Number(response.expires_in) * 1000;
+            try {
+              const info = await (await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: `Bearer ${state.token}` } })).json();
+              state.email = info.email ?? null;
+            } catch { state.email = null; }
+            sessionStorage.setItem("proto-drive-token", JSON.stringify({ token: state.token, expiresAt: state.expiresAt, email: state.email }));
+            log(`Angemeldet als ${state.email} (Token ${response.expires_in} s gültig)`, "prompt");
+            await loadAll();
+          },
+        });
+        log("Google-Anmeldefenster geöffnet", "prompt");
+        client.requestAccessToken({ prompt: "" });
+      }
+
+      function pickFolder() {
+        const s = settings();
+        log("Ordnerauswahl von Google geöffnet", "prompt");
+        gapi.load("picker", () => {
+          const mine = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setSelectFolderEnabled(true).setLabel("Meine Ablage");
+          const shared = new google.picker.DocsView(google.picker.ViewId.FOLDERS).setSelectFolderEnabled(true).setOwnedByMe(false).setLabel("Für mich freigegeben");
+          const picker = new google.picker.PickerBuilder()
+            .addView(mine).addView(shared)
+            .setOAuthToken(state.token).setDeveloperKey(s.apiKey).setAppId(s.appId)
+            .setCallback(async (data) => {
+              if (data.action !== google.picker.Action.PICKED) return;
+              const doc = data.docs[0];
+              state.folder = { id: doc.id, name: doc.name };
+              localStorage.setItem("proto-drive-folder", JSON.stringify(state.folder));
+              log(`Ordner gewählt: ${doc.name}`);
+              await loadAll();
+            })
+            .build();
+          picker.setVisible(true);
+        });
+      }
+
+      $("save-settings").onclick = () => {
+        localStorage.setItem("proto-client-id", $("client-id").value.trim());
+        localStorage.setItem("proto-api-key", $("api-key").value.trim());
+        localStorage.setItem("proto-app-id", $("app-id").value.trim());
+        log("Einstellungen gespeichert");
+        render();
+      };
+      $("login").onclick = login;
+      $("pick").onclick = pickFolder;
+      $("reload").onclick = loadAll;
+      $("logout").onclick = () => { if (state.token) google.accounts.oauth2.revoke(state.token, () => {}); sessionStorage.removeItem("proto-drive-token"); state.token = null; state.email = null; log("Abgemeldet"); render(); };
+      $("user").onchange = async (event) => { state.activeUser = event.target.value; localStorage.setItem("proto-drive-user", state.activeUser); log(`Nutzer gewechselt: ${state.activeUser}`); await loadAll(); };
+      $("add-user").onclick = async () => {
+        const name = window.prompt("Name des Nutzers:");
+        if (!name?.trim()) return;
+        state.users = DriveProto.addUser(state.users, name);
+        render();
+        await store.writeJson(state.folder.id, "users.json", { users: state.users });
+        log(`Nutzer hinzugefügt: ${name.trim()}`);
+        await loadAll();
+      };
+      $("add-note").onclick = async () => {
+        // Show at once, save in the background.
+        const start = performance.now();
+        state.notes = [...state.notes, `Notiz ${state.notes.length + 1} (${new Date().toLocaleTimeString("de-DE")})`];
+        render();
+        const visible = Math.round(performance.now() - start);
+        $("timing").textContent = `Letzte Aktion: sichtbar nach ${visible} ms – speichert …`;
+        try {
+          await store.writeJson(state.folder.id, `${state.activeUser}/prototype-app.json`, { notes: state.notes });
+          const saved = Math.round(performance.now() - start);
+          $("timing").textContent = `Letzte Aktion: sichtbar nach ${visible} ms, gespeichert nach ${saved} ms`;
+          log(`Notiz gespeichert: sichtbar nach ${visible} ms, gespeichert nach ${saved} ms`);
+        } catch (error) {
+          $("timing").textContent = `Speichern fehlgeschlagen: ${error.message}`;
+          log(`Speichern fehlgeschlagen: ${error.message}`, "error");
+        }
+      };
+      $("copy").onclick = () => navigator.clipboard.writeText(JSON.parse(localStorage.getItem(LOG_KEY) ?? "[]").map((e) => `${e.time} ${e.text}`).join("\n")).then(() => log("Protokoll kopiert"));
+      $("clear").onclick = () => { localStorage.removeItem(LOG_KEY); renderLog(); };
+
+      const s0 = settings();
+      $("client-id").value = s0.clientId; $("api-key").value = s0.apiKey; $("app-id").value = s0.appId;
+      if (!(s0.clientId && s0.apiKey && s0.appId)) $("settings").open = true;
+      log(`Seite geladen (${state.token ? "Token aus dieser Sitzung vorhanden" : "nicht angemeldet"})`);
+      render();
+      renderLog();
+      if (state.token) loadAll();
+    </script>
+  </body>
+</html>
