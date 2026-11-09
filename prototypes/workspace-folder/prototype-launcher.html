@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROTOTYP Launcher</title>
+    <link rel="stylesheet" href="./prototype.css" />
+    <script src="./prototype-workspace.js"></script>
+  </head>
+  <body>
+    <div class="banner">PROTOTYP zum Wegwerfen – testet nur den Datenordner. Kein echter Launcher.</div>
+    <main>
+      <div>
+        <h1>Launcher mit Datenordner und Nutzern</h1>
+        <p class="muted">
+          Frage: Kann Chrome einen gewählten Datenordner unter <code>file://</code> lesen und
+          beschreiben, ihn sich über Seiten und Neustarts merken – und wie viele Klicks und Abfragen
+          braucht das?
+        </p>
+      </div>
+
+      <section>
+        <h2>Aktueller Stand</h2>
+        <dl id="state"></dl>
+      </section>
+
+      <section>
+        <h2>Aktionen</h2>
+        <div class="row">
+          <button class="primary" id="pick">Datenordner wählen …</button>
+          <button id="allow">Zugriff erlauben</button>
+          <button id="add-user">Nutzer hinzufügen …</button>
+          <button id="forget">Ordner vergessen</button>
+          <a class="button primary" href="./prototype-app.html">→ Zur App wechseln</a>
+        </div>
+        <h2 style="margin-top: 14px">Nutzer</h2>
+        <ul class="plain" id="users"></ul>
+        <h2 style="margin-top: 14px">App-Reihenfolge des aktiven Nutzers (launcher.json)</h2>
+        <ul class="plain" id="priorities"></ul>
+      </section>
+
+      <section>
+        <h2>Durchgänge</h2>
+        <div class="tabs" role="tablist" id="tabs"></div>
+        <div id="scenario"></div>
+      </section>
+
+      <section>
+        <h2>Protokoll (alle Seiten)</h2>
+        <p class="muted">Gelb = Chrome hat einen Dialog gezeigt. Schick mir am Ende den kopierten Text.</p>
+        <div class="row" style="margin-bottom: 8px">
+          <button id="copy">Protokoll kopieren</button>
+          <button id="clear">Protokoll leeren</button>
+        </div>
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script>
+      const PAGE = "Launcher";
+      const APPS = ["App-Ideen", "Zinsrechner", "Notizen"];
+      const W = window.Workspace;
+      const state = { folder: null, access: "kein Ordner", users: [], activeUser: localStorage.getItem("proto-active-user"), priorities: null, error: null };
+
+      function log(text, kind) { ProtoLog.add(PAGE, text, kind); renderLog(); }
+
+      async function refresh() {
+        state.error = null;
+        try {
+          state.folder = await W.loadFolder();
+          state.access = state.folder ? await W.queryAccess(state.folder) : "kein Ordner";
+          if (state.access === "granted") {
+            state.users = await W.readUsers(state.folder);
+            if (state.activeUser && !state.users.some((u) => u.id === state.activeUser)) state.activeUser = null;
+            state.priorities = state.activeUser ? ((await W.readJson(state.folder, `${state.activeUser}/launcher.json`))?.priorities ?? [...APPS]) : null;
+          } else {
+            state.users = [];
+            state.priorities = null;
+          }
+        } catch (error) {
+          state.error = `${error.name}: ${error.message}`;
+          log(`Fehler: ${state.error}`, "error");
+        }
+        render();
+      }
+
+      const accessLabel = (a) => a === "granted" ? '<span class="ok">erlaubt</span>' : a === "prompt" ? '<span class="warn">muss bestätigt werden</span>' : a === "denied" ? '<span class="bad">verweigert</span>' : '<span class="muted">—</span>';
+
+      function render() {
+        const active = state.users.find((u) => u.id === state.activeUser);
+        document.getElementById("state").innerHTML = `
+          <dt>Ordner-Dialog verfügbar</dt><dd>${typeof showDirectoryPicker === "function" ? '<span class="ok">ja</span>' : '<span class="bad">nein (nur Chrome/Edge)</span>'}</dd>
+          <dt>Gemerkter Datenordner</dt><dd>${state.folder ? state.folder.name : "—"}</dd>
+          <dt>Zugriff</dt><dd>${accessLabel(state.access)}</dd>
+          <dt>Nutzer in users.json</dt><dd>${state.access === "granted" ? (state.users.map((u) => u.name).join(", ") || "noch keine") : "—"}</dd>
+          <dt>Aktiver Nutzer</dt><dd>${active ? active.name : "—"}</dd>
+          ${state.error ? `<dt>Fehler</dt><dd class="bad">${state.error}</dd>` : ""}`;
+        document.getElementById("allow").disabled = state.access !== "prompt";
+        document.getElementById("add-user").disabled = state.access !== "granted";
+        document.getElementById("forget").disabled = !state.folder;
+
+        document.getElementById("users").innerHTML = state.users.map((u) => `
+          <li><span class="${u.id === state.activeUser ? "active" : ""}">${u.name}</span>
+            <span class="muted">(${u.id}/)</span>
+            <button data-select="${u.id}">Als ${u.name} weiter</button>
+            <button data-remove="${u.id}">Entfernen</button></li>`).join("") || '<li class="muted">—</li>';
+        document.getElementById("priorities").innerHTML = state.priorities ? state.priorities.map((app, i) => `
+          <li>${i + 1}. ${app} <button data-up="${i}" ${i === 0 ? "disabled" : ""}>↑</button></li>`).join("") : '<li class="muted">Erst einen Nutzer wählen.</li>';
+      }
+
+      function renderLog() {
+        document.getElementById("log").innerHTML = ProtoLog.all().map((e) => `<span class="log-${e.kind}">${e.time} [${e.page}] ${e.text}</span>`).join("\n") || "—";
+      }
+
+      async function pickFolder() {
+        try {
+          log("Ordner-Dialog geöffnet", "prompt");
+          const handle = await showDirectoryPicker({ id: "pocket-apps-data", mode: "readwrite" });
+          await W.saveFolder(handle);
+          log(`Ordner gewählt: ${handle.name} → Zugriff ${await W.queryAccess(handle)}`);
+        } catch (error) {
+          log(`Ordner-Dialog: ${error.name}`, error.name === "AbortError" ? "info" : "error");
+        }
+        await refresh();
+      }
+
+      async function allow() {
+        const result = await W.requestAccess(state.folder);
+        log(`Zugriff angefragt (Chrome-Dialog) → ${result}`, "prompt");
+        await refresh();
+      }
+
+      async function addUser() {
+        const name = window.prompt("Name des Nutzers:");
+        if (!name?.trim()) return;
+        const users = W.addUser(state.users, name);
+        await W.writeUsers(state.folder, users);
+        log(`Nutzer hinzugefügt: ${name.trim()} (users.json geschrieben)`);
+        await refresh();
+      }
+
+      async function removeUser(id) {
+        const user = state.users.find((u) => u.id === id);
+        const deleteData = window.confirm(`${user.name} entfernen.\n\nAuch den Datenordner "${id}/" löschen?\nOK = ja, Abbrechen = Daten behalten`);
+        await W.writeUsers(state.folder, W.removeUser(state.users, id));
+        if (deleteData) await W.removeUserFolder(state.folder, id);
+        if (state.activeUser === id) { state.activeUser = null; localStorage.removeItem("proto-active-user"); }
+        log(`Nutzer entfernt: ${user.name}${deleteData ? " + Datenordner gelöscht" : " (Daten behalten)"}`);
+        await refresh();
+      }
+
+      async function moveUp(index) {
+        const list = [...state.priorities];
+        [list[index - 1], list[index]] = [list[index], list[index - 1]];
+        await W.writeJson(state.folder, `${state.activeUser}/launcher.json`, { priorities: list });
+        log(`Reihenfolge für ${state.activeUser} gespeichert: ${list.join(", ")}`);
+        await refresh();
+      }
+
+      document.getElementById("pick").onclick = pickFolder;
+      document.getElementById("allow").onclick = allow;
+      document.getElementById("add-user").onclick = addUser;
+      document.getElementById("forget").onclick = async () => { await W.forgetFolder(); log("Ordner vergessen"); await refresh(); };
+      document.getElementById("copy").onclick = () => navigator.clipboard.writeText(ProtoLog.all().map((e) => `${e.time} [${e.page}] ${e.text}`).join("\n")).then(() => log("Protokoll kopiert"));
+      document.getElementById("clear").onclick = () => { ProtoLog.clear(); renderLog(); };
+      document.body.addEventListener("click", (event) => {
+        const t = event.target;
+        if (t.dataset.select) { state.activeUser = t.dataset.select; localStorage.setItem("proto-active-user", t.dataset.select); log(`Aktiver Nutzer: ${t.dataset.select}`); refresh(); }
+        if (t.dataset.remove) removeUser(t.dataset.remove);
+        if (t.dataset.up) moveUp(Number(t.dataset.up));
+      });
+
+      // Guided walkthroughs.
+      const SCENARIOS = [
+        { title: "1 · Erster Start", text: "Noch nichts eingerichtet. Wähle einen leeren Ordner in deinem Google-Drive-Ordner, z. B. „PROTOTYP Pocket Apps Daten“.", steps: [
+          ["Datenordner wählen …", pickFolder], ["Nutzer „Johannes“ anlegen (Name eintippen)", addUser], ["Nutzer „Anna“ anlegen", addUser],
+          ["Bei „Johannes“ auf „Als Johannes weiter“ klicken, dann die App-Reihenfolge mit ↑ ändern", null]] },
+        { title: "2 · Seitenwechsel", text: "Wechsle zur App. Achte darauf: Kennt die App den Ordner? Fragt Chrome erneut? Danach zurück zum Launcher.", steps: [
+          ["„→ Zur App wechseln“ klicken", () => (location.href = "./prototype-app.html")], ["In der App: notieren, ob „Zugriff“ sofort „erlaubt“ ist", null], ["In der App eine Notiz hinzufügen, dann zurück", null]] },
+        { title: "3 · Neustart von Chrome", text: "Das ist der wichtigste Test. Chrome komplett beenden (Cmd+Q), wieder öffnen und diese Datei erneut öffnen.", steps: [
+          ["Chrome mit Cmd+Q beenden, neu öffnen, diese Datei öffnen", null], ["Zugriff-Status ansehen. Falls „muss bestätigt werden“: auf „Zugriff erlauben“ klicken", allowIfPrompt],
+          ["Im Chrome-Dialog: gibt es eine Option „Bei jedem Besuch erlauben“? Wenn ja, wählen und Test 3 wiederholen", null]] },
+        { title: "4 · Nutzer entfernen", text: "Entferne Anna. Prüfe danach im Finder, ob ihr Ordner weg ist bzw. noch da ist.", steps: [
+          ["Bei „Anna“ auf „Entfernen“ klicken und entscheiden", null], ["Im Finder in den Datenordner schauen", null]] },
+      ];
+      async function allowIfPrompt() { if (state.access === "prompt") await allow(); else log(`Zugriff ist bereits: ${state.access}`); }
+      function showScenario(index) {
+        const s = SCENARIOS[index];
+        document.querySelectorAll("#tabs button").forEach((b, i) => b.setAttribute("aria-selected", String(i === index)));
+        document.getElementById("scenario").innerHTML = `<p>${s.text}</p><ol class="steps">${s.steps.map(([label, action], i) => `<li>${action ? `<button data-step="${i}">${label}</button>` : label}</li>`).join("")}</ol>`;
+        document.querySelectorAll("[data-step]").forEach((b) => (b.onclick = () => s.steps[Number(b.dataset.step)][1]()));
+      }
+      document.getElementById("tabs").innerHTML = SCENARIOS.map((s, i) => `<button role="tab" data-tab="${i}">${s.title}</button>`).join("");
+      document.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => showScenario(Number(b.dataset.tab))));
+      showScenario(0);
+
+      log("Seite geladen");
+      refresh().then(() => log(`Beim Laden: Zugriff = ${state.access}`));
+      renderLog();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROTOTYP App</title>
+    <link rel="stylesheet" href="./prototype.css" />
+    <script src="./prototype-workspace.js"></script>
+  </head>
+  <body>
+    <div class="banner">PROTOTYP zum Wegwerfen – eine Beispiel-App mit Nutzerdaten im Datenordner.</div>
+    <main>
+      <div class="row">
+        <a class="button" href="./prototype-launcher.html">← Zum Launcher</a>
+        <h1>Beispiel-App „Notizen“</h1>
+      </div>
+      <p class="muted">
+        Die App öffnet keine Datei selbst. Sie nimmt den Datenordner, den der Launcher gemerkt hat,
+        und liest <code>&lt;nutzer&gt;/prototype-app.json</code> des gewählten Nutzers.
+      </p>
+
+      <section>
+        <h2>Aktueller Stand</h2>
+        <dl id="state"></dl>
+        <div class="row" style="margin-top: 10px">
+          <button class="primary" id="allow">Zugriff erlauben</button>
+          <label>Nutzer:
+            <select id="user"></select>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Notizen des Nutzers</h2>
+        <div class="row" style="margin-bottom: 8px">
+          <button id="add-note">Notiz hinzufügen</button>
+        </div>
+        <ul class="plain" id="notes"></ul>
+      </section>
+
+      <section>
+        <h2>Protokoll (alle Seiten)</h2>
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script>
+      const PAGE = "App";
+      const FILE = "prototype-app.json";
+      const W = window.Workspace;
+      const state = { folder: null, access: "kein Ordner", users: [], activeUser: localStorage.getItem("proto-active-user"), notes: null, error: null };
+
+      function log(text, kind) { ProtoLog.add(PAGE, text, kind); renderLog(); }
+      function renderLog() {
+        document.getElementById("log").innerHTML = ProtoLog.all().map((e) => `<span class="log-${e.kind}">${e.time} [${e.page}] ${e.text}</span>`).join("\n") || "—";
+      }
+
+      async function refresh() {
+        state.error = null;
+        try {
+          state.folder = await W.loadFolder();
+          state.access = state.folder ? await W.queryAccess(state.folder) : "kein Ordner";
+          if (state.access === "granted") {
+            state.users = await W.readUsers(state.folder);
+            if (!state.users.some((u) => u.id === state.activeUser)) state.activeUser = state.users[0]?.id ?? null;
+            state.notes = state.activeUser ? ((await W.readJson(state.folder, `${state.activeUser}/${FILE}`))?.notes ?? []) : null;
+          } else {
+            state.users = [];
+            state.notes = null;
+          }
+        } catch (error) {
+          state.error = `${error.name}: ${error.message}`;
+          log(`Fehler: ${state.error}`, "error");
+        }
+        render();
+      }
+
+      const accessLabel = (a) => a === "granted" ? '<span class="ok">erlaubt</span>' : a === "prompt" ? '<span class="warn">muss bestätigt werden</span>' : a === "denied" ? '<span class="bad">verweigert</span>' : '<span class="bad">kein Ordner – erst im Launcher wählen</span>';
+
+      function render() {
+        document.getElementById("state").innerHTML = `
+          <dt>Gemerkter Datenordner</dt><dd>${state.folder ? state.folder.name : "—"}</dd>
+          <dt>Zugriff</dt><dd>${accessLabel(state.access)}</dd>
+          <dt>Datei</dt><dd>${state.activeUser ? `${state.activeUser}/${FILE}` : "—"}</dd>
+          ${state.error ? `<dt>Fehler</dt><dd class="bad">${state.error}</dd>` : ""}`;
+        document.getElementById("allow").disabled = state.access !== "prompt";
+        document.getElementById("add-note").disabled = !state.activeUser;
+        const select = document.getElementById("user");
+        select.innerHTML = state.users.map((u) => `<option value="${u.id}" ${u.id === state.activeUser ? "selected" : ""}>${u.name}</option>`).join("") || "<option>—</option>";
+        select.disabled = state.users.length === 0;
+        document.getElementById("notes").innerHTML = state.notes ? (state.notes.map((n) => `<li>${n}</li>`).join("") || '<li class="muted">Noch keine Notizen.</li>') : '<li class="muted">—</li>';
+      }
+
+      document.getElementById("allow").onclick = async () => {
+        const result = await W.requestAccess(state.folder);
+        log(`Zugriff angefragt (Chrome-Dialog) → ${result}`, "prompt");
+        await refresh();
+      };
+      document.getElementById("user").onchange = async (event) => {
+        state.activeUser = event.target.value;
+        localStorage.setItem("proto-active-user", state.activeUser);
+        log(`Nutzer gewechselt: ${state.activeUser}`);
+        await refresh();
+      };
+      document.getElementById("add-note").onclick = async () => {
+        const notes = [...state.notes, `Notiz ${state.notes.length + 1} (${new Date().toLocaleTimeString("de-DE")})`];
+        await W.writeJson(state.folder, `${state.activeUser}/${FILE}`, { notes });
+        log(`Notiz gespeichert in ${state.activeUser}/${FILE} – ohne Datei-Dialog`);
+        await refresh();
+      };
+
+      log("Seite geladen");
+      refresh().then(() => log(`Beim Laden: Zugriff = ${state.access}`));
+      renderLog();
+    </script>
+  </body>
+</html>

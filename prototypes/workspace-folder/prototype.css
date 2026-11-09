@@ -1,0 +1,30 @@
+/* PROTOTYPE – throwaway styles. */
+:root { --accent: #2563eb; --muted: #6b7280; --line: #e5e7eb; --ok: #15803d; --warn: #b45309; --bad: #b91c1c; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: #111827; background: #f9fafb; }
+.banner { background: #fef3c7; color: #92400e; padding: 6px 16px; font-size: 13px; text-align: center; }
+main { max-width: 860px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+h1 { margin: 0; font-size: 22px; }
+h2 { margin: 0 0 8px; font-size: 16px; }
+p { margin: 4px 0; }
+.muted { color: var(--muted); font-size: 13px; }
+section { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+dl { display: grid; grid-template-columns: 190px 1fr; gap: 6px 12px; margin: 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+.ok { color: var(--ok); font-weight: 600; }
+.warn { color: var(--warn); font-weight: 600; }
+.bad { color: var(--bad); font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button, a.button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; color: inherit; text-decoration: none; }
+button.primary, a.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: .45; cursor: default; }
+ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+ul.plain li { display: flex; gap: 8px; align-items: center; }
+.active { font-weight: 600; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+ol.steps { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+pre { margin: 0; white-space: pre-wrap; font-size: 12px; max-height: 260px; overflow: auto; background: #f3f4f6; padding: 8px; border-radius: 8px; }
+.log-prompt { color: var(--warn); }
+.log-error { color: var(--bad); }
