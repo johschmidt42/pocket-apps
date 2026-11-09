@@ -185,7 +185,8 @@ The app file name has no version (`app-ideen.html`). A new file replaces the old
 
 ## Data files and migrations
 
-A stateful app defines its data in `src/schema.ts` with `defineDataSchema()`. It creates the store with `createDataFileStore()`.
+A stateful app defines its data in `src/schema.ts` with `defineDataSchema({ app, validate, initial, migrations })`. `app` is the app ID, `validate` the zod schema, `initial()` the data of a new file and `migrations` the list of migrations. See `apps/app-ideen/src/schema.ts`.
+`createDataFileStore(schema, { app: __POCKET_APP__ })` returns `{ DataFileProvider, useDataFile }`. `App` wraps its screen in `<DataFileProvider>`. Components inside call `useDataFile()`. It returns `{ data, update }`. `update((data) => newData)` changes the data. Then the store saves it.
 Data files are JSON. Use SQLite (sql.js) only when an app needs queries that are hard with JSON. See `docs/decisions.md`.
 
 ### How the store works
@@ -193,7 +194,7 @@ Data files are JSON. Use SQLite (sql.js) only when an app needs queries that are
 `DataFileProvider` shows the header and then one of these screens:
 
 1. In a browser without the File System Access API: "Bitte Chrome oder Edge verwenden".
-2. On the first visit: "Datenordner wählen". The user picks the data folder. The browser keeps the folder in IndexedDB. All apps of the same web address use it.
+2. On the first visit: "Datenordner wählen". The user picks the data folder. The browser keeps the folder in IndexedDB. All apps of the same web address use it. The dev server, `pnpm serve` and GitHub Pages are different addresses. Thus each needs its own folder pick.
 3. When the browser has no access to the folder: "Zugriff auf deinen Datenordner". One click gives access again. If the user selects "Bei jedem Besuch erlauben", Chrome does not ask again.
 4. Else the app. The file name is `<app>.json`. `<app>` is the `app` field in `schema.ts`. If the file does not exist, the app starts with `initial()`. It writes the file at the first change.
 
@@ -234,18 +235,22 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 ## Testing
 
 - Put unit tests next to the code: `name.test.ts` or `name.test.tsx`.
-- `packages/core` must have 100 % coverage per file.
+- `packages/core` must have 100 % coverage per file: lines, branches, functions and statements.
 - `apps/*/src/schema.ts` and `apps/*/src/migrations/` must have 100 % coverage.
 - All other code must have 95 % line coverage and 90 % branch coverage.
 - Test from the user's view. Query by role and label (`getByRole`, `getByLabelText`). Use `userEvent`, not `fireEvent`. Do not use snapshots.
-- Do not mock internals. For data files, use `createMemoryFolder()` and `createMemoryFolderHost()` from `@pocket-apps/core/data-file/testing`. Pass the host as `folderHost` to `DataFileProvider`. `createMemoryFolderHost({ saved: folder })` is a folder from an earlier visit with access. To start with data, put a file into `folder.files`.
+- Do not mock internals. For data files, use `createMemoryFolder()` and `createMemoryFolderHost()` from `@pocket-apps/core/data-file/testing`. Pass the host as `folderHost` to `DataFileProvider`. - `createMemoryFolderHost()` is the first visit (no folder). Set `host.nextPick` to the folder that "Ordner wählen …" returns.
+- `createMemoryFolderHost({ saved: folder })` is a folder from an earlier visit with access. Set `folder.access = "prompt"` to test the screen "Zugriff auf deinen Datenordner".
+- To start with data, put a file into `folder.files`: `folder.files.set("<app>.json", { text, lastModified: 1 })`. `text` is the full envelope as JSON.
+- `folder.writeError` makes saves fail. `folder.changeElsewhere(path, text)` simulates a change on another computer (conflict).
+- Saves come 500 ms after a change. Do not use fake timers. Wait with `findBy…` queries.
 - For app info in unit tests, use `testAppInfo()` from `@pocket-apps/core/testing`.
 - Keep pure logic (calculations, list operations) in `.ts` files with their own unit tests.
 - The browser tests use the local web server of `pnpm serve`. Playwright starts it.
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.
 - `e2e/launcher.spec.ts` tests the launcher.
-- Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. Run these tests only in Chromium.
-- In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile()` and `readDataFile()` for the files in it.
+- Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. Run these tests only in Chromium: `test.skip(({ browserName }) => browserName !== "chromium")`. See `e2e/app-ideen.spec.ts`.
+- In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile(page, fileName, text)` and `readDataFile(page, fileName)` for the files in it. Write files after `page.goto()`. `readDataFile()` returns the text or `null`.
 - In Firefox and WebKit, test only the notice "Bitte Chrome oder Edge verwenden".
 
 ## Add a new app
@@ -323,3 +328,4 @@ To check: `gh run list --workflow "CD - Release" --limit 3`. To publish again, r
 
 - `pnpm check:all` passes.
 - For UI changes, run `pnpm build` and `pnpm serve`. Open `http://localhost:4173/pocket-apps/` in Chrome. Look at the apps in light and dark mode.
+- For changes to a stateful app or to `packages/core/src/data-file/`, also test with a real folder in Chrome: pick a folder, change data, reload, and look at the file.
