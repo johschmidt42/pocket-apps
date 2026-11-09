@@ -298,7 +298,7 @@ The CI pipelines run on each push to `main` and on each pull request. When `CI -
 1. It starts when `CI - E2E` passed after a push to `main` of this repository. Pull requests and forks never start it.
 2. It checks that the commit is still the newest commit on `main`, and that all five CI pipelines passed for it. Else it stops. Thus a re-run of an old run cannot overwrite newer files.
 3. It downloads the artifact `release` of that run. It does not build again. Thus it uploads exactly the tested files.
-4. It runs `rclone sync release/ gdrive: --include "*.html"`. New and changed app files go to the folder. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
+4. It runs `rclone sync release/ gdrive: --include "*.html" --checksum`. It compares the MD5 checksums. New app files and app files with a changed content go to the folder. Unchanged files stay as they are, with their date. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
 5. It runs only if the repository variable `GDRIVE_FOLDER_ID` is set. Without the variable, GitHub skips it.
 
 [rclone](https://rclone.org) is a command-line tool that copies files to cloud storage. The pipeline configures its remote `gdrive` only with environment variables. Your computer has the remote `pocket-apps`. Both use the same token.

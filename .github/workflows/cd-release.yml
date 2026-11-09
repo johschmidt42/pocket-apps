@@ -90,6 +90,7 @@ jobs:
           rclone version
 
       # Only HTML files: the sync never touches data files (*.json) in the folder.
+      # --checksum: upload only files whose content changed (the build is deterministic).
       # Scope drive.file: rclone sees only the files that it created itself.
       - name: Upload to Google Drive
         env:
@@ -107,4 +108,4 @@ jobs:
               exit 1
             fi
           done
-          rclone sync release/ gdrive: --include "*.html" --verbose
+          rclone sync release/ gdrive: --include "*.html" --checksum --verbose

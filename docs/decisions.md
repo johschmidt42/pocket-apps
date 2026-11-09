@@ -19,6 +19,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Consequence:** rclone must create the folder itself. The folder that the user created before cannot be used.
 - **Rejected:** Full Drive scope (a leaked token gives access to the whole Drive). A separate Google account (more setup, the data files in the shared folder are still visible). A service account (no storage quota in a personal Drive).
 - **Detail:** The CD job uses only official GitHub actions, pinned to a commit hash.
+- **Detail:** `rclone sync --checksum` uploads only files with a changed content. This works because the build is deterministic: the same code gives the same bytes, on macOS and in CI. Thus the date in Drive shows the last real change, and Drive keeps no empty versions.
 - **Review fixes:** CD runs only for a push to `main` of this repository (no pull requests, no forks). It uploads only the newest commit of `main`, and only if all five CI pipelines passed for it. It installs a fixed rclone version with a checksum. The setup script stops if the rclone remote has a scope other than `drive.file`.
 
 ## 2026-11-09: GitHub Actions and Conventional Commits
