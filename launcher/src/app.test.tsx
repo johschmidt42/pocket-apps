@@ -25,13 +25,13 @@ describe("Launcher", () => {
     expect(zins).toHaveTextContent("Version 1.2");
     expect(within(zins).getByRole("img", { name: "Speichert keine Daten" })).toBeInTheDocument();
     expect(
-      within(zins).getByRole("img", { name: "Funktioniert ohne Internet" }),
+      within(zins).getByRole("img", { name: "Nutzt keine Online-Dienste" }),
     ).toBeInTheDocument();
     const liste = screen.getByRole("link", { name: "App-Ideen" });
     expect(
       within(liste).getByRole("img", { name: "Speichert Daten in einer eigenen Datei" }),
     ).toBeInTheDocument();
-    expect(within(liste).getByRole("img", { name: "Braucht Internet" })).toBeInTheDocument();
+    expect(within(liste).getByRole("img", { name: "Nutzt Online-Dienste" })).toBeInTheDocument();
   });
 
   it("filters the apps by the search text", async () => {

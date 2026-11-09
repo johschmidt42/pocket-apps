@@ -20,7 +20,7 @@ test.describe("launcher (release/index.html)", () => {
       ).toBeVisible();
       await expect(
         card.getByRole("img", {
-          name: app.network ? "Braucht Internet" : "Funktioniert ohne Internet",
+          name: app.network ? "Nutzt Online-Dienste" : "Nutzt keine Online-Dienste",
         }),
       ).toBeVisible();
     }

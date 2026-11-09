@@ -20,7 +20,7 @@ Small personal apps for Chrome and Edge on a computer. Open them at **https://jo
 Each card shows the app version (for example `1.0`) and two icons. Move the mouse over an icon to see what it means:
 
 - Disk icon: the app keeps your data in a file. A crossed-out disk: the app keeps nothing.
-- Globe: the app needs the internet. A crossed-out Wi-Fi symbol: the app works without internet.
+- Globe: the app uses an online service. A crossed-out Wi-Fi symbol: the app uses no online service and sends no data to the internet.
 
 The header shows the app version, for example `1.0`. The moon button switches to dark mode. The sun button switches back to light mode.
 
@@ -30,19 +30,13 @@ Some apps keep data, for example a list of ideas. These apps ask you to create o
 
 - Keep the data file in a safe place, for example in your own OneDrive or Google Drive folder.
 - Use one data file in one browser tab at a time. Two open tabs can overwrite each other's changes.
-- **Chrome and Edge** save changes into your data file automatically. The header bar shows "Gespeichert".
-- **Firefox and Safari** cannot write into a file. Click "Speichern" to download the new version.
+- Chrome and Edge save changes into your data file automatically. The header bar shows "Gespeichert".
 
-For Firefox and Safari, set the browser to ask where to save each download:
-
-- Firefox: Settings → General → Downloads → "Always ask you where to save files".
-- Safari: Settings → General → "File download location" → "Ask for each download".
-
-Then select your old data file in the save dialog. Confirm that you want to replace it. Without this setting, the browser saves a new file in your download folder, for example `app-ideen (1).json`. Then open that new file next time.
+Pocket Apps work only in Chrome and Edge on a computer.
 
 ### Updates
 
-- New app versions are online at once. Reload the page to get them. You do not have to do anything else.
+- New app versions are online within about 10 minutes. Reload the page to get them. You do not have to do anything else.
 - A new app version can change the data format. Then the app downloads a copy of your old data file before it changes anything. The copy has a name like `app-ideen.backup-v1.json`. The number is the old data format, not the app version.
 - An old app version cannot open data from a newer version. It shows an error. Reload the page to get the newest version.
 

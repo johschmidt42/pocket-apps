@@ -60,7 +60,7 @@ export function AppCard({ app }: { app: AppInfo }) {
           />
           <LabelIcon
             icon={app.network ? Globe : WifiOff}
-            label={app.network ? "Braucht Internet" : "Funktioniert ohne Internet"}
+            label={app.network ? "Nutzt Online-Dienste" : "Nutzt keine Online-Dienste"}
           />
         </CardFooter>
       </Card>

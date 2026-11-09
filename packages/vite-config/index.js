@@ -133,7 +133,7 @@ export function createAppConfig(configUrl, options = {}) {
 
   return defineConfig({
     root: appDir,
-    // Relative paths, because the file opens from disk (file://).
+    // Relative paths: the files work on GitHub Pages and from disk (file://, in the browser tests).
     base: "./",
     plugins: [react(), tailwindcss(), viteSingleFile(), appMetaPlugin(app)],
     define: {

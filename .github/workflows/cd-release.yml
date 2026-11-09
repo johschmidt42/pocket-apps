@@ -13,9 +13,6 @@ permissions:
   contents: read
   # Needed to download the artifact of the "CI - E2E" run.
   actions: read
-  # Needed to publish on GitHub Pages.
-  pages: write
-  id-token: write
 
 concurrency:
   group: cd-release
@@ -33,6 +30,12 @@ jobs:
     runs-on: ubuntu-latest
     # The check waits up to 10 minutes for the other CI pipelines.
     timeout-minutes: 20
+    # Only this job may publish on GitHub Pages.
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}

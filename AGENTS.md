@@ -5,12 +5,12 @@
 pocket-apps is a monorepo of small personal apps ("home-cooked software").
 Each app builds into **one self-contained HTML file**. GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/` in Chrome or Edge. There is no server for user data.
 Apps that keep data store it in a **separate JSON file**. The user owns this file. No user data goes to a server.
-Most apps work offline. An app that needs an external API declares this in its `package.json`.
+Most apps use no online services. An app that needs an external API declares this in its `package.json`.
 
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and internet (globe "Braucht Internet" or crossed-out Wi-Fi "Funktioniert ohne Internet"). The code is in `launcher/`.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data file:** the JSON file with the user's data. The user chooses where it is.
 - **Stateful app:** an app with a data file. A stateless app keeps nothing after the tab closes.
@@ -176,7 +176,7 @@ Rules for the app version:
 - A new app starts at `1.0`.
 - Big change: increase the first number and set the second to 0 (`1.4` → `2.0`). A big change is a new data shape (migration) or a change that the user clearly notices, for example a new screen.
 - Small change or fix: increase the second number (`1.0` → `1.1`). Examples: one new button, a text change, a bug fix.
-- Before the first app file is in the shared folder, the app stays at `1.0`.
+- Before the first version of an app is on GitHub Pages, the app stays at `1.0`.
 - There is no third number for users. npm needs three parts, so `package.json` has `"1.0.0"`. The third part is always `0`. The build shows `1.0` and stops if the third part is not `0`.
 
 The app file name has no version (`app-ideen.html`). A new file replaces the old file. Links stay the same.
@@ -207,7 +207,7 @@ Thus the app never changes the data file before the user saw the backup notice.
 
 ### Change the data shape
 
-Use a migration as soon as an app file with the old shape is in the shared folder. Before that, you can change schema version 1 freely. If you do not know whether the app is in the shared folder, ask the user.
+Use a migration as soon as a version with the old shape is on GitHub Pages. Before that, you can change schema version 1 freely. If you do not know whether that version was published, ask the user.
 
 1. Change the zod schema in `schema.ts`.
 2. Add `src/migrations/to-v<N>.ts`. Export one function `toV<N>`. Give it the type `Migration` from `@pocket-apps/core/data-file`. It converts data from schema version N-1 to N.

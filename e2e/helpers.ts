@@ -14,7 +14,7 @@ export function releaseUrl(fileName: string): string {
 
 /**
  * Test with two additions:
- * - It blocks all network requests. The apps must work offline.
+ * - It blocks all network requests. The apps must not need other servers.
  * - `pageErrors` collects page errors, console errors and network requests.
  */
 export const test = base.extend<{ pageErrors: string[] }>({
