@@ -3,6 +3,17 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: Apps on GitHub Pages, data in a local folder (like draw.io)
+
+- **Decision:** The apps come only from GitHub Pages (`johschmidt42.github.io/pocket-apps`). There is no release to Google Drive and no opening by double-click anymore.
+- **Decision:** Each person picks one local data folder once: "Pocket Apps Daten". The apps read and write it with the File System Access API. The folder can be inside a sync folder (Google Drive, OneDrive, Dropbox). Then the sync program does the backup.
+- **Decision:** Only Chrome and Edge on a computer. No smartphones for now. Other browsers show a clear notice.
+- **Decision:** No user management for now. The user is the person who picked the folder. No shared data for now. A static export per app is an idea for later.
+- **Layout:** `launcher.json` (launcher preferences, e.g. app order) and one `<app>.json` per app (data and preferences). Large files (images, music, video) go into `<app>/…` next to it; the JSON file refers to them.
+- **Why:** No server, no login, data as files that the person owns. Under a web address, Chrome offers "Allow on every visit": after that, 0 clicks, also after a restart. Under `file://`, Chrome asks again after each restart.
+- **Proof:** Prototypes and measurements on the branch `prototype/workspace-folder` (README). Also tested there: Android (1 tap per visit, slow with a Drive folder) and the Google Drive API (works on every device, but a login click per hour and full Drive access). Both are possible later.
+- **Replaces:** "CD to Google Drive with rclone and scope drive.file" and "Own OAuth client for the Drive upload" (no Drive release anymore). "App and data in separate files" stays true.
+
 ## 2026-11-09: Own OAuth client for the Drive upload
 
 - **Decision:** rclone uses an OAuth client ("Desktop app") of our own Google Cloud project. The secrets `GDRIVE_CLIENT_ID` and `GDRIVE_CLIENT_SECRET` hold it.
