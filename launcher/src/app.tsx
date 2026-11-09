@@ -2,6 +2,7 @@ import type { AppInfo } from "@pocket-apps/vite-config";
 import { AppHeader } from "@pocket-apps/core/app-shell";
 import { Input } from "@pocket-apps/ui/components/input";
 import { Label } from "@pocket-apps/ui/components/label";
+import { TooltipProvider } from "@pocket-apps/ui/components/tooltip";
 import { Search } from "lucide-react";
 import { useState } from "react";
 import { AppCard } from "./app-card.tsx";
@@ -13,12 +14,9 @@ export function App({ apps = __POCKET_APPS__ }: { apps?: readonly AppInfo[] }) {
   const visible = filterApps(apps, query);
 
   return (
-    <>
+    <TooltipProvider>
       <AppHeader app={__POCKET_APP__} />
       <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
-        <p className="text-sm text-muted-foreground">
-          Jede App ist eine einzelne Datei. Apps mit „Offline“ brauchen kein Internet.
-        </p>
         <div className="relative">
           <Label htmlFor="search" className="sr-only">
             Apps durchsuchen
@@ -50,6 +48,6 @@ export function App({ apps = __POCKET_APPS__ }: { apps?: readonly AppInfo[] }) {
           </ul>
         )}
       </main>
-    </>
+    </TooltipProvider>
   );
 }

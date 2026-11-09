@@ -1,11 +1,11 @@
 import { testAppInfo } from "@pocket-apps/core/testing";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { App } from "./app.tsx";
 
 const apps = [
-  testAppInfo({ name: "zinsrechner", title: "Zinsrechner", version: "1.2.0", stateful: false }),
+  testAppInfo({ name: "zinsrechner", title: "Zinsrechner", version: "1.2", stateful: false }),
   testAppInfo({ name: "einkaufsliste", title: "Einkaufsliste", stateful: true, network: true }),
 ];
 
@@ -21,11 +21,17 @@ describe("Launcher", () => {
       "href",
       "./einkaufsliste.html",
     );
-    expect(screen.getByText("Version 1.2.0")).toBeInTheDocument();
-    expect(screen.getByText("Mit Datendatei")).toBeInTheDocument();
-    expect(screen.getByText("Ohne Daten")).toBeInTheDocument();
-    expect(screen.getByText("Braucht Internet")).toBeInTheDocument();
-    expect(screen.getByText("Offline")).toBeInTheDocument();
+    const zins = screen.getByRole("link", { name: "Zinsrechner" });
+    expect(zins).toHaveTextContent("Version 1.2");
+    expect(within(zins).getByRole("img", { name: "Speichert keine Daten" })).toBeInTheDocument();
+    expect(
+      within(zins).getByRole("img", { name: "Funktioniert ohne Internet" }),
+    ).toBeInTheDocument();
+    const liste = screen.getByRole("link", { name: "Einkaufsliste" });
+    expect(
+      within(liste).getByRole("img", { name: "Speichert Daten in einer eigenen Datei" }),
+    ).toBeInTheDocument();
+    expect(within(liste).getByRole("img", { name: "Braucht Internet" })).toBeInTheDocument();
   });
 
   it("filters the apps by the search text", async () => {

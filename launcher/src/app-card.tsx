@@ -7,7 +7,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@pocket-apps/ui/components/card";
-import { Globe, WifiOff } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@pocket-apps/ui/components/tooltip";
+import { Globe, Save, SaveOff, WifiOff, type LucideIcon } from "lucide-react";
+
+/** An icon with a tooltip. Screen readers read the label. */
+function LabelIcon({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span role="img" aria-label={label} className="text-muted-foreground">
+          <Icon aria-hidden="true" className="size-4" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** One app on the launcher. The whole card is a link to the app file. */
 export function AppCard({ app }: { app: AppInfo }) {
@@ -32,17 +47,21 @@ export function AppCard({ app }: { app: AppInfo }) {
             <CardDescription>{app.description}</CardDescription>
           </div>
         </CardHeader>
-        <CardFooter className="mt-auto flex-wrap gap-2">
-          <Badge variant="secondary">Version {app.version}</Badge>
-          <Badge variant="outline">{app.stateful ? "Mit Datendatei" : "Ohne Daten"}</Badge>
-          <Badge variant="outline">
-            {app.network ? (
-              <Globe data-icon="inline-start" />
-            ) : (
-              <WifiOff data-icon="inline-start" />
-            )}
-            {app.network ? "Braucht Internet" : "Offline"}
+        <CardFooter className="mt-auto items-center gap-3">
+          <Badge variant="secondary">
+            <span className="sr-only">Version </span>
+            {app.version}
           </Badge>
+          <LabelIcon
+            icon={app.stateful ? Save : SaveOff}
+            label={
+              app.stateful ? "Speichert Daten in einer eigenen Datei" : "Speichert keine Daten"
+            }
+          />
+          <LabelIcon
+            icon={app.network ? Globe : WifiOff}
+            label={app.network ? "Braucht Internet" : "Funktioniert ohne Internet"}
+          />
         </CardFooter>
       </Card>
     </a>

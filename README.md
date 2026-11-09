@@ -11,12 +11,12 @@ Small personal apps. Each app is **one HTML file**. You open it with a double-cl
 3. Click an app card. The app opens.
 4. Click "Alle Apps" in the header to go back.
 
-Each card shows two labels:
+Each card shows the app version (for example `1.0`) and two icons. Move the mouse over an icon to see what it means:
 
-- "Mit Datendatei" or "Ohne Daten": the app keeps your data in a file, or it keeps nothing.
-- "Offline" or "Braucht Internet": the app works without internet, or it needs an external service.
+- Disk icon: the app keeps your data in a file. A crossed-out disk: the app keeps nothing.
+- Globe: the app needs the internet. A crossed-out Wi-Fi symbol: the app works without internet.
 
-The header shows the app version. The moon button switches to dark mode. The sun button switches back to light mode.
+The header shows the app version, for example `1.0`. The moon button switches to dark mode. The sun button switches back to light mode.
 
 ### Keep your data
 

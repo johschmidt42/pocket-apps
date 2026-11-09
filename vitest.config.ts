@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 import { testAppInfo } from "./packages/core/src/testing.ts";
 
 // The app info that unit tests see as __POCKET_APP__.
-const TEST_APP = testAppInfo({ name: "test-app", title: "Test-App", version: "0.0.0-test" });
+const TEST_APP = testAppInfo({ name: "test-app", title: "Test-App", version: "9.9" });
 
 const FULL = { lines: 100, functions: 100, branches: 100, statements: 100 };
 

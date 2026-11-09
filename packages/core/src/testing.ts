@@ -5,7 +5,7 @@ export function testAppInfo(overrides: Partial<AppInfo> = {}): AppInfo {
   return {
     name: "demo",
     title: "Demo",
-    version: "1.0.0",
+    version: "1.0",
     description: "Eine Demo-App.",
     emoji: "🧪",
     stateful: false,

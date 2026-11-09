@@ -23,7 +23,7 @@ const schema = defineDataSchema({
   ],
 });
 
-function file(app: string, schemaVersion: number, data: unknown, savedWith = "1.0.0"): string {
+function file(app: string, schemaVersion: number, data: unknown, savedWith = "1.0"): string {
   return serializeEnvelope({ app, schemaVersion, appVersion: savedWith, data });
 }
 

@@ -7,7 +7,7 @@ describe("serializeEnvelope", () => {
     const text = serializeEnvelope({
       app: "demo",
       schemaVersion: 2,
-      appVersion: "1.2.3",
+      appVersion: "1.2",
       data: { items: [] },
       now: new Date("2026-11-09T12:00:00.000Z"),
     });
@@ -15,7 +15,7 @@ describe("serializeEnvelope", () => {
     expect(JSON.parse(text)).toEqual({
       app: "demo",
       schemaVersion: 2,
-      savedWith: "1.2.3",
+      savedWith: "1.2",
       savedAt: "2026-11-09T12:00:00.000Z",
       data: { items: [] },
     });

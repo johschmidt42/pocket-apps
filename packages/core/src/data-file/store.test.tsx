@@ -17,7 +17,7 @@ const schema = defineDataSchema({
 });
 
 const { DataFileProvider, useDataFile } = createDataFileStore(schema, {
-  app: testAppInfo({ title: "Demo", version: "1.0.0" }),
+  app: testAppInfo({ title: "Demo", version: "1.0" }),
   autosaveDelayMs: 0,
 });
 
@@ -46,7 +46,7 @@ function setup(fake: MemoryFileAccess) {
 }
 
 function dataFile(schemaVersion: number, data: unknown): string {
-  return serializeEnvelope({ app: "demo", schemaVersion, appVersion: "1.0.0", data });
+  return serializeEnvelope({ app: "demo", schemaVersion, appVersion: "1.0", data });
 }
 
 describe("start screen", () => {
@@ -54,7 +54,7 @@ describe("start screen", () => {
     setup(createMemoryFileAccess({ directSave: true }));
 
     expect(screen.getByRole("heading", { level: 1, name: "Demo" })).toBeInTheDocument();
-    expect(screen.getByText("Version 1.0.0")).toBeInTheDocument();
+    expect(screen.getByRole("banner")).toHaveTextContent("Version 1.0");
     expect(screen.getByRole("button", { name: "Neue Datei" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeInTheDocument();
     expect(screen.queryByText(/kann nicht direkt/)).not.toBeInTheDocument();
@@ -95,7 +95,7 @@ describe("new file", () => {
     expect(parseEnvelope(fake.downloads[0]?.text ?? "")).toMatchObject({
       app: "demo",
       schemaVersion: 2,
-      savedWith: "1.0.0",
+      savedWith: "1.0",
       data: { count: 0 },
     });
     expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");

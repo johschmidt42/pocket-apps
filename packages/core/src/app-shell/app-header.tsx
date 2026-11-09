@@ -19,7 +19,8 @@ export function AppHeader({ app }: { app: AppInfo }) {
         <div className="mr-auto flex min-w-0 items-baseline gap-2">
           <h1 className="truncate text-lg font-semibold">{app.title}</h1>
           <span className="text-xs whitespace-nowrap text-muted-foreground">
-            Version {app.version}
+            <span className="sr-only">Version </span>
+            {app.version}
           </span>
         </div>
         <ThemeToggle />

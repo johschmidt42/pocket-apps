@@ -3,6 +3,12 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: Versions with two numbers, icons on the launcher
+
+- **Decision:** App versions have two numbers, `major.minor`. Apps start at `1.0`. A big change increases the first number. A small change or fix increases the second.
+- **Detail:** npm needs three parts. `package.json` has `"1.0.0"`, and the third part is always `0`. The build shows `1.0` and validates the format.
+- **Decision:** The launcher shows the version without the word "Version". It shows data file and internet access as icons with a tooltip. Screen readers read the full text.
+
 ## 2026-11-09: Apps declare internet access
 
 - **Decision:** Each app declares `pocketApp.network` (`true` or `false`) in its `package.json`. The launcher shows "Braucht Internet" or "Offline" on each card.

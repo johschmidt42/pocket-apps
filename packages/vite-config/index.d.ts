@@ -9,7 +9,7 @@ export type AppInfo = {
   name: string;
   /** German display name (`pocketApp.title`). */
   title: string;
-  /** App version (`version`). */
+  /** App version as "major.minor", for example "1.2". `package.json` has "1.2.0". */
   version: string;
   /** German short description (`description`). */
   description: string;

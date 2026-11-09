@@ -33,7 +33,7 @@ for (const app of listApps()) {
         "content",
         app.version,
       );
-      await expect(page.getByText(`Version ${app.version}`)).toBeVisible();
+      await expect(page.getByRole("banner").first()).toContainText(app.version);
     });
 
     test("has the Tailwind styles", async ({ page }) => {

@@ -12,10 +12,12 @@ afterEach(() => {
 
 describe("AppHeader", () => {
   it("shows the title as the page heading and the version", () => {
-    render(<AppHeader app={testAppInfo({ title: "Zinsrechner", version: "1.2.3" })} />);
+    render(<AppHeader app={testAppInfo({ title: "Zinsrechner", version: "1.2" })} />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Zinsrechner" })).toBeInTheDocument();
-    expect(screen.getByText("Version 1.2.3")).toBeInTheDocument();
+    // Visible: "1.2". Screen readers read: "Version 1.2".
+    expect(screen.getByText("1.2")).toBeVisible();
+    expect(screen.getByRole("banner")).toHaveTextContent("Version 1.2");
   });
 
   it("links back to the launcher", () => {

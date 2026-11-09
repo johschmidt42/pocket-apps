@@ -9,7 +9,7 @@ import { ShoppingListView } from "./shopping-list-view.tsx";
 const fileText = JSON.stringify({
   app: "einkaufsliste",
   schemaVersion: 1,
-  savedWith: "0.1.0",
+  savedWith: "1.0",
   savedAt: "2026-11-09T12:00:00.000Z",
   data: {
     items: [

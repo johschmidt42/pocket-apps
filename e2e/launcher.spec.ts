@@ -12,9 +12,17 @@ test.describe("launcher (release/index.html)", () => {
     for (const app of listApps()) {
       const card = page.getByRole("link", { name: app.title });
       await expect(card).toHaveAttribute("href", `./${app.name}.html`);
-      await expect(card).toContainText(`Version ${app.version}`);
-      await expect(card).toContainText(app.stateful ? "Mit Datendatei" : "Ohne Daten");
-      await expect(card).toContainText(app.network ? "Braucht Internet" : "Offline");
+      await expect(card).toContainText(app.version);
+      await expect(
+        card.getByRole("img", {
+          name: app.stateful ? "Speichert Daten in einer eigenen Datei" : "Speichert keine Daten",
+        }),
+      ).toBeVisible();
+      await expect(
+        card.getByRole("img", {
+          name: app.network ? "Braucht Internet" : "Funktioniert ohne Internet",
+        }),
+      ).toBeVisible();
     }
     await expect(page.getByRole("link", { name: "Alle Apps" })).toHaveCount(0);
     expect(pageErrors).toEqual([]);
@@ -29,6 +37,18 @@ test.describe("launcher (release/index.html)", () => {
 
     await page.getByRole("link", { name: "Alle Apps" }).click();
     await expect(page.getByRole("heading", { level: 1, name: "Pocket Apps" })).toBeVisible();
+  });
+
+  test("shows a tooltip when the mouse is on an icon", async ({ page }) => {
+    const first = listApps()[0];
+    if (!first) throw new Error("There are no apps.");
+    const label = first.stateful
+      ? "Speichert Daten in einer eigenen Datei"
+      : "Speichert keine Daten";
+
+    await page.getByRole("link", { name: first.title }).getByRole("img", { name: label }).hover();
+
+    await expect(page.getByRole("tooltip")).toHaveText(label);
   });
 
   test("filters the apps by the search text", async ({ page }) => {

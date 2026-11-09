@@ -20,7 +20,10 @@ const repoConfigSchema = z.object({
 
 const packageSchema = z.object({
   name: z.string().regex(/^[a-z][a-z0-9-]*$/, "Use lowercase letters, digits and hyphens."),
-  version: z.string().regex(/^\d+\.\d+\.\d+$/, "Use semantic versioning, e.g. 0.1.0."),
+  // Versions are major.minor. npm needs three parts, so the third part is always 0.
+  version: z
+    .string()
+    .regex(/^\d+\.\d+\.0$/, 'Use "major.minor.0", for example "1.0.0" or "2.3.0".'),
   description: z.string().min(1),
   pocketApp: z.object({
     title: z.string().min(1),
@@ -67,7 +70,8 @@ export function readAppInfo(appDir) {
   return {
     name: pkg.name,
     title: pocketApp.title,
-    version: pkg.version,
+    // "1.2.0" → "1.2". Users see only major.minor.
+    version: pkg.version.replace(/\.0$/, ""),
     description: pkg.description,
     emoji: pocketApp.emoji,
     stateful: pocketApp.stateful,

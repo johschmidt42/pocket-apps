@@ -10,7 +10,7 @@ Most apps work offline. An app that needs an external API declares this in its `
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/einkaufsliste.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card has three labels: the version, "Mit Datendatei" or "Ohne Daten", and "Offline" or "Braucht Internet". The code is in `launcher/`.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and internet (globe "Braucht Internet" or crossed-out Wi-Fi "Funktioniert ohne Internet"). The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data file:** the JSON file with the user's data. The user chooses where it is.
 - **Stateful app:** an app with a data file. A stateless app keeps nothing after the tab closes.
@@ -79,7 +79,7 @@ Each app declares its info in its `package.json`:
 | Field                | Example                  | Meaning                                                                |
 | -------------------- | ------------------------ | ---------------------------------------------------------------------- |
 | `name`               | `"einkaufsliste"`        | Package name and app file name.                                        |
-| `version`            | `"0.1.0"`                | App version.                                                           |
+| `version`            | `"1.0.0"`                | App version `1.0`. The third part is always `0`.                       |
 | `description`        | `"Eine einfache Liste."` | German short text for the launcher card.                               |
 | `pocketApp.title`    | `"Einkaufsliste"`        | German display name.                                                   |
 | `pocketApp.emoji`    | `"🛒"`                   | One emoji as the icon on the launcher card.                            |
@@ -166,14 +166,16 @@ Each app declares its info in its `package.json`:
 
 There are two version numbers:
 
-- **App version:** `version` in the app's `package.json` (semantic versioning). The header and the launcher show it. The meta tag `pocket-app-version` contains it. The store writes it into the envelope as `savedWith`.
+- **App version:** two numbers, `major.minor`, for example `1.0` or `2.3`. The header and the launcher show it. The meta tag `pocket-app-version` contains it. The store writes it into the envelope as `savedWith`.
 - **Schema version:** the version of the data shape. Do not write it by hand. It is `1 + migrations.length`. The store writes it into the envelope as `schemaVersion`.
 
-Increase the app version for each release:
+Rules for the app version:
 
-- Patch (0.1.0 → 0.1.1): bug fix.
-- Minor (0.1.0 → 0.2.0): new feature or new data shape (migration).
-- Major (0.x → 1.0.0): only when the user asks for it.
+- A new app starts at `1.0`.
+- Big change: increase the first number and set the second to 0 (`1.4` → `2.0`). A big change is a new data shape (migration) or a change that the user clearly notices, for example a new screen.
+- Small change or fix: increase the second number (`1.0` → `1.1`). Examples: one new button, a text change, a bug fix.
+- Before the first app file is in the shared folder, the app stays at `1.0`.
+- There is no third number for users. npm needs three parts, so `package.json` has `"1.0.0"`. The third part is always `0`. The build shows `1.0` and stops if the third part is not `0`.
 
 The app file name has no version (`einkaufsliste.html`). A new file replaces the old file. Links stay the same.
 
@@ -213,7 +215,7 @@ Use a migration as soon as an app file with the old shape is in the shared folde
 6. Add `src/migrations/to-v<N>.test.ts`. Put an example of the old data in the test as a constant. The test checks the converted data.
 7. Never change or remove an old migration or its example data.
 8. In `schema.test.ts`, update the test that checks `currentVersion(schema)`.
-9. Increase the minor app version.
+9. Increase the first number of the app version (big change).
 
 ## Testing
 
@@ -233,7 +235,7 @@ Use a migration as soon as an app file with the old shape is in the shared folde
 
 1. Copy `apps/zinsrechner` (stateless) or `apps/einkaufsliste` (stateful) to `apps/<name>`.
 2. Delete the app logic, the components and the tests of the old app. Keep `index.html`, `vite.config.ts`, `tsconfig.json` and `src/main.tsx` (it only calls `mountApp(App)`).
-3. In `package.json`, set `name`, `version` (`"0.1.0"`), `description` and `pocketApp` (`title`, `emoji`, `stateful`, `network`).
+3. In `package.json`, set `name`, `version` (`"1.0.0"`), `description` and `pocketApp` (`title`, `emoji`, `stateful`, `network`).
 4. For a stateful app, set `app` in `schema.ts` to the package name. Start at schema version 1 with no migrations.
 5. Run `pnpm install`.
 6. Write the app, its unit tests and, for a stateful app, `e2e/<name>.spec.ts`.
