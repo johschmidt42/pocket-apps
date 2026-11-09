@@ -3,14 +3,6 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
-## 2026-11-09: Users and a shared data folder (validated, not built yet)
-
-- **Decision:** Users and their data live in one data folder that the user picks once in Chrome (`showDirectoryPicker`): `users.json` (all users) and `<user>/<app>.json` (data and preferences of one app). The launcher keeps the user preferences of the launcher in `<user>/launcher.json`, for example the order of the apps.
-- **Why:** Today each app needs a file dialog at each start. With the folder, the apps find the file of the active user themselves.
-- **Proof:** Prototype on the branch `prototype/workspace-folder` (see its README). In Chrome, under `file://`, with a folder in Google Drive: the folder handle stays known across pages and restarts (IndexedDB). After a restart, the access needs 2 clicks once per session ("Zugriff erlauben" + "Allow"). Pages after that need 0 clicks. Chrome offers no "Allow on every visit" under `file://`.
-- **Context:** Users are a convenience, not a login. Everyone with access to the folder can read all data. All users use Chrome. Browsers without `showDirectoryPicker` keep the file dialog flow.
-- **Sharing:** Share the app folder for viewing only. Share the data folder for editing. Then nobody can replace an app file.
-
 ## 2026-11-09: Own OAuth client for the Drive upload
 
 - **Decision:** rclone uses an OAuth client ("Desktop app") of our own Google Cloud project. The secrets `GDRIVE_CLIENT_ID` and `GDRIVE_CLIENT_SECRET` hold it.
