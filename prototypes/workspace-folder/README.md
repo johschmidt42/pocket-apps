@@ -23,3 +23,29 @@ Can Chrome let pocket-apps (HTML files opened via `file://`) use a data folder t
 - `showDirectoryPicker` exists under `file://`. The page is a secure context. Origin is `file://`.
 - IndexedDB works under `file://`. Two pages in the same folder share it. It survives a restart.
 - OPFS (`navigator.storage.getDirectory()`) is blocked under `file://` (SecurityError). Not needed.
+
+## Result (manual test in Chrome, 2026-11-09)
+
+Data folder inside the Google Drive folder ("PROTOTYP Pocket Apps Daten").
+
+| Question | Answer |
+| --- | --- |
+| Read and write `users.json` and `<user>/<app>.json` without a file dialog | Yes |
+| Folder known across pages (launcher → app → launcher) | Yes, permission "granted" at once, 0 clicks |
+| Folder known after a Chrome restart | Yes, but permission is "prompt" |
+| Clicks per Chrome session | 2, once: page button "Zugriff erlauben" + Chrome dialog "Allow" |
+| "Allow on every visit" offered | No (only "Allow" / "Don't Allow" under `file://`) |
+| Remove a user with data folder | Works (`removeEntry` recursive) |
+
+Verdict: the data folder approach works in Chrome. It replaces one file dialog per app and page load with 2 clicks per Chrome session for all apps.
+
+Log of the test:
+
+```text
+20:24:29 [Launcher] Beim Laden: Zugriff = prompt        (after Chrome restart)
+20:25:45 [Launcher] Zugriff angefragt (Chrome-Dialog) → granted
+20:25:49 [App] Beim Laden: Zugriff = granted
+20:26:20 [App] Notiz gespeichert in johannes/prototype-app.json – ohne Datei-Dialog
+20:26:40 [Launcher] Beim Laden: Zugriff = granted
+20:26:52 [Launcher] Nutzer entfernt: Anna + Datenordner gelöscht
+```
