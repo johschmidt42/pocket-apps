@@ -1,0 +1,30 @@
+{
+  "name": "zinsrechner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Berechnet Zinseszins für ein Startkapital.",
+  "pocketApp": {
+    "title": "Zinsrechner",
+    "stateful": false,
+    "emoji": "💶"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pocket-apps/core": "workspace:*",
+    "@pocket-apps/ui": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@pocket-apps/vite-config": "workspace:*",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.7"
+  }
+}

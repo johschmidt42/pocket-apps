@@ -1,0 +1,8 @@
+{
+  // Only for the config files in the root folder. Apps and packages have their own tsconfig.json.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["vitest.config.ts", "vitest.setup.ts", "playwright.config.ts"]
+}

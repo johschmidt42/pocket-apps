@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": [
+    "*.ts",
+    "../packages/core/src/data-file/file-access.ts",
+    "../packages/vite-config/index.d.ts"
+  ]
+}

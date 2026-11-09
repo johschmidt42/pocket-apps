@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/
+*.tsbuildinfo
+
+# Local files, not shared
+CLAUDE.local.md
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Release output (built by scripts/build-release.mjs)
+release/
+
+# Playwright
+test-results/
+playwright-report/

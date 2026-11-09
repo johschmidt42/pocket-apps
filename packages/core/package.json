@@ -1,0 +1,28 @@
+{
+  "name": "@pocket-apps/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./app-shell": "./src/app-shell/index.ts",
+    "./data-file": "./src/data-file/index.ts",
+    "./data-file/testing": "./src/data-file/testing.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pocket-apps/ui": "workspace:*",
+    "lucide-react": "1.70.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@pocket-apps/vite-config": "workspace:*",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "6.0.3"
+  }
+}
