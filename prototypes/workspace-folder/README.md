@@ -60,3 +60,15 @@ The same files, served by `python3 -m http.server` on `http://localhost:8765`.
 | After "Allow on every visit" and a Chrome restart | Access "granted" at once, **0 clicks** |
 
 Verdict: only a web origin (http://localhost or https://) gets the persistent permission. Under `file://`, Chrome asks again after each restart (2 clicks).
+
+## Result 3: GitHub Pages (https), desktop Chrome and Chrome on Android (2026-11-09)
+
+URL: https://johschmidt42.github.io/pocket-apps/prototypes/workspace-folder/prototype-launcher.html
+
+| Question | Desktop Chrome | Chrome on Android |
+| --- | --- | --- |
+| Folder dialog available | Yes | Yes |
+| Google Drive folder selectable | Yes (synced folder) | Yes (Drive in the Android dialog) |
+| Reads `users.json` from the Drive folder | Yes | Yes ("Johannes" shown) |
+| Permission text | "Allow on every visit" offered | "… while tabs of this site are open" |
+| After closing and reopening | 0 clicks (with "Allow on every visit") | Folder remembered, tap "Zugriff erlauben" again |
