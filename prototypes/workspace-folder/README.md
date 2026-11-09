@@ -49,3 +49,14 @@ Log of the test:
 20:26:40 [Launcher] Beim Laden: Zugriff = granted
 20:26:52 [Launcher] Nutzer entfernt: Anna + Datenordner gelöscht
 ```
+
+## Result 2: the same pages from a web address (http://localhost, 2026-11-09)
+
+The same files, served by `python3 -m http.server` on `http://localhost:8765`.
+
+| Question | Answer |
+| --- | --- |
+| Dialog after a Chrome restart | Three options: "Allow this time", **"Allow on every visit"**, "Don't allow" |
+| After "Allow on every visit" and a Chrome restart | Access "granted" at once, **0 clicks** |
+
+Verdict: only a web origin (http://localhost or https://) gets the persistent permission. Under `file://`, Chrome asks again after each restart (2 clicks).
