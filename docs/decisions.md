@@ -3,6 +3,13 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: Own OAuth client for the Drive upload
+
+- **Decision:** rclone uses an OAuth client ("Desktop app") of our own Google Cloud project. The secrets `GDRIVE_CLIENT_ID` and `GDRIVE_CLIENT_SECRET` hold it.
+- **Why:** rclone's shared client ID stops working in 2026. rclone showed this warning at the first upload.
+- **Detail:** The consent screen is "In production" with only the non-sensitive scope `drive.file`. Thus the login does not end after 7 days, and Google does not need to verify the app.
+- **Consequence:** `drive.file` gives access per client. The switch needed a new folder.
+
 ## 2026-11-09: CD to Google Drive with rclone and scope drive.file
 
 - **Decision:** `CD - Release` uploads `release/*.html` to a Google Drive folder with rclone. It starts after a successful `CI - E2E` run on `main`. It uploads the artifact of that run, thus exactly the tested files.

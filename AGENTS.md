@@ -304,10 +304,24 @@ The token has the Google Drive scope `drive.file`. With this scope, the token ca
 
 Repository settings (Settings → Secrets and variables → Actions):
 
-| Kind     | Name               | Value                                                                                 |
-| -------- | ------------------ | ------------------------------------------------------------------------------------- |
-| Secret   | `GDRIVE_TOKEN`     | The rclone OAuth token (JSON) of the remote `pocket-apps`.                            |
-| Variable | `GDRIVE_FOLDER_ID` | The ID of the Drive folder. Set it to turn the pipeline on. Delete it to turn it off. |
+| Kind     | Name                   | Value                                                                                 |
+| -------- | ---------------------- | ------------------------------------------------------------------------------------- |
+| Secret   | `GDRIVE_TOKEN`         | The rclone OAuth token (JSON) of the remote `pocket-apps`.                            |
+| Secret   | `GDRIVE_CLIENT_ID`     | The OAuth client ID of your Google Cloud project (type "Desktop app").                |
+| Secret   | `GDRIVE_CLIENT_SECRET` | The secret of this OAuth client.                                                      |
+| Variable | `GDRIVE_FOLDER_ID`     | The ID of the Drive folder. Set it to turn the pipeline on. Delete it to turn it off. |
+
+#### Google Cloud project (once)
+
+rclone needs an OAuth client of your own Google Cloud project. rclone's shared client stops working in 2026. Do these steps in the [Google Cloud Console](https://console.cloud.google.com). Add `?project=<project-id>` to each link.
+
+1. Enable the Google Drive API: [APIs & Services → Library → Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) → "Enable".
+2. Google Auth Platform → [Branding](https://console.cloud.google.com/auth/branding): app name `pocket-apps`, your email as support and developer contact.
+3. Google Auth Platform → [Audience](https://console.cloud.google.com/auth/audience): user type "External". Click "Publish app" so that the status is "In production". In "Testing", Google ends the login after 7 days.
+4. Google Auth Platform → [Data access](https://console.cloud.google.com/auth/scopes): add the scope `https://www.googleapis.com/auth/drive.file`. It is a non-sensitive scope, so Google does not need to verify the app.
+5. Google Auth Platform → [Clients](https://console.cloud.google.com/auth/clients/create): create a client of type "Desktop app", name `rclone pocket-apps`. Copy the client ID and the client secret.
+
+`drive.file` gives access per OAuth client. A new client cannot see the folder of the old client. The setup script then creates a new folder.
 
 #### Set up
 
@@ -316,6 +330,7 @@ Before you start:
 - You have admin rights on the GitHub repository.
 - `gh` is logged in (`gh auth status`).
 - `rclone` and `jq` are installed (`brew install rclone jq`).
+- You have the client ID and the client secret (see above).
 - You ran `pnpm install`.
 
 Run this in the repository root folder:
@@ -327,10 +342,11 @@ pnpm setup:google-drive "Meine Apps"     # or with another folder name
 
 The script does these steps:
 
-1. It creates the rclone remote `pocket-apps` with scope `drive.file`. Your browser opens. Log in with the Google account that must own the folder. The consent screen shows "rclone". Allow the access.
-2. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set, it uses that folder and creates no new one.
-3. It writes the token into the secret `GDRIVE_TOKEN`. It does not print the token.
-4. It writes the folder ID into the variable `GDRIVE_FOLDER_ID`.
+1. It asks for the client ID and the client secret (or reads `GDRIVE_CLIENT_ID` and `GDRIVE_CLIENT_SECRET` from the environment).
+2. It creates the rclone remote `pocket-apps` with scope `drive.file` and your client. Your browser opens. Log in with the Google account that must own the folder. The consent screen shows `pocket-apps`. Allow the access.
+3. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set and the client did not change, it uses that folder.
+4. It writes the token, the client ID and the client secret into the secrets. It does not print them.
+5. It writes the folder ID into the variable `GDRIVE_FOLDER_ID`.
 
 After the setup, you can move, rename and share the folder in Google Drive. The ID stays the same. You can run the script again at any time, for example after you removed the access. It keeps the folder.
 
@@ -345,9 +361,9 @@ To upload now, run `CI - E2E` on `main` again (Actions → CI - E2E → Re-run).
 #### Turn off and undo
 
 - Pause the uploads: `gh variable delete GDRIVE_FOLDER_ID`. The script finds the folder no longer. A new setup creates a new folder.
-- Remove the token from GitHub: `gh secret delete GDRIVE_TOKEN`.
+- Remove the secrets from GitHub: `gh secret delete GDRIVE_TOKEN`, `gh secret delete GDRIVE_CLIENT_ID`, `gh secret delete GDRIVE_CLIENT_SECRET`.
 - Remove the token from your computer: `rclone config delete pocket-apps`. The file `~/.config/rclone/rclone.conf` holds the token without encryption.
-- Stop the Google access at once: remove "rclone" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). This stops all rclone remotes of this Google account, not only this one.
+- Stop the Google access at once: remove "pocket-apps" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Or delete the OAuth client in the Google Cloud Console.
 - The folder and the app files stay in Google Drive. Delete them there if necessary.
 
 ## Definition of done
