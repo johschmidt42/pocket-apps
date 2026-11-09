@@ -1,5 +1,12 @@
 # pocket-apps
 
+[![CI - Lint](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-lint.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-lint.yml)
+[![CI - Format](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-format.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-format.yml)
+[![CI - Typecheck](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-typecheck.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-typecheck.yml)
+[![CI - Test](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-test.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-test.yml)
+[![CI - E2E](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-e2e.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-e2e.yml)
+[![CD - Release](https://github.com/johschmidt42/pocket-apps/actions/workflows/cd-release.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/cd-release.yml)
+
 Small personal apps. Each app is **one HTML file**. You open it with a double-click. It needs no server. Most apps also work without internet.
 
 ## For users
