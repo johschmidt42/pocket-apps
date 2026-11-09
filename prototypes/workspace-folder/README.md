@@ -83,3 +83,17 @@ URL: https://johschmidt42.github.io/pocket-apps/prototypes/workspace-folder/prot
 | Slow mode (save, read all again, then show) | several seconds per click |
 
 Verdict: Google Drive is usable on Android. Each file access goes over the network (~2–3 s), so the app must read once at the start, work in memory and save in the background. To hide the start time, show the last known state from browser storage and refresh it in the background. Warn before the user closes the app while a save is running.
+
+## Result 5: Google Drive API in the browser (prototype-drive.html, 2026-11-09)
+
+Google login (GIS token client), folder selection with Google Picker, files over the Drive REST API. Tested on desktop Chrome and Chrome on Android. No iPhone available.
+
+| Question | Result |
+| --- | --- |
+| Scope `drive.file` | Sees only files that the web app created itself. A picked folder gives **no** access to its children. Files written by the local mode (Drive for Desktop) or on Android stay invisible. |
+| Scope `drive` (restricted, app unverified) | Sees all files in the shared folder: `users.json`, `johannes/`, notes from the local test and from the Android test. Login shows "Google hasn't verified this app". Max. 100 users. |
+| Speed, desktop | 0.3–1.1 s per request; load all (5 sequential requests) 3.3 s |
+| Speed, Android | Add a note: visible after 2 ms, saved after 2.6 s (3–4 sequential requests) |
+| Reopen the page | Google login again (one click, consent is remembered). Access tokens live 1 h; a browser-only app cannot refresh them without a click. |
+
+Verdict: the Drive API works in any browser and shares the files with the local mode only with the full `drive` scope. The cost is a login click per new tab or hour, the "unverified app" warning, and a larger blast radius (full Drive access while logged in). A real app would cache file IDs: one request per save (< 1 s) and one list request plus parallel reads on start.
