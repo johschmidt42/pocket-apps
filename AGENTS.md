@@ -291,32 +291,64 @@ The CI pipelines run on each push to `main` and on each pull request. When `CI -
 
 ### CD - Release
 
-`CD - Release` uploads the app files to a Google Drive folder:
+`CD - Release` uploads the app files to a folder in Google Drive:
 
 1. It starts when `CI - E2E` passed on `main`.
 2. It downloads the artifact `release` of that run. It does not build again. Thus it uploads exactly the tested files.
 3. It runs `rclone sync release/ gdrive: --include "*.html"`. New and changed app files go to the folder. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
 4. It runs only if the repository variable `GDRIVE_FOLDER_ID` is set. Without the variable, GitHub skips it.
 
-The pipeline uses [rclone](https://rclone.org) with the Google Drive scope `drive.file`. With this scope, the token can access only the files that rclone created. It cannot see other files in the Drive.
+[rclone](https://rclone.org) is a command-line tool that copies files to cloud storage. The pipeline configures its remote `gdrive` only with environment variables. Your computer has the remote `pocket-apps`. Both use the same token.
+
+The token has the Google Drive scope `drive.file`. With this scope, the token can access only the files that rclone created. It cannot see other files in the Drive.
 
 Repository settings (Settings → Secrets and variables → Actions):
 
-| Kind     | Name               | Value                                                                                           |
-| -------- | ------------------ | ----------------------------------------------------------------------------------------------- |
-| Secret   | `GDRIVE_TOKEN`     | The rclone OAuth token (JSON) of the remote `pocket-apps`.                                      |
-| Variable | `GDRIVE_FOLDER_ID` | The ID of the Drive folder. Set it to turn the pipeline on. Delete it to turn the pipeline off. |
+| Kind     | Name               | Value                                                                                 |
+| -------- | ------------------ | ------------------------------------------------------------------------------------- |
+| Secret   | `GDRIVE_TOKEN`     | The rclone OAuth token (JSON) of the remote `pocket-apps`.                            |
+| Variable | `GDRIVE_FOLDER_ID` | The ID of the Drive folder. Set it to turn the pipeline on. Delete it to turn it off. |
 
-`pnpm setup:google-drive` (`scripts/setup-google-drive.sh`) does the setup. It needs `rclone`, `jq` and a logged-in `gh`. It does these steps:
+#### Set up
 
-1. It creates the rclone remote `pocket-apps` with scope `drive.file`. The browser opens for the Google login.
-2. It creates the folder "Pocket Apps" in the Drive. With scope `drive.file`, rclone must create the folder itself.
-3. It writes the token into the secret `GDRIVE_TOKEN` (`gh secret set`).
-4. It writes the folder ID into the variable `GDRIVE_FOLDER_ID` (`gh variable set`).
+Before you start:
 
-After the setup, you can move, rename and share the folder in Google Drive. The ID stays the same.
+- You have admin rights on the GitHub repository.
+- `gh` is logged in (`gh auth status`).
+- `rclone` and `jq` are installed (`brew install rclone jq`).
+- You ran `pnpm install`.
 
-To stop access at once: remove "rclone" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Then run the setup again.
+Run this in the repository root folder:
+
+```sh
+pnpm setup:google-drive                  # creates the folder "Pocket Apps"
+pnpm setup:google-drive "Meine Apps"     # or with another folder name
+```
+
+The script does these steps:
+
+1. It creates the rclone remote `pocket-apps` with scope `drive.file`. Your browser opens. Log in with the Google account that must own the folder. The consent screen shows "rclone". Allow the access.
+2. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set, it uses that folder and creates no new one.
+3. It writes the token into the secret `GDRIVE_TOKEN`. It does not print the token.
+4. It writes the folder ID into the variable `GDRIVE_FOLDER_ID`.
+
+After the setup, you can move, rename and share the folder in Google Drive. The ID stays the same. You can run the script again at any time, for example after you removed the access. It keeps the folder.
+
+#### Check
+
+```sh
+gh run list --workflow "CD - Release" --limit 3
+```
+
+To upload now, run `CI - E2E` on `main` again (Actions → CI - E2E → Re-run). The script prints the exact command.
+
+#### Turn off and undo
+
+- Pause the uploads: `gh variable delete GDRIVE_FOLDER_ID`. The script finds the folder no longer. A new setup creates a new folder.
+- Remove the token from GitHub: `gh secret delete GDRIVE_TOKEN`.
+- Remove the token from your computer: `rclone config delete pocket-apps`. The file `~/.config/rclone/rclone.conf` holds the token without encryption.
+- Stop the Google access at once: remove "rclone" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). This stops all rclone remotes of this Google account, not only this one.
+- The folder and the app files stay in Google Drive. Delete them there if necessary.
 
 ## Definition of done
 

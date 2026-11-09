@@ -55,7 +55,7 @@ pnpm e2e                          # build, then browser tests
 pnpm build                        # builds release/index.html and release/<app>.html
 ```
 
-The pipeline `CD - Release` uploads the app files to the shared Google Drive folder after each successful test run on `main`. Run `pnpm setup:google-drive` once to set it up. See "CD - Release" in [AGENTS.md](AGENTS.md).
+The pipeline `CD - Release` uploads the app files to a Google Drive folder after each successful test run on `main`. You can share this folder with other people. To set it up, run `pnpm setup:google-drive` once in the repository root folder. See "CD - Release" in [AGENTS.md](AGENTS.md) for the prerequisites, the check and the undo steps.
 
 ## Apps
 
