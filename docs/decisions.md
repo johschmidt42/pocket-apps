@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: GitHub Actions and Conventional Commits
+
+- **Decision:** CI pipelines are named `CI - <what>`. CD pipelines are named `CD - <what>`.
+- **Decision:** The first pipelines are the lint checks: `CI - Lint` (ESLint), `CI - Format` (Prettier) and `CI - Typecheck` (TypeScript). Each check is a separate pipeline. Then GitHub shows which check failed.
+- **Decision:** A local composite action `.github/actions/setup` installs Node.js 24, pnpm and the dependencies. All pipelines use it.
+- **Decision:** Commit messages follow Conventional Commits. The scope is the app or package.
+- **Open:** Pipelines for unit tests and browser tests. A CD pipeline that publishes `release/`.
+
 ## 2026-11-09: Versions with two numbers, icons on the launcher
 
 - **Decision:** App versions have two numbers, `major.minor`. Apps start at `1.0`. A big change increases the first number. A small change or fix increases the second.

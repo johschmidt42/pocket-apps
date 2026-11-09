@@ -53,6 +53,7 @@ packages/vite-config/      Shared Vite config. Reads app info and pocket-apps.co
 pocket-apps.config.json    Settings for all apps, for example the back link.
 scripts/build-release.mjs  Copies the built files to release/.
 e2e/                       Browser tests (Playwright) for the files in release/.
+.github/                   GitHub Actions: pipelines in workflows/, shared setup in actions/setup/.
 docs/decisions.md          Why we chose the tools and patterns.
 ```
 
@@ -243,6 +244,46 @@ Use a migration as soon as an app file with the old shape is in the shared folde
 8. Add the app to the table in `README.md`.
 
 A new app needs no decision entry.
+
+## Git commits
+
+Write commit messages in the style of Conventional Commits: `<type>(<scope>): <summary>`.
+
+- Types: `feat` (new feature), `fix` (bug fix), `docs`, `test`, `refactor`, `chore` (tooling, config), `ci` (pipelines), `build` (build setup).
+- Dependency updates: `chore(deps): update vite to 8.4.0`.
+- Scope: the app or package that the commit changes, for example `einkaufsliste`, `zinsrechner`, `launcher`, `core`, `ui`, `vite-config`.
+- If a commit changes several apps or packages, leave out the scope: `feat: two-part app versions`.
+- Write the summary in English, in the imperative, in lower case, without a period: `fix(zinsrechner): read "10.000" as ten thousand`.
+- Put details in the body as a short list.
+
+Examples:
+
+```text
+feat(einkaufsliste): add quantity to each item
+fix(core): keep the backup before a migration
+ci: add lint pipelines
+docs: explain the back link config
+```
+
+## CI and CD
+
+GitHub Actions run the pipelines in `.github/workflows/`.
+
+- Name a CI pipeline (checks) `CI - <what>`, for example `CI - Lint`. File name: `ci-<what>.yml`.
+- Name a CD pipeline (delivery) `CD - <what>`, for example `CD - Release`. File name: `cd-<what>.yml`.
+- Use the local action `./.github/actions/setup` to install Node.js, pnpm and the dependencies. Do not repeat these steps.
+- Give each pipeline `permissions: contents: read`, unless it needs more.
+- Use the same commands as on your computer (`pnpm lint`, `pnpm typecheck`). Do not write special commands for CI.
+
+Current pipelines:
+
+| Pipeline         | File               | Runs                |
+| ---------------- | ------------------ | ------------------- |
+| `CI - Lint`      | `ci-lint.yml`      | `pnpm lint`         |
+| `CI - Format`    | `ci-format.yml`    | `pnpm format:check` |
+| `CI - Typecheck` | `ci-typecheck.yml` | `pnpm typecheck`    |
+
+All pipelines run on each push to `main` and on each pull request.
 
 ## Definition of done
 
