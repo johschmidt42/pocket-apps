@@ -272,6 +272,7 @@ GitHub Actions run the pipelines in `.github/workflows/`.
 - Name a CI pipeline (checks) `CI - <what>`, for example `CI - Lint`. File name: `ci-<what>.yml`.
 - Name a CD pipeline (delivery) `CD - <what>`, for example `CD - Release`. File name: `cd-<what>.yml`.
 - Use the local action `./.github/actions/setup` to install Node.js, pnpm and the dependencies. Do not repeat these steps.
+- In CD pipelines, use only official GitHub actions. Pin them to a commit hash with the tag as a comment. CD pipelines have access to secrets.
 - Give each pipeline `permissions: contents: read`, unless it needs more.
 - Use the same commands as on your computer (`pnpm lint`, `pnpm typecheck`). Do not write special commands for CI.
 
@@ -284,8 +285,38 @@ Current pipelines:
 | `CI - Typecheck` | `ci-typecheck.yml` | `pnpm typecheck`                                |
 | `CI - Test`      | `ci-test.yml`      | `pnpm coverage`                                 |
 | `CI - E2E`       | `ci-e2e.yml`       | `pnpm e2e:install --with-deps`, then `pnpm e2e` |
+| `CD - Release`   | `cd-release.yml`   | Upload of `release/*.html` to Google Drive      |
 
-All pipelines run on each push to `main` and on each pull request. When `CI - E2E` fails, it uploads the Playwright report as the artifact `playwright-report`.
+The CI pipelines run on each push to `main` and on each pull request. When `CI - E2E` fails, it uploads the Playwright report as the artifact `playwright-report`. When it passes, it uploads `release/` as the artifact `release`.
+
+### CD - Release
+
+`CD - Release` uploads the app files to a Google Drive folder:
+
+1. It starts when `CI - E2E` passed on `main`.
+2. It downloads the artifact `release` of that run. It does not build again. Thus it uploads exactly the tested files.
+3. It runs `rclone sync release/ gdrive: --include "*.html"`. New and changed app files go to the folder. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
+4. It runs only if the repository variable `GDRIVE_FOLDER_ID` is set. Without the variable, GitHub skips it.
+
+The pipeline uses [rclone](https://rclone.org) with the Google Drive scope `drive.file`. With this scope, the token can access only the files that rclone created. It cannot see other files in the Drive.
+
+Repository settings (Settings → Secrets and variables → Actions):
+
+| Kind     | Name               | Value                                                                                           |
+| -------- | ------------------ | ----------------------------------------------------------------------------------------------- |
+| Secret   | `GDRIVE_TOKEN`     | The rclone OAuth token (JSON) of the remote `pocket-apps`.                                      |
+| Variable | `GDRIVE_FOLDER_ID` | The ID of the Drive folder. Set it to turn the pipeline on. Delete it to turn the pipeline off. |
+
+`pnpm setup:google-drive` (`scripts/setup-google-drive.sh`) does the setup. It needs `rclone`, `jq` and a logged-in `gh`. It does these steps:
+
+1. It creates the rclone remote `pocket-apps` with scope `drive.file`. The browser opens for the Google login.
+2. It creates the folder "Pocket Apps" in the Drive. With scope `drive.file`, rclone must create the folder itself.
+3. It writes the token into the secret `GDRIVE_TOKEN` (`gh secret set`).
+4. It writes the folder ID into the variable `GDRIVE_FOLDER_ID` (`gh variable set`).
+
+After the setup, you can move, rename and share the folder in Google Drive. The ID stays the same.
+
+To stop access at once: remove "rclone" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Then run the setup again.
 
 ## Definition of done
 

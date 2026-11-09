@@ -1,0 +1,59 @@
+name: CD - Release
+
+# Uploads the app files to Google Drive after "CI - E2E" passed on main.
+# It runs only when the repository variable GDRIVE_FOLDER_ID is set.
+# Setup: see "CD - Release" in AGENTS.md.
+
+on:
+  workflow_run:
+    workflows: ["CI - E2E"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  # Needed to download the artifact of the "CI - E2E" run.
+  actions: read
+
+concurrency:
+  group: cd-release
+  cancel-in-progress: false
+
+jobs:
+  google-drive:
+    name: Upload to Google Drive
+    if: vars.GDRIVE_FOLDER_ID != '' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # The files that "CI - E2E" built and tested. No new build.
+      - name: Download tested release files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Check the secret
+        env:
+          GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+        run: |
+          if [ -z "$GDRIVE_TOKEN" ]; then
+            echo "::error::The secret GDRIVE_TOKEN is missing. See 'CD - Release' in AGENTS.md."
+            exit 1
+          fi
+
+      - name: Install rclone
+        run: sudo apt-get update -q && sudo apt-get install -y -q rclone
+
+      # Only HTML files: the sync never touches data files (*.json) in the folder.
+      # Scope drive.file: rclone sees only the files that it created itself.
+      - name: Upload to Google Drive
+        env:
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive.file
+          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: ${{ vars.GDRIVE_FOLDER_ID }}
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+        run: |
+          rclone sync release/ gdrive: --include "*.html" --verbose

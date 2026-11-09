@@ -40,6 +40,8 @@ export default defineConfig([
     "**/dist/",
     "**/coverage/",
     "release/",
+    "playwright-report/",
+    "test-results/",
     "pnpm-lock.yaml",
     // shadcn components are vendor code. We use them without changes.
     "packages/ui/src/components/",

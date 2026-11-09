@@ -55,7 +55,7 @@ pnpm e2e                          # build, then browser tests
 pnpm build                        # builds release/index.html and release/<app>.html
 ```
 
-To publish, copy the content of `release/` into the shared folder. Automation with GitHub Actions comes later.
+The pipeline `CD - Release` uploads the app files to the shared Google Drive folder after each successful test run on `main`. Run `pnpm setup:google-drive` once to set it up. See "CD - Release" in [AGENTS.md](AGENTS.md).
 
 ## Apps
 

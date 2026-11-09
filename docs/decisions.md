@@ -3,6 +3,15 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: CD to Google Drive with rclone and scope drive.file
+
+- **Decision:** `CD - Release` uploads `release/*.html` to a Google Drive folder with rclone. It starts after a successful `CI - E2E` run on `main`. It uploads the artifact of that run, thus exactly the tested files.
+- **Decision:** The repository variable `GDRIVE_FOLDER_ID` turns the pipeline on. The secret `GDRIVE_TOKEN` holds the rclone OAuth token.
+- **Decision:** The token has the scope `drive.file`. It can only access files that rclone created. If the token leaks, an attacker can change or delete only the app files, not other files in the Drive.
+- **Consequence:** rclone must create the folder itself. The folder that the user created before cannot be used.
+- **Rejected:** Full Drive scope (a leaked token gives access to the whole Drive). A separate Google account (more setup, the data files in the shared folder are still visible). A service account (no storage quota in a personal Drive).
+- **Detail:** The CD job uses only official GitHub actions, pinned to a commit hash.
+
 ## 2026-11-09: GitHub Actions and Conventional Commits
 
 - **Decision:** CI pipelines are named `CI - <what>`. CD pipelines are named `CD - <what>`.
@@ -10,7 +19,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** A local composite action `.github/actions/setup` installs Node.js 24, pnpm and the dependencies. All pipelines use it.
 - **Decision:** Commit messages follow Conventional Commits. The scope is the app or package.
 - **Added:** `CI - Test` (unit tests with coverage) and `CI - E2E` (browser tests in Chromium, Firefox and WebKit). `CI - E2E` caches the Playwright browsers and retries a failed test once.
-- **Open:** A CD pipeline that publishes `release/`.
+- **Added:** `CD - Release`. See "CD to Google Drive with rclone and scope drive.file".
 
 ## 2026-11-09: Versions with two numbers, icons on the launcher
 
