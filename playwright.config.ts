@@ -6,7 +6,9 @@ export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
   forbidOnly: process.env.CI !== undefined,
-  reporter: "list",
+  // In CI, retry once and write an HTML report. The pipeline uploads it when a test fails.
+  retries: process.env.CI === undefined ? 0 : 1,
+  reporter: process.env.CI === undefined ? "list" : [["list"], ["html", { open: "never" }]],
   projects: [
     { name: "chromium", use: devices["Desktop Chrome"] },
     { name: "firefox", use: devices["Desktop Firefox"] },

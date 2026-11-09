@@ -9,7 +9,8 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** The first pipelines are the lint checks: `CI - Lint` (ESLint), `CI - Format` (Prettier) and `CI - Typecheck` (TypeScript). Each check is a separate pipeline. Then GitHub shows which check failed.
 - **Decision:** A local composite action `.github/actions/setup` installs Node.js 24, pnpm and the dependencies. All pipelines use it.
 - **Decision:** Commit messages follow Conventional Commits. The scope is the app or package.
-- **Open:** Pipelines for unit tests and browser tests. A CD pipeline that publishes `release/`.
+- **Added:** `CI - Test` (unit tests with coverage) and `CI - E2E` (browser tests in Chromium, Firefox and WebKit). `CI - E2E` caches the Playwright browsers and retries a failed test once.
+- **Open:** A CD pipeline that publishes `release/`.
 
 ## 2026-11-09: Versions with two numbers, icons on the launcher
 

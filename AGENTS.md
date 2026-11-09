@@ -277,13 +277,15 @@ GitHub Actions run the pipelines in `.github/workflows/`.
 
 Current pipelines:
 
-| Pipeline         | File               | Runs                |
-| ---------------- | ------------------ | ------------------- |
-| `CI - Lint`      | `ci-lint.yml`      | `pnpm lint`         |
-| `CI - Format`    | `ci-format.yml`    | `pnpm format:check` |
-| `CI - Typecheck` | `ci-typecheck.yml` | `pnpm typecheck`    |
+| Pipeline         | File               | Runs                                            |
+| ---------------- | ------------------ | ----------------------------------------------- |
+| `CI - Lint`      | `ci-lint.yml`      | `pnpm lint`                                     |
+| `CI - Format`    | `ci-format.yml`    | `pnpm format:check`                             |
+| `CI - Typecheck` | `ci-typecheck.yml` | `pnpm typecheck`                                |
+| `CI - Test`      | `ci-test.yml`      | `pnpm coverage`                                 |
+| `CI - E2E`       | `ci-e2e.yml`       | `pnpm e2e:install --with-deps`, then `pnpm e2e` |
 
-All pipelines run on each push to `main` and on each pull request.
+All pipelines run on each push to `main` and on each pull request. When `CI - E2E` fails, it uploads the Playwright report as the artifact `playwright-report`.
 
 ## Definition of done
 
