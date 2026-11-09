@@ -5,7 +5,7 @@ export type BackLink = { href: string; label: string };
 
 /** The info of one app. It comes from the app's package.json and pocket-apps.config.json. */
 export type AppInfo = {
-  /** Package name and file name, for example "einkaufsliste". */
+  /** Package name and file name, for example "app-ideen". */
   name: string;
   /** German display name (`pocketApp.title`). */
   title: string;

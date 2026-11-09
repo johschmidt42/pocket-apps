@@ -2,9 +2,9 @@ import { currentVersion } from "@pocket-apps/core/data-file";
 import { describe, expect, it } from "vitest";
 import { schema } from "./schema.ts";
 
-describe("einkaufsliste schema", () => {
+describe("app-ideen schema", () => {
   it("has the app ID of the data file", () => {
-    expect(schema.app).toBe("einkaufsliste");
+    expect(schema.app).toBe("app-ideen");
   });
 
   it("is at version 1", () => {
@@ -13,6 +13,12 @@ describe("einkaufsliste schema", () => {
   });
 
   it("starts with an empty list that is valid", () => {
-    expect(schema.validate.parse(schema.initial())).toEqual({ items: [] });
+    expect(schema.validate.parse(schema.initial())).toEqual({ ideas: [] });
+  });
+
+  it("rejects an idea without a title", () => {
+    expect(
+      schema.validate.safeParse({ ideas: [{ id: "a", title: "", description: "" }] }).success,
+    ).toBe(false);
   });
 });

@@ -1,12 +1,12 @@
 {
-  "name": "einkaufsliste",
+  "name": "app-ideen",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Eine einfache Einkaufsliste. Die Liste liegt in einer eigenen Datei.",
+  "description": "Sammelt Ideen für neue Apps. Die Ideen liegen in einer eigenen Datei.",
   "pocketApp": {
-    "title": "Einkaufsliste",
-    "emoji": "🛒",
+    "title": "App-Ideen",
+    "emoji": "💡",
     "stateful": true,
     "network": false
   },

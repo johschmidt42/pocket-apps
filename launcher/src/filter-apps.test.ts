@@ -5,9 +5,9 @@ import { filterApps } from "./filter-apps.ts";
 const apps = [
   testAppInfo({ name: "zinsrechner", title: "Zinsrechner", description: "Zinseszins rechnen." }),
   testAppInfo({
-    name: "einkaufsliste",
-    title: "Einkaufsliste",
-    description: "Was ich kaufen will.",
+    name: "app-ideen",
+    title: "App-Ideen",
+    description: "Ideen für neue Apps.",
   }),
 ];
 
@@ -21,7 +21,7 @@ describe("filterApps", () => {
   });
 
   it("finds apps by description", () => {
-    expect(filterApps(apps, "kaufen").map((app) => app.name)).toEqual(["einkaufsliste"]);
+    expect(filterApps(apps, "neue apps").map((app) => app.name)).toEqual(["app-ideen"]);
   });
 
   it("returns no apps when nothing matches", () => {

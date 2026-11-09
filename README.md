@@ -27,7 +27,7 @@ The header shows the app version, for example `1.0`. The moon button switches to
 
 ### Keep your data
 
-Some apps keep data, for example a shopping list. These apps ask you to create or open a data file (`.json`).
+Some apps keep data, for example a list of ideas. These apps ask you to create or open a data file (`.json`).
 
 - Keep the data file in a safe place, for example in your own OneDrive or Google Drive folder.
 - Use one data file in one browser tab at a time. Two open tabs can overwrite each other's changes.
@@ -39,13 +39,13 @@ For Firefox and Safari, set the browser to ask where to save each download:
 - Firefox: Settings → General → Downloads → "Always ask you where to save files".
 - Safari: Settings → General → "File download location" → "Ask for each download".
 
-Then select your old data file in the save dialog. Confirm that you want to replace it. Without this setting, the browser saves a new file in your download folder, for example `einkaufsliste (1).json`. Then open that new file next time.
+Then select your old data file in the save dialog. Confirm that you want to replace it. Without this setting, the browser saves a new file in your download folder, for example `app-ideen (1).json`. Then open that new file next time.
 
 ### Updates
 
 - The owner of the shared folder copies new app files into it. You do not have to do anything.
 - If you keep a copy of an app file on your computer, replace it with the new file.
-- A new app version can change the data format. Then the app downloads a copy of your old data file before it changes anything. The copy has a name like `einkaufsliste.backup-v1.json`. The number is the old data format, not the app version.
+- A new app version can change the data format. Then the app downloads a copy of your old data file before it changes anything. The copy has a name like `app-ideen.backup-v1.json`. The number is the old data format, not the app version.
 - An old app version cannot open data from a newer version. It shows an error. Use the newest app file.
 
 ## For developers
@@ -57,7 +57,7 @@ nvm install && nvm use            # Node.js 24 from .nvmrc
 brew install pnpm
 pnpm install
 pnpm e2e:install                  # test browsers, once
-pnpm --filter einkaufsliste dev   # dev server for one app
+pnpm --filter app-ideen dev       # dev server for one app
 pnpm check                        # typecheck, lint, format, unit tests
 pnpm e2e                          # build, then browser tests
 pnpm build                        # builds release/index.html and release/<app>.html
@@ -67,7 +67,7 @@ The pipeline `CD - Release` uploads the app files to a Google Drive folder after
 
 ## Apps
 
-| App           | Data file | Internet | Description                      |
-| ------------- | --------- | -------- | -------------------------------- |
-| zinsrechner   | no        | no       | Compound interest for a capital. |
-| einkaufsliste | yes       | no       | A simple shopping list.          |
+| App         | Data file | Internet | Description                      |
+| ----------- | --------- | -------- | -------------------------------- |
+| zinsrechner | no        | no       | Compound interest for a capital. |
+| app-ideen   | yes       | no       | Collects ideas for new apps.     |

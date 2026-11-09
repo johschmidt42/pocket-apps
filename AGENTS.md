@@ -9,7 +9,7 @@ Most apps work offline. An app that needs an external API declares this in its `
 
 ## Terms
 
-- **App file:** the built HTML file of one app, for example `release/einkaufsliste.html`.
+- **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
 - **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and internet (globe "Braucht Internet" or crossed-out Wi-Fi "Funktioniert ohne Internet"). The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data file:** the JSON file with the user's data. The user chooses where it is.
@@ -29,16 +29,16 @@ Use Node.js 24. The file `.nvmrc` sets the exact version (for example `24.22.2`)
 Install pnpm once with Homebrew: `brew install pnpm`. pnpm then uses the version in `packageManager` of `package.json`.
 Install the test browsers once: `pnpm e2e:install`.
 
-| Command                                    | What it does                                                          |
-| ------------------------------------------ | --------------------------------------------------------------------- |
-| `pnpm install`                             | Install all dependencies.                                             |
-| `pnpm --filter <app> dev`                  | Start the dev server for one app, e.g. `einkaufsliste` or `launcher`. |
-| `pnpm check`                               | Typecheck, lint, format check, unit tests with coverage.              |
-| `pnpm build`                               | Build all apps and the launcher into `release/`.                      |
-| `pnpm e2e`                                 | Build, then test the files in Chromium, Firefox and WebKit.           |
-| `pnpm check:all`                           | `pnpm check` and `pnpm e2e`.                                          |
-| `pnpm format`                              | Format all files with Prettier.                                       |
-| `cd packages/ui && pnpm shadcn add <name>` | Add a shadcn component to `packages/ui`.                              |
+| Command                                    | What it does                                                      |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| `pnpm install`                             | Install all dependencies.                                         |
+| `pnpm --filter <app> dev`                  | Start the dev server for one app, e.g. `app-ideen` or `launcher`. |
+| `pnpm check`                               | Typecheck, lint, format check, unit tests with coverage.          |
+| `pnpm build`                               | Build all apps and the launcher into `release/`.                  |
+| `pnpm e2e`                                 | Build, then test the files in Chromium, Firefox and WebKit.       |
+| `pnpm check:all`                           | `pnpm check` and `pnpm e2e`.                                      |
+| `pnpm format`                              | Format all files with Prettier.                                   |
+| `cd packages/ui && pnpm shadcn add <name>` | Add a shadcn component to `packages/ui`.                          |
 
 ## Layout
 
@@ -80,11 +80,11 @@ Each app declares its info in its `package.json`:
 
 | Field                | Example                  | Meaning                                                                |
 | -------------------- | ------------------------ | ---------------------------------------------------------------------- |
-| `name`               | `"einkaufsliste"`        | Package name and app file name.                                        |
+| `name`               | `"app-ideen"`            | Package name and app file name.                                        |
 | `version`            | `"1.0.0"`                | App version `1.0`. The third part is always `0`.                       |
 | `description`        | `"Eine einfache Liste."` | German short text for the launcher card.                               |
-| `pocketApp.title`    | `"Einkaufsliste"`        | German display name.                                                   |
-| `pocketApp.emoji`    | `"🛒"`                   | One emoji as the icon on the launcher card.                            |
+| `pocketApp.title`    | `"App-Ideen"`            | German display name.                                                   |
+| `pocketApp.emoji`    | `"💡"`                   | One emoji as the icon on the launcher card.                            |
 | `pocketApp.stateful` | `true`                   | `true` if the app has a data file.                                     |
 | `pocketApp.network`  | `false`                  | `true` if the app needs the internet, for example for an external API. |
 | `pocketApp.backLink` | `false`                  | Optional. `false` turns the back link off for this app.                |
@@ -179,7 +179,7 @@ Rules for the app version:
 - Before the first app file is in the shared folder, the app stays at `1.0`.
 - There is no third number for users. npm needs three parts, so `package.json` has `"1.0.0"`. The third part is always `0`. The build shows `1.0` and stops if the third part is not `0`.
 
-The app file name has no version (`einkaufsliste.html`). A new file replaces the old file. Links stay the same.
+The app file name has no version (`app-ideen.html`). A new file replaces the old file. Links stay the same.
 
 ## Data files and migrations
 
@@ -235,7 +235,7 @@ Use a migration as soon as an app file with the old shape is in the shared folde
 
 ## Add a new app
 
-1. Copy `apps/zinsrechner` (stateless) or `apps/einkaufsliste` (stateful) to `apps/<name>`.
+1. Copy `apps/zinsrechner` (stateless) or `apps/app-ideen` (stateful) to `apps/<name>`.
 2. Delete the app logic, the components and the tests of the old app. Keep `index.html`, `vite.config.ts`, `tsconfig.json` and `src/main.tsx` (it only calls `mountApp(App)`).
 3. In `package.json`, set `name`, `version` (`"1.0.0"`), `description` and `pocketApp` (`title`, `emoji`, `stateful`, `network`).
 4. For a stateful app, set `app` in `schema.ts` to the package name. Start at schema version 1 with no migrations.
@@ -252,7 +252,7 @@ Write commit messages in the style of Conventional Commits: `<type>(<scope>): <s
 
 - Types: `feat` (new feature), `fix` (bug fix), `docs`, `test`, `refactor`, `chore` (tooling, config), `ci` (pipelines), `build` (build setup).
 - Dependency updates: `chore(deps): update vite to 8.4.0`.
-- Scope: the app or package that the commit changes, for example `einkaufsliste`, `zinsrechner`, `launcher`, `core`, `ui`, `vite-config`.
+- Scope: the app or package that the commit changes, for example `app-ideen`, `zinsrechner`, `launcher`, `core`, `ui`, `vite-config`.
 - If a commit changes several apps or packages, leave out the scope: `feat: two-part app versions`.
 - Write the summary in English, in the imperative, in lower case, without a period: `fix(zinsrechner): read "10.000" as ten thousand`.
 - Put details in the body as a short list.
@@ -260,7 +260,7 @@ Write commit messages in the style of Conventional Commits: `<type>(<scope>): <s
 Examples:
 
 ```text
-feat(einkaufsliste): add quantity to each item
+feat(app-ideen): add a priority to each idea
 fix(core): keep the backup before a migration
 ci: add lint pipelines
 docs: explain the back link config

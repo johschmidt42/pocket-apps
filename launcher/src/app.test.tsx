@@ -6,7 +6,7 @@ import { App } from "./app.tsx";
 
 const apps = [
   testAppInfo({ name: "zinsrechner", title: "Zinsrechner", version: "1.2", stateful: false }),
-  testAppInfo({ name: "einkaufsliste", title: "Einkaufsliste", stateful: true, network: true }),
+  testAppInfo({ name: "app-ideen", title: "App-Ideen", stateful: true, network: true }),
 ];
 
 describe("Launcher", () => {
@@ -17,9 +17,9 @@ describe("Launcher", () => {
       "href",
       "./zinsrechner.html",
     );
-    expect(screen.getByRole("link", { name: "Einkaufsliste" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "App-Ideen" })).toHaveAttribute(
       "href",
-      "./einkaufsliste.html",
+      "./app-ideen.html",
     );
     const zins = screen.getByRole("link", { name: "Zinsrechner" });
     expect(zins).toHaveTextContent("Version 1.2");
@@ -27,7 +27,7 @@ describe("Launcher", () => {
     expect(
       within(zins).getByRole("img", { name: "Funktioniert ohne Internet" }),
     ).toBeInTheDocument();
-    const liste = screen.getByRole("link", { name: "Einkaufsliste" });
+    const liste = screen.getByRole("link", { name: "App-Ideen" });
     expect(
       within(liste).getByRole("img", { name: "Speichert Daten in einer eigenen Datei" }),
     ).toBeInTheDocument();
@@ -38,9 +38,9 @@ describe("Launcher", () => {
     const user = userEvent.setup();
     render(<App apps={apps} />);
 
-    await user.type(screen.getByLabelText("Apps durchsuchen"), "einkauf");
+    await user.type(screen.getByLabelText("Apps durchsuchen"), "ideen");
 
-    expect(screen.getByRole("link", { name: "Einkaufsliste" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "App-Ideen" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Zinsrechner" })).not.toBeInTheDocument();
   });
 
