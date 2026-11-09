@@ -21,9 +21,10 @@ const STORAGE_GLOBALS = [
   {
     name: "localStorage",
     message:
-      "Use the data file from @pocket-apps/core. localStorage is not reliable under file://.",
+      "Use the data file from @pocket-apps/core. Browser storage is lost when the user clears the browser.",
   },
   { name: "sessionStorage", message: "Use the data file from @pocket-apps/core." },
+  { name: "indexedDB", message: "Use the data file from @pocket-apps/core." },
 ];
 
 // Apps with "pocketApp.network": false must not use the network.
@@ -198,6 +199,12 @@ export default defineConfig([
           property: "showSaveFilePicker",
           message: "Use @pocket-apps/core/data-file.",
         },
+        {
+          object: "window",
+          property: "showDirectoryPicker",
+          message: "Use @pocket-apps/core/data-file.",
+        },
+        { object: "navigator", property: "storage", message: "Use @pocket-apps/core/data-file." },
         { object: "window", property: "localStorage", message: "Use @pocket-apps/core/data-file." },
       ],
     },

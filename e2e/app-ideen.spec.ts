@@ -1,18 +1,19 @@
-import { readFileSync } from "node:fs";
 import { expect, type Page } from "@playwright/test";
 import {
   dataFileText,
+  FOLDER_NAME,
   listApps,
-  readFakeFile,
+  readDataFile,
   releaseUrl,
   test,
-  withFakeDirectSave,
-  withoutDirectSave,
+  withDataFolder,
+  writeDataFile,
 } from "./helpers.ts";
 
 const app = listApps().find((candidate) => candidate.name === "app-ideen");
 if (!app) throw new Error("App app-ideen is missing.");
 const version = app.version;
+const FILE = "app-ideen.json";
 
 type Idea = { id: string; title: string; description: string };
 type SavedFile = { app: string; schemaVersion: number; savedWith: string; data: { ideas: Idea[] } };
@@ -31,22 +32,29 @@ function titles(page: Page) {
   return page.getByRole("list").getByRole("heading", { level: 3 });
 }
 
-async function openWithChooser(page: Page, name: string, text: string) {
-  const chooserPromise = page.waitForEvent("filechooser");
-  await page.getByRole("button", { name: "Datei öffnen" }).click();
-  const chooser = await chooserPromise;
-  await chooser.setFiles({ name, mimeType: "application/json", buffer: Buffer.from(text) });
+async function savedFile(page: Page): Promise<SavedFile> {
+  await expect(page.getByRole("status")).toHaveText("Gespeichert");
+  return JSON.parse((await readDataFile(page, FILE)) ?? "") as SavedFile;
 }
 
-test.describe("app-ideen", () => {
-  test("without direct save: adds, sorts and removes ideas, then saves a download", async ({
+/** Opens the app. If `fileText` is set, the data folder has this file first. */
+async function openWithFolder(page: Page, fileText?: string) {
+  await withDataFolder(page);
+  await page.goto(releaseUrl("app-ideen.html"));
+  if (fileText !== undefined) await writeDataFile(page, FILE, fileText);
+  await page.getByRole("button", { name: "Ordner wählen …" }).click();
+}
+
+test.describe("app-ideen in Chrome and Edge", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "Only Chromium can open a folder.");
+
+  test("adds, sorts and removes ideas and saves them in the data folder", async ({
     page,
     pageErrors,
   }) => {
-    await withoutDirectSave(page);
-    await page.goto(releaseUrl("app-ideen.html"));
+    await openWithFolder(page);
 
-    await page.getByRole("button", { name: "Neue Datei" }).click();
+    await expect(page.getByText(`${FOLDER_NAME} / ${FILE}`)).toBeVisible();
     await addIdeaInUi(page, "Pflanzen", "Gießplan");
     await addIdeaInUi(page, "Rezepte", "Wochenplan");
     await addIdeaInUi(page, "Wetter", "");
@@ -55,28 +63,33 @@ test.describe("app-ideen", () => {
     await page.getByRole("button", { name: "Pflanzen löschen" }).click();
     await expect(titles(page)).toHaveText(["Wetter", "Rezepte"]);
 
-    const downloadPromise = page.waitForEvent("download");
-    await page.getByRole("button", { name: "Speichern" }).click();
-    const download = await downloadPromise;
-
-    expect(download.suggestedFilename()).toBe("app-ideen.json");
-    const saved = JSON.parse(readFileSync(await download.path(), "utf8")) as SavedFile;
+    const saved = await savedFile(page);
     expect(saved).toMatchObject({ app: "app-ideen", schemaVersion: 1, savedWith: version });
     expect(saved.data.ideas.map((idea) => [idea.title, idea.description])).toEqual([
       ["Wetter", ""],
       ["Rezepte", "Wochenplan"],
     ]);
-    await expect(page.getByRole("status")).toHaveText("Gespeichert");
     expect(pageErrors).toEqual([]);
   });
 
-  test("without direct save: opens an existing file in its order", async ({ page }) => {
-    await withoutDirectSave(page);
-    await page.goto(releaseUrl("app-ideen.html"));
+  test("remembers the folder after a reload and from the launcher", async ({ page }) => {
+    await openWithFolder(page);
+    await addIdeaInUi(page, "Tee", "Sorten");
+    await expect(page.getByRole("status")).toHaveText("Gespeichert");
 
-    await openWithChooser(
+    await page.reload();
+
+    await expect(titles(page)).toHaveText(["Tee"]);
+
+    await page.getByRole("link", { name: "Alle Apps" }).click();
+    await page.getByRole("link", { name: "App-Ideen" }).click();
+
+    await expect(titles(page)).toHaveText(["Tee"]);
+  });
+
+  test("shows an existing file of the folder in its order", async ({ page }) => {
+    await openWithFolder(
       page,
-      "meine-ideen.json",
       ideasFile([
         { id: "a1", title: "Fahrtenbuch", description: "Kilometer pro Fahrt" },
         { id: "a2", title: "Vokabeln", description: "" },
@@ -85,56 +98,43 @@ test.describe("app-ideen", () => {
 
     await expect(titles(page)).toHaveText(["Fahrtenbuch", "Vokabeln"]);
     await expect(page.getByText("Kilometer pro Fahrt")).toBeVisible();
-    await expect(page.getByText("meine-ideen.json")).toBeVisible();
+  });
+
+  test("does not overwrite a file that changed elsewhere", async ({ page }) => {
+    await openWithFolder(page, ideasFile([{ id: "a1", title: "Tee", description: "" }]));
+    await expect(titles(page)).toHaveText(["Tee"]);
+    // The file times have a resolution of 1 ms. Make sure that the change is newer.
+    await page.waitForTimeout(50);
+    await writeDataFile(page, FILE, ideasFile([{ id: "b1", title: "Kakao", description: "" }]));
+
+    await addIdeaInUi(page, "Kaffee", "");
+
+    await expect(page.getByRole("status")).toHaveText("Nicht gespeichert: Konflikt");
+    expect(await readDataFile(page, FILE)).toContain("Kakao");
+
+    await page.getByRole("button", { name: "Meine Version speichern" }).click();
+
+    const saved = await savedFile(page);
+    expect(saved.data.ideas.map((idea) => idea.title)).toEqual(["Tee", "Kaffee"]);
   });
 
   test("shows a clear error for the data file of another app", async ({ page }) => {
-    await withoutDirectSave(page);
-    await page.goto(releaseUrl("app-ideen.html"));
-
-    await openWithChooser(page, "fremd.json", dataFileText("haushaltsbuch", 1, {}));
+    await openWithFolder(page, dataFileText("haushaltsbuch", 1, {}));
 
     await expect(page.getByRole("alert")).toContainText("gehört zur App „haushaltsbuch“");
   });
 
-  test("with direct save: opens a file, asks for write access and saves changes", async ({
-    page,
-    pageErrors,
-  }) => {
-    await withFakeDirectSave(
-      page,
-      "ideen.json",
-      ideasFile([{ id: "a1", title: "Tee", description: "Sorten" }]),
-    );
-    await page.goto(releaseUrl("app-ideen.html"));
-
-    await page.getByRole("button", { name: "Datei öffnen" }).click();
-    await expect(titles(page)).toHaveText(["Tee"]);
-    await addIdeaInUi(page, "Kaffee", "Bohnen");
-
-    await expect(page.getByRole("status")).toHaveText("Gespeichert");
-    const result = await readFakeFile(page);
-    expect(result.permission).toBe("readwrite");
-    const saved = JSON.parse(result.written) as SavedFile;
-    expect(saved.data.ideas.map((idea) => idea.title)).toEqual(["Tee", "Kaffee"]);
-    expect(pageErrors).toEqual([]);
-  });
-
-  test("refuses a data file from a newer app version", async ({ page }) => {
-    await withFakeDirectSave(page, "ideen.json", ideasFile([], 99));
-    await page.goto(releaseUrl("app-ideen.html"));
-
-    await page.getByRole("button", { name: "Datei öffnen" }).click();
+  test("refuses a data file from a newer app version and keeps it", async ({ page }) => {
+    const newer = ideasFile([], 99);
+    await openWithFolder(page, newer);
 
     await expect(page.getByRole("alert")).toContainText("neueren App-Version");
-    await expect(page.getByRole("button", { name: "Neue Datei" })).toBeVisible();
+    expect(await readDataFile(page, FILE)).toBe(newer);
   });
 
   test("wraps a very long word in a narrow window", async ({ page }) => {
-    await withoutDirectSave(page);
     await page.setViewportSize({ width: 320, height: 640 });
-    await page.goto(releaseUrl("app-ideen.html"));
-    await page.getByRole("button", { name: "Neue Datei" }).click();
+    await openWithFolder(page);
 
     await addIdeaInUi(page, "https://example.com/" + "x".repeat(80), "y".repeat(120));
 
@@ -142,5 +142,18 @@ test.describe("app-ideen", () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
+
+test.describe("app-ideen in other browsers", () => {
+  test.skip(({ browserName }) => browserName === "chromium", "Chromium can open a folder.");
+
+  test("asks for Chrome or Edge", async ({ page, pageErrors }) => {
+    await page.goto(releaseUrl("app-ideen.html"));
+
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Bitte Chrome oder Edge verwenden" }),
+    ).toBeVisible();
+    expect(pageErrors).toEqual([]);
   });
 });

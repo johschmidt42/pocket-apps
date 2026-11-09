@@ -4,7 +4,7 @@
 
 pocket-apps is a monorepo of small personal apps ("home-cooked software").
 Each app builds into **one self-contained HTML file**. GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/` in Chrome or Edge. There is no server for user data.
-Apps that keep data store it in a **separate JSON file**. The user owns this file. No user data goes to a server.
+Apps that keep data store it in a **data folder** on the user's computer. The user picks this folder once. Each app has its own JSON file in it. No user data goes to a server.
 Most apps use no online services. An app that needs an external API declares this in its `package.json`.
 
 ## Terms
@@ -12,7 +12,8 @@ Most apps use no online services. An app that needs an external API declares thi
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
 - **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
-- **Data file:** the JSON file with the user's data. The user chooses where it is.
+- **Data folder:** the folder that the user picks once, for example "Pocket Apps Daten". It can be in a OneDrive or Google Drive folder. The apps use the File System Access API. Thus only Chrome and Edge on a computer can use it.
+- **Data file:** the JSON file of one app in the data folder: `<app>.json`, for example `app-ideen.json`.
 - **Stateful app:** an app with a data file. A stateless app keeps nothing after the tab closes.
 - **Envelope:** the outer JSON object of a data file: `{ app, schemaVersion, savedWith, savedAt, data }`. `savedWith` is the app version that wrote the file. `savedAt` is an ISO time. The code calls it `Envelope` (`envelope.ts`).
 - **Vendor code:** code that a tool generated and that we do not edit. Here: the components in `packages/ui/src/components/`.
@@ -35,6 +36,7 @@ Install the test browsers once: `pnpm e2e:install`.
 | `pnpm --filter <app> dev`                  | Start the dev server for one app, e.g. `app-ideen` or `launcher`. |
 | `pnpm check`                               | Typecheck, lint, format check, unit tests with coverage.          |
 | `pnpm build`                               | Build all apps and the launcher into `release/`.                  |
+| `pnpm serve`                               | Serve `release/` at `http://localhost:4173/pocket-apps/`.         |
 | `pnpm e2e`                                 | Build, then test the files in Chromium, Firefox and WebKit.       |
 | `pnpm check:all`                           | `pnpm check` and `pnpm e2e`.                                      |
 | `pnpm format`                              | Format all files with Prettier.                                   |
@@ -47,12 +49,13 @@ apps/<app>/                One app. Vite + React + TypeScript. Builds to dist/in
 launcher/                  The launcher. Builds to release/index.html.
 packages/core/             Shared code:
   src/app-shell/           AppHeader (back link, title, version, theme switch) and the theme logic.
-  src/data-file/           Data file: open, save, migrate, validate.
+  src/data-file/           Data folder and data file: pick, load, save, migrate, validate.
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
 packages/vite-config/      Shared Vite config. Reads app info and pocket-apps.config.json.
 pocket-apps.config.json    Settings for all apps, for example the back link.
 scripts/build-release.mjs  Copies the built files to release/.
+scripts/serve-release.mjs  Serves release/ at http://localhost:4173/pocket-apps/ (`pnpm serve`).
 e2e/                       Browser tests (Playwright) for the files in release/.
 .github/                   GitHub Actions: pipelines in workflows/, shared setup in actions/setup/.
 docs/decisions.md          Why we chose the tools and patterns.
@@ -62,7 +65,7 @@ Import boundaries (ESLint enforces them in `apps/` and `launcher/`):
 
 - Import only from `packages/*`. Never import from another app.
 - Use UI components only from `@pocket-apps/ui`. Never import a component library directly.
-- Access data only through `@pocket-apps/core/data-file`. Never use `localStorage`, `sessionStorage` or the file pickers directly.
+- Access data only through `@pocket-apps/core/data-file`. Never use `localStorage`, `sessionStorage`, IndexedDB or the folder and file dialogs directly.
 
 ## Rules
 
@@ -162,7 +165,6 @@ Each app declares its info in its `package.json`:
 - Add a dependency only with a reason. Use browser APIs first.
 - Pin exact versions. Do not use `^` or `~`.
 - Keep TypeScript on 6.0.x until typescript-eslint supports TypeScript 7.
-- Make IDs with `crypto.getRandomValues`. The browser tests open the files under `file://`, where `crypto.randomUUID` is not always available.
 
 ## Versions
 
@@ -186,9 +188,25 @@ The app file name has no version (`app-ideen.html`). A new file replaces the old
 A stateful app defines its data in `src/schema.ts` with `defineDataSchema()`. It creates the store with `createDataFileStore()`.
 Data files are JSON. Use SQLite (sql.js) only when an app needs queries that are hard with JSON. See `docs/decisions.md`.
 
+### How the store works
+
+`DataFileProvider` shows the header and then one of these screens:
+
+1. In a browser without the File System Access API: "Bitte Chrome oder Edge verwenden".
+2. On the first visit: "Datenordner wählen". The user picks the data folder. The browser keeps the folder in IndexedDB. All apps of the same web address use it.
+3. When the browser has no access to the folder: "Zugriff auf deinen Datenordner". One click gives access again. If the user selects "Bei jedem Besuch erlauben", Chrome does not ask again.
+4. Else the app. The file name is `<app>.json`. `<app>` is the `app` field in `schema.ts`. If the file does not exist, the app starts with `initial()`. It writes the file at the first change.
+
+When the app is open, the store does these things:
+
+- It saves each change automatically after 500 ms. The status line under the header shows "Gespeichert" or "Speichert …".
+- Before each save, it compares the time of the last change of the file with the time when the app read or wrote it. If the file changed elsewhere (for example on another computer through Google Drive), it does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
+- After a failed save, it shows an error and tries again after 5 seconds.
+- While a change is not saved, it warns before the tab closes.
+
 ### How a migration runs
 
-When the user opens a data file, `loadData()` in `packages/core` does these steps:
+When the app reads its data file, `loadData()` in `packages/core` does these steps:
 
 1. It reads the envelope. It stops with an error if the file is not JSON or has no valid envelope.
 2. It compares `app` with the app ID. It stops with an error for a file of another app.
@@ -196,14 +214,8 @@ When the user opens a data file, `loadData()` in `packages/core` does these step
 4. It runs each missing migration in order, in memory. Example: a file with schema version 1 in an app with schema version 3 runs `migrations[0]` (1 → 2), then `migrations[1]` (2 → 3).
 5. It validates the result with the zod schema. It stops with an error if the data does not match.
 
-If step 4 ran a migration, the store then:
-
-1. Downloads the unchanged old file as `<name>.backup-v<old schema version>.json`.
-2. Shows the data, marks it as unsaved and shows a notice about the backup.
-3. Waits for the user. The app does not save automatically after a migration, also not in Chrome and Edge.
-4. Writes the data file when the user clicks "Speichern". After that, automatic saving works again.
-
-Thus the app never changes the data file before the user saw the backup notice.
+On an error, the app shows the message and does not change the file.
+If step 4 ran a migration, the store first writes the unchanged old file into the data folder as `<app>.backup-v<old schema version>.json`. Then it saves the data in the new shape. If the backup fails, it shows an error and does not change the data file.
 
 ### Change the data shape
 
@@ -226,12 +238,15 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - `apps/*/src/schema.ts` and `apps/*/src/migrations/` must have 100 % coverage.
 - All other code must have 95 % line coverage and 90 % branch coverage.
 - Test from the user's view. Query by role and label (`getByRole`, `getByLabelText`). Use `userEvent`, not `fireEvent`. Do not use snapshots.
-- Do not mock internals. For data files, use `createMemoryFileAccess()` from `@pocket-apps/core/data-file/testing`. Pass it as `fileAccess` to `DataFileProvider`.
+- Do not mock internals. For data files, use `createMemoryFolder()` and `createMemoryFolderHost()` from `@pocket-apps/core/data-file/testing`. Pass the host as `folderHost` to `DataFileProvider`. `createMemoryFolderHost({ saved: folder })` is a folder from an earlier visit with access. To start with data, put a file into `folder.files`.
 - For app info in unit tests, use `testAppInfo()` from `@pocket-apps/core/testing`.
 - Keep pure logic (calculations, list operations) in `.ts` files with their own unit tests.
-- `e2e/all-apps.spec.ts` tests every app automatically: offline start, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests. An app with `"network": true` may try requests, but it must start without errors.
+- The browser tests use the local web server of `pnpm serve`. Playwright starts it.
+- `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.
 - `e2e/launcher.spec.ts` tests the launcher.
-- Add `e2e/<app>.spec.ts` for the main flow of a stateful app: create, change, save, open.
+- Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. Run these tests only in Chromium.
+- In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile()` and `readDataFile()` for the files in it.
+- In Firefox and WebKit, test only the notice "Bitte Chrome oder Edge verwenden".
 
 ## Add a new app
 
@@ -307,4 +322,4 @@ To check: `gh run list --workflow "CD - Release" --limit 3`. To publish again, r
 ## Definition of done
 
 - `pnpm check:all` passes.
-- For UI changes, open the files from `release/` in a browser. Look at them in light and dark mode.
+- For UI changes, run `pnpm build` and `pnpm serve`. Open `http://localhost:4173/pocket-apps/` in Chrome. Look at the apps in light and dark mode.

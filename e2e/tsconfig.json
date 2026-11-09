@@ -5,7 +5,7 @@
   },
   "include": [
     "*.ts",
-    "../packages/core/src/data-file/file-access.ts",
+    "../packages/core/src/data-file/browser-folder.ts",
     "../packages/vite-config/index.d.ts"
   ]
 }

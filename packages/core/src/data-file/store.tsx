@@ -1,12 +1,14 @@
-import { createContext, use, useEffect, useReducer, useState, type ReactNode } from "react";
 import type { AppInfo } from "@pocket-apps/vite-config";
+import { Alert, AlertDescription } from "@pocket-apps/ui/components/alert";
+import { Button } from "@pocket-apps/ui/components/button";
+import { createContext, use, useEffect, useReducer, useState, type ReactNode } from "react";
 import { AppHeader } from "../app-shell/app-header.tsx";
-import type { FileActions } from "./actions.ts";
-import { DataFileBar } from "./data-file-bar.tsx";
-import { DataFileStart } from "./data-file-start.tsx";
+import { browserFolderHost } from "./browser-folder-host.ts";
+import { DataFileStatus } from "./data-file-status.tsx";
+import { DataFolderGate } from "./data-folder-gate.tsx";
 import { serializeEnvelope } from "./envelope.ts";
 import { DataFileError } from "./errors.ts";
-import { browserFileAccess, type FileAccess } from "./file-access.ts";
+import type { DataFolder, FolderHost } from "./folder.ts";
 import { loadData } from "./migrate.ts";
 import { dataFileReducer, type DataFileAction, type ReadyState } from "./reducer.ts";
 import { currentVersion, type DataSchema } from "./schema.ts";
@@ -18,21 +20,19 @@ export type DataFileApi<T> = {
 };
 
 export type DataFileStoreOptions = {
-  /** The app info for the header and the data file. Use `__POCKET_APP__`. */
+  /** The app info. Use `__POCKET_APP__`. */
   app: AppInfo;
-  /** Wait time before an automatic save (Chrome, Edge). Default: 1000 ms. */
+  /** Wait time before an automatic save. Default: 500 ms. */
   autosaveDelayMs?: number;
+  /** Wait time before the next try after a failed save. Default: 5000 ms. */
+  retryDelayMs?: number;
 };
 
 export type DataFileProviderProps = {
   children: ReactNode;
-  /** Only for tests. Default: the real browser file access. */
-  fileAccess?: FileAccess;
+  /** Only for tests. Default: the data folder of the browser. */
+  folderHost?: FolderHost;
 };
-
-export function backupFileName(fileName: string, version: number): string {
-  return `${fileName.replace(/\.json$/i, "")}.backup-v${String(version)}.json`;
-}
 
 function errorMessage(error: unknown): string {
   if (error instanceof DataFileError) return error.message;
@@ -41,12 +41,16 @@ function errorMessage(error: unknown): string {
 
 /**
  * Creates the data file store for one app.
+ * The data lives in `<schema.app>.json` in the data folder that the person picked.
  * Call it once per app, at module level, with the app's schema.
  */
 export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileStoreOptions) {
   const Context = createContext<DataFileApi<T> | null>(null);
+  const fileName = `${schema.app}.json`;
+  const backupName = (version: number) => `${schema.app}.backup-v${String(version)}.json`;
   const schemaVersion = currentVersion(schema);
-  const autosaveDelayMs = options.autosaveDelayMs ?? 1000;
+  const autosaveDelayMs = options.autosaveDelayMs ?? 500;
+  const retryDelayMs = options.retryDelayMs ?? 5000;
 
   function serialize(data: T): string {
     return serializeEnvelope({
@@ -57,120 +61,91 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     });
   }
 
-  async function write(
-    files: FileAccess,
+  async function loadFile(folder: DataFolder): Promise<DataFileAction<T>> {
+    try {
+      const file = await folder.read(fileName);
+      if (!file) {
+        const data = schema.initial();
+        return { type: "loaded", data, saved: data, lastModified: null };
+      }
+      const result = loadData(file.text, schema);
+      if (result.migratedFrom === null) {
+        return {
+          type: "loaded",
+          data: result.data,
+          saved: result.data,
+          lastModified: file.lastModified,
+        };
+      }
+      // Keep the old file before the app writes the new shape.
+      await folder.write(backupName(result.migratedFrom), file.text);
+      return { type: "loaded", data: result.data, saved: null, lastModified: file.lastModified };
+    } catch (error) {
+      return { type: "broken", message: errorMessage(error) };
+    }
+  }
+
+  async function persist(
+    folder: DataFolder,
     state: ReadyState<T>,
     dispatch: (action: DataFileAction<T>) => void,
   ): Promise<void> {
-    const text = serialize(state.data);
-    if (state.handle) {
-      await files.writeFile(state.handle, text);
-    } else {
-      files.downloadFile(state.fileName, text);
+    dispatch({ type: "saving" });
+    try {
+      // Another device can have changed the file (for example through Google Drive).
+      if ((await folder.lastModified(fileName)) !== state.lastModified) {
+        dispatch({ type: "conflict" });
+        return;
+      }
+      const lastModified = await folder.write(fileName, serialize(state.data));
+      dispatch({ type: "saved", data: state.data, lastModified });
+    } catch (error) {
+      dispatch({ type: "failed", message: errorMessage(error) });
     }
-    dispatch({ type: "saved", data: state.data });
   }
 
-  function DataFileProvider({
-    children,
-    fileAccess: files = browserFileAccess,
-  }: DataFileProviderProps) {
-    const [state, dispatch] = useReducer(dataFileReducer<T>, { status: "empty" });
-    const [error, setError] = useState<string | null>(null);
-    const directSave = files.supportsDirectSave();
+  function FileView({ folder, children }: { folder: DataFolder; children: ReactNode }) {
+    const [state, dispatch] = useReducer(dataFileReducer<T>, { status: "loading" });
+    const [loadCount, setLoadCount] = useState(0);
 
-    async function run(task: () => Promise<void>): Promise<void> {
-      setError(null);
-      try {
-        await task();
-      } catch (caught) {
-        setError(errorMessage(caught));
-      }
-    }
-
-    const actions: FileActions = {
-      error,
-      directSave,
-      createNew: () =>
-        run(async () => {
-          const data = schema.initial();
-          const fileName = `${schema.app}.json`;
-          if (!directSave) {
-            dispatch({
-              type: "loaded",
-              state: {
-                status: "ready",
-                data,
-                fileName,
-                handle: null,
-                dirty: true,
-                pendingMigration: false,
-              },
-            });
-            return;
-          }
-          const handle = await files.createFile(fileName);
-          if (!handle) return;
-          await files.writeFile(handle, serialize(data));
-          dispatch({
-            type: "loaded",
-            state: {
-              status: "ready",
-              data,
-              fileName: handle.name,
-              handle,
-              dirty: false,
-              pendingMigration: false,
-            },
-          });
-        }),
-      open: () =>
-        run(async () => {
-          const file = await files.openFile();
-          if (!file) return;
-          const result = loadData(file.text, schema);
-          const migrated = result.migratedFrom !== null;
-          if (result.migratedFrom !== null) {
-            // Keep the old file as a backup. The app does not overwrite the file
-            // before the user clicks "Speichern" (see pendingMigration).
-            files.downloadFile(backupFileName(file.name, result.migratedFrom), file.text);
-          }
-          dispatch({
-            type: "loaded",
-            state: {
-              status: "ready",
-              data: result.data,
-              fileName: file.name,
-              handle: file.handle,
-              dirty: migrated,
-              pendingMigration: migrated,
-            },
-          });
-        }),
-    };
-
-    // Automatic save: only with a file handle (Chrome, Edge), not after a migration,
-    // and not after a failed save. Then the user saves with the "Speichern" button.
-    const autosaving =
-      state.status === "ready" && state.handle !== null && !state.pendingMigration && !error;
+    // The file lives in the data folder (an external system).
     useEffect(() => {
-      if (state.status !== "ready" || !state.dirty || !autosaving) return;
+      let active = true;
+      void loadFile(folder).then((action) => {
+        if (active) dispatch(action);
+      });
+      return () => {
+        active = false;
+      };
+    }, [folder, loadCount]);
+
+    // Automatic save, a moment after the last change.
+    useEffect(() => {
+      if (state.status !== "ready" || state.save !== "pending") return;
       const timer = setTimeout(() => {
-        write(files, state, dispatch).catch((caught: unknown) => {
-          setError(
-            `Automatisches Speichern ist fehlgeschlagen. Klicke auf „Speichern“. (${errorMessage(caught)})`,
-          );
-        });
+        void persist(folder, state, dispatch);
       }, autosaveDelayMs);
       return () => {
         clearTimeout(timer);
       };
-    }, [files, state, autosaving]);
+    }, [folder, state]);
 
-    // Warn before the user closes the tab with unsaved changes.
-    const dirty = state.status === "ready" && state.dirty;
+    // After a failed save, try again a moment later.
+    const failed = state.status === "ready" && state.save === "failed";
     useEffect(() => {
-      if (!dirty) return;
+      if (!failed) return;
+      const timer = setTimeout(() => {
+        dispatch({ type: "retry" });
+      }, retryDelayMs);
+      return () => {
+        clearTimeout(timer);
+      };
+    }, [failed]);
+
+    // Warn before the person closes the tab with unsaved changes.
+    const unsaved = state.status === "ready" && state.save !== "saved";
+    useEffect(() => {
+      if (!unsaved) return;
       const onBeforeUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault();
       };
@@ -178,16 +153,43 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
       return () => {
         window.removeEventListener("beforeunload", onBeforeUnload);
       };
-    }, [dirty]);
+    }, [unsaved]);
 
-    const header = <AppHeader app={options.app} />;
+    function reload() {
+      dispatch({ type: "loading" });
+      setLoadCount((count) => count + 1);
+    }
 
-    if (state.status === "empty") {
+    async function keepMine() {
+      try {
+        dispatch({ type: "overwrite", lastModified: await folder.lastModified(fileName) });
+      } catch (error) {
+        dispatch({ type: "failed", message: errorMessage(error) });
+      }
+    }
+
+    if (state.status === "loading") {
       return (
-        <>
-          {header}
-          <DataFileStart file={actions} />
-        </>
+        <p role="status" className="p-4 text-sm text-muted-foreground">
+          Lädt …
+        </p>
+      );
+    }
+    if (state.status === "broken") {
+      return (
+        <main className="mx-auto flex max-w-md flex-col gap-4 p-4 pt-12">
+          <Alert variant="destructive">
+            <AlertDescription className="flex flex-col items-start gap-2">
+              <span>
+                Die Datei „{fileName}“ im Ordner „{folder.name}“ lässt sich nicht öffnen.{" "}
+                {state.message}
+              </span>
+              <Button size="sm" variant="outline" onClick={reload}>
+                Erneut laden
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </main>
       );
     }
 
@@ -197,22 +199,32 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
         dispatch({ type: "updated", updater });
       },
     };
-
     return (
       <Context value={api}>
-        {header}
-        <DataFileBar
-          file={{
-            ...actions,
-            fileName: state.fileName,
-            dirty: state.dirty,
-            autosaving,
-            pendingMigration: state.pendingMigration,
-            save: () => run(() => write(files, state, dispatch)),
+        <DataFileStatus
+          folderName={folder.name}
+          fileName={fileName}
+          save={state.save}
+          error={state.error}
+          onRetry={() => {
+            dispatch({ type: "retry" });
           }}
+          onReload={reload}
+          onKeepMine={() => void keepMine()}
         />
         {children}
       </Context>
+    );
+  }
+
+  function DataFileProvider({ children, folderHost = browserFolderHost }: DataFileProviderProps) {
+    return (
+      <>
+        <AppHeader app={options.app} />
+        <DataFolderGate host={folderHost}>
+          {(folder) => <FileView folder={folder}>{children}</FileView>}
+        </DataFolderGate>
+      </>
     );
   }
 

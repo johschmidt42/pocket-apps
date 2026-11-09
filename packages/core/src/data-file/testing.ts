@@ -1,37 +1,72 @@
-import type { FileAccess, FileHandle, OpenedFile } from "./file-access.ts";
+import type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
 
-export type MemoryFileAccess = FileAccess & {
-  /** The file that the next `openFile()` returns. `null` means: the user cancels. */
-  nextOpen: OpenedFile | null;
-  /** The name that the next `createFile()` returns. `null` means: the user cancels. */
-  nextCreateName: string | null;
-  /** All texts written with `writeFile()`, by file name. */
-  written: Map<string, string>;
-  /** All downloads, in order. */
-  downloads: { name: string; text: string }[];
+export type MemoryFolder = DataFolder & {
+  /** All files by path. */
+  files: Map<string, FileSnapshot>;
+  /** The access state that `queryAccess` returns. */
+  access: PermissionState;
+  /** The access state that `requestAccess` sets and returns. */
+  accessAfterRequest: PermissionState;
+  /** If set, `write` fails with this error. */
+  writeError: Error | null;
+  /** Simulates a change on another device: a new text and a newer time. */
+  changeElsewhere: (path: string, text: string) => void;
 };
 
-/** An in-memory fake of the file access. Use it in tests instead of mocks. */
-export function createMemoryFileAccess(options: { directSave: boolean }): MemoryFileAccess {
-  const fake: MemoryFileAccess = {
-    nextOpen: null,
-    nextCreateName: null,
-    written: new Map(),
-    downloads: [],
-    supportsDirectSave: () => options.directSave,
-    openFile: () => Promise.resolve(fake.nextOpen),
-    createFile: () => {
-      const name = fake.nextCreateName;
-      const handle: FileHandle | null = name === null ? null : { name };
-      return Promise.resolve(handle);
+export type MemoryFolderHost = FolderHost & {
+  /** The remembered folder, or `null`. */
+  saved: MemoryFolder | null;
+  /** The folder that the next `pick()` returns. `null` = the person cancels. */
+  nextPick: MemoryFolder | null;
+  /** False = a browser without folder access. */
+  supported: boolean;
+};
+
+/** An in-memory data folder. Use it in tests instead of mocks. */
+export function createMemoryFolder(name = "Pocket Apps Daten"): MemoryFolder {
+  let clock = 1000;
+  const folder: MemoryFolder = {
+    name,
+    files: new Map(),
+    access: "granted",
+    accessAfterRequest: "granted",
+    writeError: null,
+    queryAccess: () => Promise.resolve(folder.access),
+    requestAccess: () => {
+      folder.access = folder.accessAfterRequest;
+      return Promise.resolve(folder.access);
     },
-    writeFile: (handle, text) => {
-      fake.written.set(handle.name, text);
-      return Promise.resolve();
+    read: (path) => Promise.resolve(folder.files.get(path) ?? null),
+    lastModified: (path) => Promise.resolve(folder.files.get(path)?.lastModified ?? null),
+    write: (path, text) => {
+      if (folder.writeError) return Promise.reject(folder.writeError);
+      clock += 1;
+      folder.files.set(path, { text, lastModified: clock });
+      return Promise.resolve(clock);
     },
-    downloadFile: (name, text) => {
-      fake.downloads.push({ name, text });
+    changeElsewhere: (path, text) => {
+      clock += 1;
+      folder.files.set(path, { text, lastModified: clock });
     },
   };
-  return fake;
+  return folder;
+}
+
+/** An in-memory folder host. `saved` = a folder from an earlier visit. */
+export function createMemoryFolderHost(
+  options: { saved?: MemoryFolder | null; supported?: boolean } = {},
+): MemoryFolderHost {
+  const host: MemoryFolderHost = {
+    saved: options.saved ?? null,
+    nextPick: null,
+    supported: options.supported ?? true,
+    isSupported: () => host.supported,
+    loadSaved: () => Promise.resolve(host.saved),
+    pick: () => {
+      const picked = host.nextPick;
+      if (picked) host.saved = picked;
+      return Promise.resolve(picked);
+    },
+  };
+  return host;
 }

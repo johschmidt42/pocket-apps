@@ -10,7 +10,7 @@ for (const app of listApps()) {
       await page.goto(releaseUrl(`${app.name}.html`));
     });
 
-    test("opens from file:// without network and without errors", async ({ page, pageErrors }) => {
+    test("opens without network and without errors", async ({ page, pageErrors }) => {
       await expect(page.getByRole("heading", { level: 1, name: app.title })).toBeVisible();
       // Apps with "network": true may try requests. They must still start offline without errors.
       // The browser itself logs blocked requests ("Failed to load resource"). That is not an app error.

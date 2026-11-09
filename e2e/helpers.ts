@@ -1,29 +1,35 @@
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { test as base, type Page } from "@playwright/test";
-import { listApps, ROOT_DIR, type AppInfo } from "../packages/vite-config/index.js";
+import { listApps, type AppInfo } from "../packages/vite-config/index.js";
 
 export { listApps, type AppInfo };
 
-const RELEASE = join(ROOT_DIR, "release");
+/** The address of release/ on the local test server (see playwright.config.ts). */
+const RELEASE_URL = "http://localhost:4173/pocket-apps/";
 
-/** The file:// URL of a file in release/. */
+/** The name of the fake data folder. */
+export const FOLDER_NAME = "Pocket Apps Daten";
+
+/** The URL of a file in release/ on the local test server. */
 export function releaseUrl(fileName: string): string {
-  return pathToFileURL(join(RELEASE, fileName)).href;
+  return new URL(fileName, RELEASE_URL).href;
 }
 
 /**
  * Test with two additions:
- * - It blocks all network requests. The apps must not need other servers.
- * - `pageErrors` collects page errors, console errors and network requests.
+ * - It blocks all network requests to other servers. The apps must not need them.
+ * - `pageErrors` collects page errors, console errors and blocked network requests.
  */
 export const test = base.extend<{ pageErrors: string[] }>({
   pageErrors: async ({ page, context }, provide) => {
     const errors: string[] = [];
-    await context.route(/^(https?|wss?):/, (route) => {
-      errors.push(`network request: ${route.request().url()}`);
-      return route.abort();
-    });
+    const origin = new URL(RELEASE_URL).origin;
+    await context.route(
+      (url) => /^(https?|wss?):$/.test(url.protocol) && url.origin !== origin,
+      (route) => {
+        errors.push(`network request: ${route.request().url()}`);
+        return route.abort();
+      },
+    );
     page.on("pageerror", (error) => errors.push(`page error: ${error.message}`));
     page.on("console", (message) => {
       if (message.type() === "error") errors.push(`console error: ${message.text()}`);
@@ -32,62 +38,46 @@ export const test = base.extend<{ pageErrors: string[] }>({
   },
 });
 
-/** The page globals that the fake File System Access API writes. */
-type FakeFileWindow = Window & { __written?: string; __permission?: string };
-
-/** Removes the File System Access API. Then an app works like in Firefox and Safari. */
-export async function withoutDirectSave(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    delete window.showOpenFilePicker;
-    delete window.showSaveFilePicker;
-  });
+/**
+ * Replaces the folder dialog of Chrome. It returns the folder `FOLDER_NAME` in the
+ * origin private file system (OPFS) of the browser. Each test has its own empty OPFS.
+ * Call it before `page.goto()`.
+ */
+export async function withDataFolder(page: Page): Promise<void> {
+  await page.addInitScript((name) => {
+    window.showDirectoryPicker = async () =>
+      (await navigator.storage.getDirectory()).getDirectoryHandle(name, { create: true });
+  }, FOLDER_NAME);
 }
 
-/**
- * A fake File System Access API, like in Chrome and Edge.
- * The open and save pickers return the same file handle. `openText` is its content.
- * The page keeps the last written text in `window.__written` and the permission mode in `window.__permission`.
- */
-export async function withFakeDirectSave(
-  page: Page,
-  fileName: string,
-  openText = "",
-): Promise<void> {
-  await page.addInitScript(
-    ({ name, initialText }) => {
-      const target: FakeFileWindow = window;
-      const handle = {
-        name,
-        getFile: () => Promise.resolve(new File([initialText], name)),
-        requestPermission: ({ mode }: { mode: string }) => {
-          target.__permission = mode;
-          return Promise.resolve("granted");
-        },
-        createWritable: () =>
-          Promise.resolve({
-            write: (text: string) => {
-              target.__written = text;
-              return Promise.resolve();
-            },
-            close: () => Promise.resolve(),
-          }),
-      };
-      const fileHandle = handle as unknown as FileSystemFileHandle;
-      window.showSaveFilePicker = () => Promise.resolve(fileHandle);
-      window.showOpenFilePicker = () => Promise.resolve([fileHandle]);
+/** Writes a file into the fake data folder, like a change on another computer. */
+export async function writeDataFile(page: Page, fileName: string, text: string): Promise<void> {
+  await page.evaluate(
+    async ({ name, file, content }) => {
+      const folder = await (
+        await navigator.storage.getDirectory()
+      ).getDirectoryHandle(name, { create: true });
+      const writable = await (await folder.getFileHandle(file, { create: true })).createWritable();
+      await writable.write(content);
+      await writable.close();
     },
-    { name: fileName, initialText: openText },
+    { name: FOLDER_NAME, file: fileName, content: text },
   );
 }
 
-/** Reads what the fake File System Access API wrote last. */
-export async function readFakeFile(
-  page: Page,
-): Promise<{ written: string; permission: string | undefined }> {
-  return page.evaluate(() => {
-    const target: FakeFileWindow = window;
-    return { written: target.__written ?? "", permission: target.__permission };
-  });
+/** Reads a file of the fake data folder. Returns `null` if it does not exist. */
+export async function readDataFile(page: Page, fileName: string): Promise<string | null> {
+  return page.evaluate(
+    async ({ name, file }) => {
+      try {
+        const folder = await (await navigator.storage.getDirectory()).getDirectoryHandle(name);
+        return await (await (await folder.getFileHandle(file)).getFile()).text();
+      } catch {
+        return null;
+      }
+    },
+    { name: FOLDER_NAME, file: fileName },
+  );
 }
 
 /** Builds the text of a data file (envelope with data). */

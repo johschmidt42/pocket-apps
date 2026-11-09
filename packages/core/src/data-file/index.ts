@@ -1,4 +1,4 @@
-export type { FileAccess } from "./file-access.ts";
+export type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
 export { currentVersion, defineDataSchema, type DataSchema, type Migration } from "./schema.ts";
 export {
   createDataFileStore,

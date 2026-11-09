@@ -2,11 +2,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { parseEnvelope, serializeEnvelope } from "./envelope.ts";
-import { defineDataSchema } from "./schema.ts";
-import { backupFileName, createDataFileStore } from "./store.tsx";
 import { testAppInfo } from "../testing.ts";
-import { createMemoryFileAccess, type MemoryFileAccess } from "./testing.ts";
+import { parseEnvelope, serializeEnvelope } from "./envelope.ts";
+import type { FolderHost } from "./folder.ts";
+import { defineDataSchema } from "./schema.ts";
+import { createDataFileStore, type DataFileStoreOptions } from "./store.tsx";
+import { createMemoryFolder, createMemoryFolderHost, type MemoryFolder } from "./testing.ts";
 
 // Version 1: { n: number }. Version 2: { count: number }.
 const schema = defineDataSchema({
@@ -16,285 +17,327 @@ const schema = defineDataSchema({
   migrations: [(data) => ({ count: z.object({ n: z.number() }).parse(data).n })],
 });
 
-const { DataFileProvider, useDataFile } = createDataFileStore(schema, {
-  app: testAppInfo({ title: "Demo", version: "1.0" }),
-  autosaveDelayMs: 0,
-});
+const app = testAppInfo({ name: "demo", title: "Demo", version: "1.0" });
 
-function Counter() {
-  const { data, update } = useDataFile();
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        update((current) => ({ count: current.count + 1 }));
-      }}
-    >
-      Zähler {data.count}
-    </button>
-  );
+function makeStore(options: Partial<DataFileStoreOptions> = {}) {
+  const { DataFileProvider, useDataFile } = createDataFileStore(schema, {
+    app,
+    autosaveDelayMs: 0,
+    retryDelayMs: 60_000,
+    ...options,
+  });
+
+  function Counter() {
+    const { data, update } = useDataFile();
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          update((current) => ({ count: current.count + 1 }));
+        }}
+      >
+        Zähler {data.count}
+      </button>
+    );
+  }
+
+  function setup(host?: FolderHost) {
+    const user = userEvent.setup();
+    render(
+      <DataFileProvider {...(host && { folderHost: host })}>
+        <Counter />
+      </DataFileProvider>,
+    );
+    return user;
+  }
+
+  return { setup, Counter };
 }
 
-function setup(fake: MemoryFileAccess) {
-  const user = userEvent.setup();
-  render(
-    <DataFileProvider fileAccess={fake}>
-      <Counter />
-    </DataFileProvider>,
-  );
-  return user;
-}
+const { setup, Counter } = makeStore();
 
 function dataFile(schemaVersion: number, data: unknown): string {
   return serializeEnvelope({ app: "demo", schemaVersion, appVersion: "1.0", data });
 }
 
-describe("start screen", () => {
-  it("shows the title and the file actions", () => {
-    setup(createMemoryFileAccess({ directSave: true }));
+function fileData(folder: MemoryFolder, path = "demo.json"): unknown {
+  return parseEnvelope(folder.files.get(path)?.text ?? "").data;
+}
+
+function readyHost(folder = createMemoryFolder()) {
+  return { folder, host: createMemoryFolderHost({ saved: folder }) };
+}
+
+describe("data folder", () => {
+  it("shows the header and asks for a folder on the first visit", async () => {
+    const host = createMemoryFolderHost();
+    host.nextPick = createMemoryFolder();
+    const user = setup(host);
 
     expect(screen.getByRole("heading", { level: 1, name: "Demo" })).toBeInTheDocument();
-    expect(screen.getByRole("banner")).toHaveTextContent("Version 1.0");
-    expect(screen.getByRole("button", { name: "Neue Datei" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeInTheDocument();
-    expect(screen.queryByText(/kann nicht direkt/)).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Ordner wählen …" }));
+
+    expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
+    expect(screen.getByText("Pocket Apps Daten / demo.json")).toBeInTheDocument();
   });
 
-  it("explains the download fallback when the browser cannot save directly", () => {
-    setup(createMemoryFileAccess({ directSave: false }));
-
-    expect(screen.getByText(/kann nicht direkt in die Datei speichern/)).toBeInTheDocument();
-  });
-
-  it("uses the real browser file access by default", () => {
-    render(
-      <DataFileProvider>
-        <Counter />
-      </DataFileProvider>,
-    );
+  it("uses the folder of the browser by default", () => {
+    setup();
 
     // jsdom has no File System Access API.
-    expect(screen.getByText(/kann nicht direkt in die Datei speichern/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Bitte Chrome oder Edge verwenden" }),
+    ).toBeInTheDocument();
   });
 });
 
-describe("new file", () => {
-  it("without direct save: starts with the initial data and saves by download", async () => {
-    const fake = createMemoryFileAccess({ directSave: false });
-    const user = setup(fake);
+describe("load", () => {
+  it("starts with the initial data when the file does not exist and writes nothing", async () => {
+    const { folder, host } = readyHost();
+    setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
+    expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
+    expect(folder.files.size).toBe(0);
+  });
 
-    expect(screen.getByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Nicht gespeichert");
+  it("shows the data of the file", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Speichern" }));
-
-    expect(fake.downloads).toHaveLength(1);
-    expect(fake.downloads[0]?.name).toBe("demo.json");
-    expect(parseEnvelope(fake.downloads[0]?.text ?? "")).toMatchObject({
-      app: "demo",
-      schemaVersion: 2,
-      savedWith: "1.0",
-      data: { count: 0 },
-    });
+    expect(await screen.findByRole("button", { name: "Zähler 5" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
   });
 
-  it("with direct save: writes the new file at once", async () => {
-    const fake = createMemoryFileAccess({ directSave: true });
-    fake.nextCreateName = "mine.json";
-    const user = setup(fake);
-
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
-
-    expect(screen.getByText("mine.json")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
-    expect(screen.queryByRole("button", { name: "Speichern" })).not.toBeInTheDocument();
-    expect(parseEnvelope(fake.written.get("mine.json") ?? "").data).toEqual({ count: 0 });
-  });
-
-  it("with direct save: stays on the start screen when the user cancels", async () => {
-    const fake = createMemoryFileAccess({ directSave: true });
-    const user = setup(fake);
-
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
-
-    expect(screen.getByRole("button", { name: "Neue Datei" })).toBeInTheDocument();
-  });
-});
-
-describe("open file", () => {
-  it("stays on the start screen when the user cancels", async () => {
-    const user = setup(createMemoryFileAccess({ directSave: false }));
-
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-
-    expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeInTheDocument();
-  });
-
-  it("with direct save: shows the data and saves changes automatically", async () => {
-    const fake = createMemoryFileAccess({ directSave: true });
-    fake.nextOpen = {
-      name: "mine.json",
-      text: dataFile(2, { count: 5 }),
-      handle: { name: "mine.json" },
-    };
-    const user = setup(fake);
-
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-    await user.click(screen.getByRole("button", { name: "Zähler 5" }));
-
-    expect(screen.getByRole("button", { name: "Zähler 6" })).toBeInTheDocument();
-    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(parseEnvelope(fake.written.get("mine.json") ?? "").data).toEqual({ count: 6 });
-  });
-
-  it("migrates old data and downloads a backup of the old file first", async () => {
-    const fake = createMemoryFileAccess({ directSave: false });
+  it("migrates old data, keeps a backup of the old file and saves the new shape", async () => {
+    const { folder, host } = readyHost();
     const oldText = dataFile(1, { n: 3 });
-    fake.nextOpen = { name: "old.json", text: oldText, handle: null };
-    const user = setup(fake);
+    folder.files.set("demo.json", { text: oldText, lastModified: 1 });
+    setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-
-    expect(screen.getByRole("button", { name: "Zähler 3" })).toBeInTheDocument();
-    expect(fake.downloads).toEqual([{ name: "old.backup-v1.json", text: oldText }]);
-    expect(screen.getByRole("status")).toHaveTextContent("Nicht gespeichert");
-    expect(screen.getByText(/in ein neues Format umgewandelt/)).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Zähler 3" })).toBeInTheDocument();
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(folder.files.get("demo.backup-v1.json")?.text).toBe(oldText);
+    expect(parseEnvelope(folder.files.get("demo.json")?.text ?? "")).toMatchObject({
+      schemaVersion: 2,
+      data: { count: 3 },
+    });
   });
 
-  it("with direct save: does not overwrite a migrated file before the user saves", async () => {
-    const fake = createMemoryFileAccess({ directSave: true });
-    fake.nextOpen = { name: "old.json", text: dataFile(1, { n: 3 }), handle: { name: "old.json" } };
-    const user = setup(fake);
+  it("shows a clear error for an invalid file and loads again on request", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: "not json", lastModified: 1 });
+    const user = setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-    // Wait longer than the autosave delay (0 ms in this test).
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(await screen.findByRole("alert")).toHaveTextContent("keine gültige JSON-Datei");
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Die Datei „demo.json“ im Ordner „Pocket Apps Daten“ lässt sich nicht öffnen.",
+    );
 
-    expect(fake.written.size).toBe(0);
-    expect(screen.getByRole("status")).toHaveTextContent("Nicht gespeichert");
+    folder.files.set("demo.json", { text: dataFile(2, { count: 7 }), lastModified: 2 });
+    await user.click(screen.getByRole("button", { name: "Erneut laden" }));
 
-    await user.click(screen.getByRole("button", { name: "Speichern" }));
-
-    expect(parseEnvelope(fake.written.get("old.json") ?? "").data).toEqual({ count: 3 });
-    expect(screen.queryByText(/in ein neues Format umgewandelt/)).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
+    expect(await screen.findByRole("button", { name: "Zähler 7" })).toBeInTheDocument();
   });
 
-  it("shows a clear error for an invalid file", async () => {
-    const fake = createMemoryFileAccess({ directSave: false });
-    fake.nextOpen = { name: "bad.json", text: "not json", handle: null };
-    const user = setup(fake);
+  it("does not write the new shape when the backup fails", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(1, { n: 3 }), lastModified: 1 });
+    folder.writeError = new Error("read-only");
+    setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-
-    expect(screen.getByRole("alert")).toHaveTextContent("keine gültige JSON-Datei");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unerwarteter Fehler: read-only");
+    expect(folder.files.size).toBe(1);
   });
 
   it("shows unexpected errors that are not Error objects", async () => {
-    const fake = createMemoryFileAccess({ directSave: false });
+    const { folder, host } = readyHost();
     // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors -- This test needs a non-Error rejection.
-    fake.openFile = () => Promise.reject("kaputt");
-    const user = setup(fake);
+    folder.read = () => Promise.reject("kaputt");
+    setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-
-    expect(screen.getByRole("alert")).toHaveTextContent("Unerwarteter Fehler: kaputt");
-  });
-
-  it("shows unexpected errors", async () => {
-    const fake = createMemoryFileAccess({ directSave: false });
-    fake.openFile = () => Promise.reject(new Error("boom"));
-    const user = setup(fake);
-
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-
-    expect(screen.getByRole("alert")).toHaveTextContent("Unerwarteter Fehler: boom");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unerwarteter Fehler: kaputt");
   });
 });
 
-describe("file bar", () => {
-  it("shows an error when the automatic save fails", async () => {
-    const fake = createMemoryFileAccess({ directSave: true });
-    fake.nextOpen = {
-      name: "mine.json",
-      text: dataFile(2, { count: 0 }),
-      handle: { name: "mine.json" },
-    };
-    fake.writeFile = () => Promise.reject(new Error("disk full"));
-    const user = setup(fake);
+describe("save", () => {
+  it("saves changes automatically", async () => {
+    const { folder, host } = readyHost();
+    const user = setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
-    await user.click(screen.getByRole("button", { name: "Zähler 0" }));
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Automatisches Speichern ist fehlgeschlagen",
-    );
-    expect(screen.getByRole("alert")).toHaveTextContent("disk full");
-    expect(screen.getByRole("status")).toHaveTextContent("Nicht gespeichert");
+    expect(screen.getByRole("button", { name: "Zähler 1" })).toBeInTheDocument();
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(parseEnvelope(folder.files.get("demo.json")?.text ?? "")).toMatchObject({
+      app: "demo",
+      schemaVersion: 2,
+      savedWith: "1.0",
+      data: { count: 1 },
+    });
+  });
 
-    fake.writeFile = (handle, text) => {
-      fake.written.set(handle.name, text);
-      return Promise.resolve();
-    };
-    await user.click(screen.getByRole("button", { name: "Speichern" }));
+  it("saves again when the data changes during a save", async () => {
+    const { folder, host } = readyHost();
+    const write = folder.write;
+    const blocked: { finish?: () => void } = {};
+    folder.write = (path, text) =>
+      new Promise((resolve) => {
+        blocked.finish = () => {
+          resolve(write(path, text));
+        };
+      });
+    const user = setup(host);
 
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+    await vi.waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("Speichert …");
+    });
+    await user.click(screen.getByRole("button", { name: "Zähler 1" }));
+    folder.write = write;
+    blocked.finish?.();
+
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(fileData(folder)).toEqual({ count: 2 });
+  });
+
+  it("shows an error when a save fails and saves on retry", async () => {
+    const { folder, host } = readyHost();
+    folder.writeError = new Error("disk full");
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("disk full");
+    expect(screen.getByRole("status")).toHaveTextContent("Speichern fehlgeschlagen");
+
+    folder.writeError = null;
+    await user.click(screen.getByRole("button", { name: "Jetzt erneut versuchen" }));
+
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
+    expect(fileData(folder)).toEqual({ count: 1 });
   });
 
-  it("asks before it discards unsaved changes", async () => {
-    const fake = createMemoryFileAccess({ directSave: false });
-    const user = setup(fake);
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
-    const openFile = vi.spyOn(fake, "openFile");
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  it("tries again automatically after a failed save", async () => {
+    const quick = makeStore({ retryDelayMs: 10 });
+    const { folder, host } = readyHost();
+    folder.writeError = new Error("disk full");
+    const user = quick.setup(host);
 
-    await user.click(screen.getByRole("button", { name: "Öffnen" }));
-    await user.click(screen.getByRole("button", { name: "Neu" }));
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+    await screen.findByRole("alert");
+    folder.writeError = null;
 
-    expect(confirm).toHaveBeenCalledTimes(2);
-    expect(openFile).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-
-    confirm.mockReturnValue(true);
-    await user.click(screen.getByRole("button", { name: "Zähler 0" }));
-    await user.click(screen.getByRole("button", { name: "Neu" }));
-
-    expect(screen.getByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Öffnen" }));
-
-    expect(openFile).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not ask when there are no unsaved changes", async () => {
-    const fake = createMemoryFileAccess({ directSave: true });
-    fake.nextCreateName = "mine.json";
-    const user = setup(fake);
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
-    const confirm = vi.spyOn(window, "confirm");
-
-    await user.click(screen.getByRole("button", { name: "Öffnen" }));
-
-    expect(confirm).not.toHaveBeenCalled();
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(fileData(folder)).toEqual({ count: 1 });
   });
 
   it("warns before the tab closes with unsaved changes", async () => {
-    const user = setup(createMemoryFileAccess({ directSave: false }));
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
+    const { folder, host } = readyHost();
+    folder.writeError = new Error("disk full");
+    const user = setup(host);
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+    await screen.findByRole("alert");
 
-    const whileDirty = new Event("beforeunload", { cancelable: true });
-    window.dispatchEvent(whileDirty);
-    expect(whileDirty.defaultPrevented).toBe(true);
+    const whileUnsaved = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(whileUnsaved);
+    expect(whileUnsaved.defaultPrevented).toBe(true);
 
-    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    folder.writeError = null;
+    await user.click(screen.getByRole("button", { name: "Jetzt erneut versuchen" }));
+    await screen.findByText("Gespeichert");
 
     const afterSave = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(afterSave);
     expect(afterSave.defaultPrevented).toBe(false);
+  });
+});
+
+describe("conflict", () => {
+  async function conflict() {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    const user = setup(host);
+    await screen.findByRole("button", { name: "Zähler 5" });
+    folder.changeElsewhere("demo.json", dataFile(2, { count: 50 }));
+
+    await user.click(screen.getByRole("button", { name: "Zähler 5" }));
+    await screen.findByText("Nicht gespeichert: Konflikt");
+    return { folder, user };
+  }
+
+  it("does not overwrite a file that changed elsewhere", async () => {
+    const { folder, user } = await conflict();
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Die Datei wurde woanders geändert");
+    expect(fileData(folder)).toEqual({ count: 50 });
+
+    // More changes keep the conflict.
+    await user.click(screen.getByRole("button", { name: "Zähler 6" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Nicht gespeichert: Konflikt");
+    expect(fileData(folder)).toEqual({ count: 50 });
+  });
+
+  it("loads the other version on request", async () => {
+    const { folder, user } = await conflict();
+
+    await user.click(
+      screen.getByRole("button", { name: "Neu laden (meine Änderungen verwerfen)" }),
+    );
+
+    expect(await screen.findByRole("button", { name: "Zähler 50" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
+    expect(fileData(folder)).toEqual({ count: 50 });
+  });
+
+  it("overwrites the other version on request", async () => {
+    const { folder, user } = await conflict();
+
+    await user.click(screen.getByRole("button", { name: "Meine Version speichern" }));
+
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(fileData(folder)).toEqual({ count: 6 });
+  });
+
+  it("shows an error when the folder cannot be read for the overwrite", async () => {
+    const { folder, user } = await conflict();
+    folder.lastModified = () => Promise.reject(new Error("offline"));
+
+    await user.click(screen.getByRole("button", { name: "Meine Version speichern" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("offline");
+    expect(screen.getByRole("status")).toHaveTextContent("Speichern fehlgeschlagen");
+  });
+});
+
+describe("options", () => {
+  it("uses the default delays and ignores a late load after it closed", async () => {
+    const defaults = createDataFileStore(schema, { app });
+    const { folder, host } = readyHost();
+    const blocked: { finish?: () => void } = {};
+    folder.read = () =>
+      new Promise((resolve) => {
+        blocked.finish = () => {
+          resolve(null);
+        };
+      });
+    const view = render(
+      <defaults.DataFileProvider folderHost={host}>
+        <p>App</p>
+      </defaults.DataFileProvider>,
+    );
+    await vi.waitFor(() => {
+      expect(blocked.finish).toBeDefined();
+    });
+
+    view.unmount();
+    blocked.finish?.();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(screen.queryByText("App")).not.toBeInTheDocument();
   });
 });
 
@@ -303,12 +346,5 @@ describe("useDataFile", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     expect(() => render(<Counter />)).toThrow("inside <DataFileProvider>");
-  });
-});
-
-describe("backupFileName", () => {
-  it("adds the old version before the extension", () => {
-    expect(backupFileName("list.json", 2)).toBe("list.backup-v2.json");
-    expect(backupFileName("list", 1)).toBe("list.backup-v1.json");
   });
 });

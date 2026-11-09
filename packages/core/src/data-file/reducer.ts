@@ -1,39 +1,87 @@
-import type { FileHandle } from "./file-access.ts";
+/**
+ * - "saved": the file has the current data.
+ * - "pending": there are changes; the app saves them soon.
+ * - "saving": the app writes the file now.
+ * - "failed": the last write failed; the app tries again soon.
+ * - "conflict": the file changed elsewhere since the app read it; the person decides.
+ */
+export type SaveStatus = "saved" | "pending" | "saving" | "failed" | "conflict";
 
 export type ReadyState<T> = {
   status: "ready";
   data: T;
-  fileName: string;
-  /** Only in Chrome and Edge. With a handle, the app can save automatically. */
-  handle: FileHandle | null;
-  /** True if there are changes that are not in the file yet. */
-  dirty: boolean;
-  /**
-   * True after a migration until the first save. The app does not save automatically then.
-   * The user first checks the backup and then clicks "Speichern".
-   */
-  pendingMigration: boolean;
+  /** The data that the file has. `null` = the file does not have the current shape yet. */
+  saved: T | null;
+  /** The time of the last change of the file when the app read or wrote it. `null` = no file yet. */
+  lastModified: number | null;
+  save: SaveStatus;
+  error: string | null;
 };
 
-export type DataFileState<T> = { status: "empty" } | ReadyState<T>;
+export type DataFileState<T> =
+  { status: "loading" } | { status: "broken"; message: string } | ReadyState<T>;
 
 export type DataFileAction<T> =
-  | { type: "loaded"; state: ReadyState<T> }
+  | { type: "loading" }
+  | { type: "loaded"; data: T; saved: T | null; lastModified: number | null }
+  | { type: "broken"; message: string }
   | { type: "updated"; updater: (data: T) => T }
-  | { type: "saved"; data: T };
+  | { type: "saving" }
+  | { type: "saved"; data: T; lastModified: number }
+  | { type: "failed"; message: string }
+  | { type: "conflict" }
+  | { type: "retry" }
+  | { type: "overwrite"; lastModified: number | null };
+
+type FileAction<T> = Exclude<DataFileAction<T>, { type: "loading" | "loaded" | "broken" }>;
 
 export function dataFileReducer<T>(
   state: DataFileState<T>,
   action: DataFileAction<T>,
 ): DataFileState<T> {
-  if (action.type === "loaded") return action.state;
-  // Updates and saves only apply to a loaded file.
-  if (state.status !== "ready") return state;
+  if (action.type === "loading") return { status: "loading" };
+  if (action.type === "broken") return { status: "broken", message: action.message };
+  if (action.type === "loaded") {
+    return {
+      status: "ready",
+      data: action.data,
+      saved: action.saved,
+      lastModified: action.lastModified,
+      save: action.saved === action.data ? "saved" : "pending",
+      error: null,
+    };
+  }
+  // The other actions only apply to a loaded file.
+  return state.status === "ready" ? fileReducer(state, action) : state;
+}
+
+function fileReducer<T>(state: ReadyState<T>, action: FileAction<T>): ReadyState<T> {
   switch (action.type) {
     case "updated":
-      return { ...state, data: action.updater(state.data), dirty: true };
+      return {
+        ...state,
+        data: action.updater(state.data),
+        // During a save or a conflict, the status stays. "saved" then sees the new data.
+        save: state.save === "conflict" || state.save === "saving" ? state.save : "pending",
+      };
+    case "saving":
+      return { ...state, save: "saving" };
     case "saved":
-      // If the data changed while we saved, it is still dirty.
-      return { ...state, dirty: state.data !== action.data, pendingMigration: false };
+      return {
+        ...state,
+        saved: action.data,
+        lastModified: action.lastModified,
+        // If the data changed while the app saved, it saves again.
+        save: state.data === action.data ? "saved" : "pending",
+        error: null,
+      };
+    case "failed":
+      return { ...state, save: "failed", error: action.message };
+    case "conflict":
+      return { ...state, save: "conflict" };
+    case "retry":
+      return { ...state, save: "pending", error: null };
+    case "overwrite":
+      return { ...state, lastModified: action.lastModified, save: "pending", error: null };
   }
 }

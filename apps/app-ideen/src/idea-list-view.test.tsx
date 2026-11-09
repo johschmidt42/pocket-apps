@@ -1,4 +1,4 @@
-import { createMemoryFileAccess } from "@pocket-apps/core/data-file/testing";
+import { createMemoryFolder, createMemoryFolderHost } from "@pocket-apps/core/data-file/testing";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -20,15 +20,15 @@ const fileText = JSON.stringify({
 });
 
 async function openIdeas() {
-  const fake = createMemoryFileAccess({ directSave: false });
-  fake.nextOpen = { name: "ideen.json", text: fileText, handle: null };
+  const folder = createMemoryFolder();
+  folder.files.set("app-ideen.json", { text: fileText, lastModified: 1 });
   const user = userEvent.setup();
   render(
-    <DataFileProvider fileAccess={fake}>
+    <DataFileProvider folderHost={createMemoryFolderHost({ saved: folder })}>
       <IdeaListView />
     </DataFileProvider>,
   );
-  await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
+  await screen.findByRole("list");
   return user;
 }
 
@@ -132,15 +132,12 @@ describe("IdeaListView", () => {
   });
 
   it("shows a hint when there are no ideas", async () => {
-    const user = userEvent.setup();
     render(
-      <DataFileProvider fileAccess={createMemoryFileAccess({ directSave: false })}>
+      <DataFileProvider folderHost={createMemoryFolderHost({ saved: createMemoryFolder() })}>
         <IdeaListView />
       </DataFileProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Neue Datei" }));
-
-    expect(screen.getByText("Noch keine Ideen.")).toBeInTheDocument();
+    expect(await screen.findByText("Noch keine Ideen.")).toBeInTheDocument();
   });
 });

@@ -1,47 +1,51 @@
 import { describe, expect, it } from "vitest";
 import { dataFileReducer, type DataFileState, type ReadyState } from "./reducer.ts";
 
-const ready: ReadyState<number> = {
+type Data = { count: number };
+
+const ready: ReadyState<Data> = {
   status: "ready",
-  data: 1,
-  fileName: "a.json",
-  handle: null,
-  dirty: false,
-  pendingMigration: false,
+  data: { count: 1 },
+  saved: { count: 1 },
+  lastModified: 5,
+  save: "saved",
+  error: null,
 };
-const empty: DataFileState<number> = { status: "empty" };
 
 describe("dataFileReducer", () => {
-  it("replaces the state when a file is loaded", () => {
-    expect(dataFileReducer(empty, { type: "loaded", state: ready })).toBe(ready);
+  it("ignores save actions while no file is loaded", () => {
+    const loading: DataFileState<Data> = { status: "loading" };
+
+    expect(dataFileReducer(loading, { type: "saving" })).toBe(loading);
+    expect(dataFileReducer(loading, { type: "updated", updater: (d) => d })).toBe(loading);
   });
 
-  it("applies an update and marks the state as dirty", () => {
-    const next = dataFileReducer(ready, { type: "updated", updater: (n) => n + 1 });
+  it("marks loaded data as pending when the file does not have it yet", () => {
+    const state = dataFileReducer<Data>(
+      { status: "loading" },
+      { type: "loaded", data: { count: 2 }, saved: null, lastModified: 1 },
+    );
 
-    expect(next).toEqual({ ...ready, data: 2, dirty: true });
+    expect(state).toMatchObject({ status: "ready", save: "pending" });
   });
 
-  it("marks the state as clean after a save of the current data", () => {
-    const dirty = { ...ready, dirty: true };
+  it("keeps the status of a running save when the data changes", () => {
+    const saving = dataFileReducer(ready, { type: "saving" });
+    const changed = dataFileReducer(saving, {
+      type: "updated",
+      updater: (d) => ({ count: d.count + 1 }),
+    });
 
-    expect(dataFileReducer(dirty, { type: "saved", data: 1 })).toEqual(ready);
+    expect(changed).toMatchObject({ save: "saving", data: { count: 2 } });
   });
 
-  it("ends a pending migration with the first save", () => {
-    const migrated = { ...ready, dirty: true, pendingMigration: true };
+  it("clears the error and takes the new time on overwrite", () => {
+    const failed = dataFileReducer(ready, { type: "failed", message: "x" });
 
-    expect(dataFileReducer(migrated, { type: "saved", data: 1 })).toEqual(ready);
-  });
-
-  it("keeps the state dirty if the data changed during the save", () => {
-    const dirty = { ...ready, data: 2, dirty: true };
-
-    expect(dataFileReducer(dirty, { type: "saved", data: 1 })).toEqual({ ...dirty, dirty: true });
-  });
-
-  it("ignores updates and saves when no file is loaded", () => {
-    expect(dataFileReducer<number>(empty, { type: "updated", updater: (n) => n + 1 })).toBe(empty);
-    expect(dataFileReducer(empty, { type: "saved", data: 1 })).toBe(empty);
+    expect(dataFileReducer(failed, { type: "overwrite", lastModified: 9 })).toMatchObject({
+      save: "pending",
+      error: null,
+      lastModified: 9,
+    });
   });
 });
