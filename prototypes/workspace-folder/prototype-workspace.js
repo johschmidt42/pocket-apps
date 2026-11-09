@@ -38,7 +38,26 @@
   /** Shows the Chrome permission dialog if necessary. Needs a click (user activation). */
   const requestAccess = (handle) => handle.requestPermission({ mode: "readwrite" });
 
+  // Measures each file access. Pages set Workspace.onTiming to log it.
+  async function timed(label, action) {
+    const start = performance.now();
+    try {
+      return await action();
+    } finally {
+      const ms = Math.round(performance.now() - start);
+      window.Workspace?.onTiming?.(label, ms);
+    }
+  }
+
   async function readJson(dir, path) {
+    return timed(`gelesen: ${path}`, () => readJsonRaw(dir, path));
+  }
+
+  async function writeJson(dir, path, data) {
+    return timed(`geschrieben: ${path}`, () => writeJsonRaw(dir, path, data));
+  }
+
+  async function readJsonRaw(dir, path) {
     const parts = path.split("/");
     let current = dir;
     try {
@@ -51,7 +70,7 @@
     }
   }
 
-  async function writeJson(dir, path, data) {
+  async function writeJsonRaw(dir, path, data) {
     const parts = path.split("/");
     let current = dir;
     for (const part of parts.slice(0, -1)) current = await current.getDirectoryHandle(part, { create: true });
@@ -79,6 +98,7 @@
   window.Workspace = {
     loadFolder, saveFolder, forgetFolder, queryAccess, requestAccess,
     readJson, writeJson, addUser, removeUser, readUsers, writeUsers, removeUserFolder,
+    onTiming: null,
   };
 
   // Event log, shared by all prototype pages (localStorage is shared under file:// in Chrome).

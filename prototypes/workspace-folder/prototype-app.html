@@ -34,7 +34,9 @@
         <h2>Notizen des Nutzers</h2>
         <div class="row" style="margin-bottom: 8px">
           <button id="add-note">Notiz hinzufügen</button>
+          <label><input type="checkbox" id="fast" /> Schneller Modus (sofort anzeigen, im Hintergrund speichern)</label>
         </div>
+        <p class="muted" id="timing">Letzte Aktion: —</p>
         <ul class="plain" id="notes"></ul>
       </section>
 
@@ -51,6 +53,13 @@
       const state = { folder: null, access: "kein Ordner", users: [], activeUser: localStorage.getItem("proto-active-user"), notes: null, error: null };
 
       function log(text, kind) { ProtoLog.add(PAGE, text, kind); renderLog(); }
+      W.onTiming = (label, ms) => log(`⏱ ${label} in ${ms} ms`);
+      const fast = document.getElementById("fast");
+      fast.checked = localStorage.getItem("proto-fast") !== "off";
+      fast.onchange = () => { localStorage.setItem("proto-fast", fast.checked ? "on" : "off"); log(`Schneller Modus: ${fast.checked ? "an" : "aus"}`); };
+      function showTiming(visibleMs, savedMs) {
+        document.getElementById("timing").textContent = `Letzte Aktion: sichtbar nach ${visibleMs} ms` + (savedMs === undefined ? " – speichert …" : `, gespeichert nach ${savedMs} ms`);
+      }
       function renderLog() {
         document.getElementById("log").innerHTML = ProtoLog.all().map((e) => `<span class="log-${e.kind}">${e.time} [${e.page}] ${e.text}</span>`).join("\n") || "—";
       }
@@ -103,10 +112,26 @@
         await refresh();
       };
       document.getElementById("add-note").onclick = async () => {
+        const start = performance.now();
         const notes = [...state.notes, `Notiz ${state.notes.length + 1} (${new Date().toLocaleTimeString("de-DE")})`];
-        await W.writeJson(state.folder, `${state.activeUser}/${FILE}`, { notes });
-        log(`Notiz gespeichert in ${state.activeUser}/${FILE} – ohne Datei-Dialog`);
-        await refresh();
+        const path = `${state.activeUser}/${FILE}`;
+        if (fast.checked) {
+          // Show at once, save in the background. No re-read of the folder.
+          state.notes = notes;
+          render();
+          const visible = Math.round(performance.now() - start);
+          showTiming(visible);
+          await W.writeJson(state.folder, path, { notes });
+          showTiming(visible, Math.round(performance.now() - start));
+          log(`Notiz gespeichert (schneller Modus): sichtbar nach ${visible} ms`);
+        } else {
+          // Prototype behaviour before: save, then read everything again, then show.
+          await W.writeJson(state.folder, path, { notes });
+          await refresh();
+          const ms = Math.round(performance.now() - start);
+          showTiming(ms, ms);
+          log(`Notiz gespeichert (langsamer Modus): sichtbar nach ${ms} ms`);
+        }
       };
 
       log("Seite geladen");

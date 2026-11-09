@@ -63,6 +63,7 @@
       const state = { folder: null, access: "kein Ordner", users: [], activeUser: localStorage.getItem("proto-active-user"), priorities: null, error: null };
 
       function log(text, kind) { ProtoLog.add(PAGE, text, kind); renderLog(); }
+      W.onTiming = (label, ms) => log(`⏱ ${label} in ${ms} ms`);
 
       async function refresh() {
         state.error = null;
