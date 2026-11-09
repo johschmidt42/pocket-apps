@@ -25,7 +25,7 @@ Most apps work offline. An app that needs an external API declares this in its `
 
 ## Commands
 
-Use Node.js 24. The file `.nvmrc` sets the version for nvm and for the CI. Run `nvm use` in the repository root folder (once: `nvm install`).
+Use Node.js 24. The file `.nvmrc` sets the exact version (for example `24.22.2`) for nvm and for the CI. To update Node.js, change only `.nvmrc`. Run `nvm use` in the repository root folder (once: `nvm install`).
 Install pnpm once with Homebrew: `brew install pnpm`. pnpm then uses the version in `packageManager` of `package.json`.
 Install the test browsers once: `pnpm e2e:install`.
 
@@ -273,7 +273,8 @@ GitHub Actions run the pipelines in `.github/workflows/`.
 - Name a CI pipeline (checks) `CI - <what>`, for example `CI - Lint`. File name: `ci-<what>.yml`.
 - Name a CD pipeline (delivery) `CD - <what>`, for example `CD - Release`. File name: `cd-<what>.yml`.
 - Use the local action `./.github/actions/setup` to install Node.js (version from `.nvmrc`), pnpm and the dependencies. Do not repeat these steps.
-- In CD pipelines, use only official GitHub actions. Pin them to a commit hash with the tag as a comment. CD pipelines have access to secrets.
+- Pin every action to a commit hash with the tag as a comment: `actions/checkout@<sha> # v7.0.1`. CI builds the files that CD delivers, so CI needs the same protection.
+- In CD pipelines, use only official GitHub actions. CD pipelines have access to secrets.
 - Give each pipeline `permissions: contents: read`, unless it needs more.
 - Use the same commands as on your computer (`pnpm lint`, `pnpm typecheck`). Do not write special commands for CI.
 
@@ -294,10 +295,11 @@ The CI pipelines run on each push to `main` and on each pull request. When `CI -
 
 `CD - Release` uploads the app files to a folder in Google Drive:
 
-1. It starts when `CI - E2E` passed on `main`.
-2. It downloads the artifact `release` of that run. It does not build again. Thus it uploads exactly the tested files.
-3. It runs `rclone sync release/ gdrive: --include "*.html"`. New and changed app files go to the folder. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
-4. It runs only if the repository variable `GDRIVE_FOLDER_ID` is set. Without the variable, GitHub skips it.
+1. It starts when `CI - E2E` passed after a push to `main` of this repository. Pull requests and forks never start it.
+2. It checks that the commit is still the newest commit on `main`, and that all five CI pipelines passed for it. Else it stops. Thus a re-run of an old run cannot overwrite newer files.
+3. It downloads the artifact `release` of that run. It does not build again. Thus it uploads exactly the tested files.
+4. It runs `rclone sync release/ gdrive: --include "*.html"`. New and changed app files go to the folder. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
+5. It runs only if the repository variable `GDRIVE_FOLDER_ID` is set. Without the variable, GitHub skips it.
 
 [rclone](https://rclone.org) is a command-line tool that copies files to cloud storage. The pipeline configures its remote `gdrive` only with environment variables. Your computer has the remote `pocket-apps`. Both use the same token.
 
@@ -362,7 +364,7 @@ The script does these steps:
    - If rclone asks "Token already configured - replace it?": answer `y`.
    - If rclone asks "Use web browser to automatically authenticate?": answer `y`.
    - If rclone asks "Configure this as a Shared Drive (Team Drive)?": answer `n`.
-3. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set and the client did not change, it uses that folder.
+3. It checks that the remote has the scope `drive.file`. Else it stops. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set and the client did not change, it uses that folder.
 4. It writes the token, the client ID and the client secret into the secrets. It does not print them.
 5. It writes the folder ID into the variable `GDRIVE_FOLDER_ID`.
 
@@ -374,11 +376,13 @@ After the setup, you can move, rename and share the folder in Google Drive. The 
 gh run list --workflow "CD - Release" --limit 3
 ```
 
-To upload now, run `CI - E2E` on `main` again (Actions → CI - E2E → Re-run). The script prints the exact command.
+To upload now, run the newest `CI - E2E` run on `main` again (Actions → CI - E2E → Re-run). The script prints the exact command. The artifact `release` exists for 7 days. After that, push a new commit.
+
+If `CD - Release` fails with `invalid_grant`, Google ended the login. This happens when you removed the access, or when nobody used the token for 6 months. Run `pnpm setup:google-drive` again. It keeps the folder.
 
 #### Turn off and undo
 
-- Pause the uploads: `gh variable delete GDRIVE_FOLDER_ID`. The script finds the folder no longer. A new setup creates a new folder.
+- Pause the uploads: `gh variable delete GDRIVE_FOLDER_ID`. A new setup then uses the folder with the same name again, if it still exists. Else it creates a new folder.
 - Remove the secrets from GitHub: `gh secret delete GDRIVE_TOKEN`, `gh secret delete GDRIVE_CLIENT_ID`, `gh secret delete GDRIVE_CLIENT_SECRET`.
 - Remove the token from your computer: `rclone config delete pocket-apps`. The file `~/.config/rclone/rclone.conf` holds the token without encryption.
 - Stop the Google access at once: remove "pocket-apps" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Or delete the OAuth client in the Google Cloud Console.

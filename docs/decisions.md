@@ -19,14 +19,15 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Consequence:** rclone must create the folder itself. The folder that the user created before cannot be used.
 - **Rejected:** Full Drive scope (a leaked token gives access to the whole Drive). A separate Google account (more setup, the data files in the shared folder are still visible). A service account (no storage quota in a personal Drive).
 - **Detail:** The CD job uses only official GitHub actions, pinned to a commit hash.
+- **Review fixes:** CD runs only for a push to `main` of this repository (no pull requests, no forks). It uploads only the newest commit of `main`, and only if all five CI pipelines passed for it. It installs a fixed rclone version with a checksum. The setup script stops if the rclone remote has a scope other than `drive.file`.
 
 ## 2026-11-09: GitHub Actions and Conventional Commits
 
 - **Decision:** CI pipelines are named `CI - <what>`. CD pipelines are named `CD - <what>`.
 - **Decision:** The first pipelines are the lint checks: `CI - Lint` (ESLint), `CI - Format` (Prettier) and `CI - Typecheck` (TypeScript). Each check is a separate pipeline. Then GitHub shows which check failed.
-- **Decision:** A local composite action `.github/actions/setup` installs Node.js (version from `.nvmrc`), pnpm and the dependencies. All pipelines use it. `.nvmrc` is the only place for the Node.js version, for nvm and for the CI.
+- **Decision:** A local composite action `.github/actions/setup` installs Node.js (version from `.nvmrc`), pnpm and the dependencies. All pipelines use it. `.nvmrc` is the only place for the exact Node.js version, for nvm and for the CI. `engines.node` in `package.json` is only the minimum (`>=24`).
 - **Decision:** Commit messages follow Conventional Commits. The scope is the app or package.
-- **Added:** `CI - Test` (unit tests with coverage) and `CI - E2E` (browser tests in Chromium, Firefox and WebKit). `CI - E2E` caches the Playwright browsers and retries a failed test once.
+- **Added:** `CI - Test` (unit tests with coverage) and `CI - E2E` (browser tests in Chromium, Firefox and WebKit). `CI - E2E` caches the Playwright browsers. It retries a failed test once for a trace, but a flaky test still fails the pipeline (`failOnFlakyTests`).
 - **Added:** `CD - Release`. See "CD to Google Drive with rclone and scope drive.file".
 
 ## 2026-11-09: Versions with two numbers, icons on the launcher

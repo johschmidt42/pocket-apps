@@ -18,7 +18,7 @@
 set -euo pipefail
 
 REMOTE="pocket-apps"
-FOLDER="${1:-Pocket Apps}"
+FOLDER_NAME="${1:-Pocket Apps}"
 
 fail() {
   echo "Error: $*" >&2
@@ -75,6 +75,10 @@ else
   fi
 fi
 
+# The token must have the scope drive.file. A wider scope gives access to the whole Drive.
+SCOPE=$(remote_value scope)
+[ "$SCOPE" = "drive.file" ] || fail "The rclone remote '${REMOTE}' has the scope '${SCOPE}', not 'drive.file'. Run: rclone config delete ${REMOTE}. Then run this script again."
+
 # Step 3: the folder. Keep the folder that the pipeline already uses, if this client created it.
 FOLDER_ID=$(gh variable get GDRIVE_FOLDER_ID --repo "$REPO" 2>/dev/null || true)
 if [ -n "$FOLDER_ID" ] && $CLIENT_CHANGED; then
@@ -87,11 +91,11 @@ if [ -n "$FOLDER_ID" ]; then
   rclone lsjson "${REMOTE}:" --drive-root-folder-id "$FOLDER_ID" --max-depth 1 >/dev/null 2>&1 ||
     fail "rclone cannot open the folder ${FOLDER_ID}. Delete the variable GDRIVE_FOLDER_ID to create a new folder: gh variable delete GDRIVE_FOLDER_ID"
 else
-  echo "Step 3/5: Create the Drive folder '${FOLDER}'."
-  rclone mkdir "${REMOTE}:${FOLDER}"
-  FOLDER_ID=$(rclone lsjson "${REMOTE}:" --dirs-only | jq -r --arg name "$FOLDER" '.[] | select(.Name == $name) | .ID')
-  [ -n "$FOLDER_ID" ] || fail "Could not find the folder ID of '${FOLDER}'."
-  [ "$(echo "$FOLDER_ID" | wc -l)" -eq 1 ] || fail "There are several folders with the name '${FOLDER}'. Rename or delete the extra folders."
+  echo "Step 3/5: Create the Drive folder '${FOLDER_NAME}'."
+  rclone mkdir "${REMOTE}:${FOLDER_NAME}"
+  FOLDER_ID=$(rclone lsjson "${REMOTE}:" --dirs-only | jq -r --arg name "$FOLDER_NAME" '.[] | select(.Name == $name) | .ID')
+  [ -n "$FOLDER_ID" ] || fail "Could not find the folder ID of '${FOLDER_NAME}'."
+  [ "$(echo "$FOLDER_ID" | wc -l)" -eq 1 ] || fail "There are several folders with the name '${FOLDER_NAME}'. Rename or delete the extra folders."
 fi
 
 # Step 4: token and client. They go from rclone directly to GitHub. They are not printed.
