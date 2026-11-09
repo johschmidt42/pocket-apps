@@ -3,7 +3,7 @@
 ## Purpose
 
 pocket-apps is a monorepo of small personal apps ("home-cooked software").
-Each app builds into **one self-contained HTML file**. Users open the file from disk (`file://`). They need no server.
+Each app builds into **one self-contained HTML file**. GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/` in Chrome or Edge. There is no server for user data.
 Apps that keep data store it in a **separate JSON file**. The user owns this file. No user data goes to a server.
 Most apps work offline. An app that needs an external API declares this in its `package.json`.
 
@@ -110,7 +110,7 @@ Each app declares its info in its `package.json`:
 - Set `pocketApp.network` to `true` only if the app needs an external API.
 - In apps with `"network": false` and in the launcher, ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket` and `EventSource`.
 - An app with `"network": true` must start without internet. Catch each failed request. Show a clear German message. Do not log the failure with `console.error`.
-- Use only APIs that allow requests from any origin (`Access-Control-Allow-Origin: *`). An app file under `file://` has the origin `null`. Test the API from a `file://` page before you build the app.
+- Use only APIs that allow requests from the origin `https://johschmidt42.github.io` (CORS). Test the API from that origin before you build the app.
 - Keep settings such as a city in the data file. Then the app is stateful. Do not use `localStorage`.
 - Never put an API key or a password into the code. Everyone who has the app file can read it. If an API needs a key, the user types it in. A stateful app can keep it in the data file.
 - Send to an API only the data that the request needs, for example a city name for a weather API. Do not send the content of the data file.
@@ -162,7 +162,7 @@ Each app declares its info in its `package.json`:
 - Add a dependency only with a reason. Use browser APIs first.
 - Pin exact versions. Do not use `^` or `~`.
 - Keep TypeScript on 6.0.x until typescript-eslint supports TypeScript 7.
-- Make IDs with `crypto.getRandomValues`. Do not use `crypto.randomUUID`. Some browsers block it under `file://`.
+- Make IDs with `crypto.getRandomValues`. The browser tests open the files under `file://`, where `crypto.randomUUID` is not always available.
 
 ## Versions
 
@@ -287,106 +287,22 @@ Current pipelines:
 | `CI - Typecheck` | `ci-typecheck.yml` | `pnpm typecheck`                                |
 | `CI - Test`      | `ci-test.yml`      | `pnpm coverage`                                 |
 | `CI - E2E`       | `ci-e2e.yml`       | `pnpm e2e:install --with-deps`, then `pnpm e2e` |
-| `CD - Release`   | `cd-release.yml`   | Upload of `release/*.html` to Google Drive      |
+| `CD - Release`   | `cd-release.yml`   | Publish `release/` on GitHub Pages              |
 
 The CI pipelines run on each push to `main` and on each pull request. When `CI - E2E` fails, it uploads the Playwright report as the artifact `playwright-report`. When it passes, it uploads `release/` as the artifact `release`.
 
 ### CD - Release
 
-`CD - Release` uploads the app files to a folder in Google Drive:
+`CD - Release` publishes the app files on GitHub Pages:
 
 1. It starts when `CI - E2E` passed after a push to `main` of this repository. Pull requests and forks never start it.
 2. It checks that the commit is still the newest commit on `main`, and that all five CI pipelines passed for it. Else it stops. Thus a re-run of an old run cannot overwrite newer files.
-3. It downloads the artifact `release` of that run. It does not build again. Thus it uploads exactly the tested files.
-4. It runs `rclone sync release/ gdrive: --include "*.html" --checksum`. It compares the MD5 checksums. New app files and app files with a changed content go to the folder. Unchanged files stay as they are, with their date. App files that are no longer in `release/` are deleted. Other files, for example data files (`*.json`), stay.
-5. It runs only if the repository variable `GDRIVE_FOLDER_ID` is set. Without the variable, GitHub skips it.
+3. It downloads the artifact `release` of that run. It does not build again. Thus it publishes exactly the tested files.
+4. It publishes the folder on GitHub Pages: `release/index.html` (the launcher) is `https://johschmidt42.github.io/pocket-apps/`, each app is `…/pocket-apps/<app>.html`.
 
-[rclone](https://rclone.org) is a command-line tool that copies files to cloud storage. The pipeline configures its remote `gdrive` only with environment variables. Your computer has the remote `pocket-apps`. Both use the same token.
+Repository settings: Settings → Pages → Source must be "GitHub Actions". The pipeline needs no secrets.
 
-The token has the Google Drive scope `drive.file`. With this scope, the token can access only the files that rclone created. It cannot see other files in the Drive.
-
-Repository settings (Settings → Secrets and variables → Actions):
-
-| Kind     | Name                   | Value                                                                                 |
-| -------- | ---------------------- | ------------------------------------------------------------------------------------- |
-| Secret   | `GDRIVE_TOKEN`         | The rclone OAuth token (JSON) of the remote `pocket-apps`.                            |
-| Secret   | `GDRIVE_CLIENT_ID`     | The OAuth client ID of your Google Cloud project (type "Desktop app").                |
-| Secret   | `GDRIVE_CLIENT_SECRET` | The secret of this OAuth client.                                                      |
-| Variable | `GDRIVE_FOLDER_ID`     | The ID of the Drive folder. Set it to turn the pipeline on. Delete it to turn it off. |
-
-#### Google Cloud project (once)
-
-rclone needs an OAuth client of your own Google Cloud project. rclone's shared client stops working in 2026. Do these steps in the [Google Cloud Console](https://console.cloud.google.com). Add `?project=<project-id>` to each link.
-
-1. Enable the Google Drive API: [APIs & Services → Library → Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) → "Enable".
-2. Google Auth Platform → "Get started": app name `pocket-apps`, your email as support email, user type "External", your email as contact. Click "Create".
-3. Google Auth Platform → [Branding](https://console.cloud.google.com/auth/branding). Google needs these fields before it lets you publish the app:
-
-   | Field                           | Value                                           |
-   | ------------------------------- | ----------------------------------------------- |
-   | App logo                        | Leave empty. A logo needs a verification.       |
-   | Application home page           | A public page, e.g. `https://github.com/<user>` |
-   | Application privacy policy link | A public page, e.g. `https://github.com/<user>` |
-   | Authorised domains              | The domain of these pages, e.g. `github.com`    |
-
-   Click "Save". Google checks the content of these pages only in a verification. This app needs no verification.
-
-4. Google Auth Platform → [Audience](https://console.cloud.google.com/auth/audience): click "Publish app" and confirm. The status must be "In production". In "Testing", Google ends the login after 7 days.
-5. Google Auth Platform → [Data access](https://console.cloud.google.com/auth/scopes): "Add or remove scopes" → add `https://www.googleapis.com/auth/drive.file` → "Update" → "Save". It must show under "Your non-sensitive scopes". Thus Google does not need to verify the app.
-6. Google Auth Platform → [Clients](https://console.cloud.google.com/auth/clients/create): create a client of type "Desktop app", name `rclone pocket-apps`. Copy the client ID and the client secret. Google shows the full secret only once.
-
-"Authorised domains" give nobody access to the Drive. They only list the domains that the consent screen can show. Only the token gives access, and only the owner of the Drive can create it with a login.
-
-`drive.file` gives access per OAuth client. A new client cannot see the folder of the old client. The setup script then creates a new folder.
-
-#### Set up
-
-Before you start:
-
-- You have admin rights on the GitHub repository.
-- `gh` is logged in (`gh auth status`).
-- `rclone` and `jq` are installed (`brew install rclone jq`).
-- You have the client ID and the client secret (see above).
-- You ran `pnpm install`.
-
-Run this in the repository root folder:
-
-```sh
-pnpm setup:google-drive                  # creates the folder "Pocket Apps"
-pnpm setup:google-drive "Meine Apps"     # or with another folder name
-```
-
-The script does these steps:
-
-1. It asks for the client ID and the client secret (or reads `GDRIVE_CLIENT_ID` and `GDRIVE_CLIENT_SECRET` from the environment).
-2. It creates the rclone remote `pocket-apps` with scope `drive.file` and your client. Your browser opens. Log in with the Google account that must own the folder. The consent screen shows `pocket-apps`. Allow the access.
-   - If Google shows "Google hasn't verified this app": click "Advanced" → "Go to pocket-apps (unsafe)". This is correct for your own app.
-   - If rclone asks "Token already configured - replace it?": answer `y`.
-   - If rclone asks "Use web browser to automatically authenticate?": answer `y`.
-   - If rclone asks "Configure this as a Shared Drive (Team Drive)?": answer `n`.
-3. It checks that the remote has the scope `drive.file`. Else it stops. It creates the folder in "My Drive". With scope `drive.file`, rclone must create the folder itself. If `GDRIVE_FOLDER_ID` is already set and the client did not change, it uses that folder.
-4. It writes the token, the client ID and the client secret into the secrets. It does not print them.
-5. It writes the folder ID into the variable `GDRIVE_FOLDER_ID`.
-
-After the setup, you can move, rename and share the folder in Google Drive. The ID stays the same. You can run the script again at any time, for example after you removed the access. It keeps the folder.
-
-#### Check
-
-```sh
-gh run list --workflow "CD - Release" --limit 3
-```
-
-To upload now, run the newest `CI - E2E` run on `main` again (Actions → CI - E2E → Re-run). The script prints the exact command. The artifact `release` exists for 7 days. After that, push a new commit.
-
-If `CD - Release` fails with `invalid_grant`, Google ended the login. This happens when you removed the access, or when nobody used the token for 6 months. Run `pnpm setup:google-drive` again. It keeps the folder.
-
-#### Turn off and undo
-
-- Pause the uploads: `gh variable delete GDRIVE_FOLDER_ID`. A new setup then uses the folder with the same name again, if it still exists. Else it creates a new folder.
-- Remove the secrets from GitHub: `gh secret delete GDRIVE_TOKEN`, `gh secret delete GDRIVE_CLIENT_ID`, `gh secret delete GDRIVE_CLIENT_SECRET`.
-- Remove the token from your computer: `rclone config delete pocket-apps`. The file `~/.config/rclone/rclone.conf` holds the token without encryption.
-- Stop the Google access at once: remove "pocket-apps" at [myaccount.google.com/permissions](https://myaccount.google.com/permissions). Or delete the OAuth client in the Google Cloud Console.
-- The folder and the app files stay in Google Drive. Delete them there if necessary.
+To check: `gh run list --workflow "CD - Release" --limit 3`. To publish again, run the newest `CI - E2E` run on `main` again (Actions → CI - E2E → Re-run).
 
 ## Definition of done
 

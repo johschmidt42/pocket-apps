@@ -7,16 +7,15 @@
 [![CI - E2E](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-e2e.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-e2e.yml)
 [![CD - Release](https://github.com/johschmidt42/pocket-apps/actions/workflows/cd-release.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/cd-release.yml)
 
-Small personal apps. Each app is **one HTML file**. You open it with a double-click. It needs no server. Most apps also work without internet.
+Small personal apps for Chrome and Edge on a computer. Open them at **https://johschmidt42.github.io/pocket-apps/**. Each app is one HTML file. Your data stays on your computer.
 
 ## For users
 
 ### Start an app
 
-1. Open the shared "Pocket Apps" folder on OneDrive or Google Drive.
-2. Double-click `index.html`. It opens in your browser and shows all apps.
-3. Click an app card. The app opens.
-4. Click "Alle Apps" in the header to go back.
+1. Open https://johschmidt42.github.io/pocket-apps/ in Chrome or Edge. The page shows all apps.
+2. Click an app card. The app opens.
+3. Click "Alle Apps" in the header to go back.
 
 Each card shows the app version (for example `1.0`) and two icons. Move the mouse over an icon to see what it means:
 
@@ -43,10 +42,9 @@ Then select your old data file in the save dialog. Confirm that you want to repl
 
 ### Updates
 
-- The owner of the shared folder copies new app files into it. You do not have to do anything.
-- If you keep a copy of an app file on your computer, replace it with the new file.
+- New app versions are online at once. Reload the page to get them. You do not have to do anything else.
 - A new app version can change the data format. Then the app downloads a copy of your old data file before it changes anything. The copy has a name like `app-ideen.backup-v1.json`. The number is the old data format, not the app version.
-- An old app version cannot open data from a newer version. It shows an error. Use the newest app file.
+- An old app version cannot open data from a newer version. It shows an error. Reload the page to get the newest version.
 
 ## For developers
 
@@ -63,7 +61,7 @@ pnpm e2e                          # build, then browser tests
 pnpm build                        # builds release/index.html and release/<app>.html
 ```
 
-The pipeline `CD - Release` uploads the app files to a Google Drive folder after each successful test run on `main`. You can share this folder with other people. To set it up, run `pnpm setup:google-drive` once in the repository root folder. See "CD - Release" in [AGENTS.md](AGENTS.md) for the prerequisites, the check and the undo steps.
+The pipeline `CD - Release` publishes the app files on GitHub Pages after each successful test run on `main`. See "CD - Release" in [AGENTS.md](AGENTS.md).
 
 ## Apps
 
