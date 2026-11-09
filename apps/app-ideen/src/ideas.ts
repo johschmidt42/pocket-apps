@@ -1,4 +1,4 @@
-import type { IdeaList } from "./schema.ts";
+import type { Idea, IdeaList } from "./schema.ts";
 
 export type Direction = "up" | "down";
 
@@ -9,12 +9,12 @@ export function newId(): string {
 }
 
 /** Adds an idea at the end. Ignores an empty title. */
-export function addIdea(list: IdeaList, title: string, description: string, id: string): IdeaList {
-  const trimmedTitle = title.trim();
-  if (trimmedTitle === "") return list;
+export function addIdea(list: IdeaList, idea: Idea): IdeaList {
+  const title = idea.title.trim();
+  if (title === "") return list;
   return {
     ...list,
-    ideas: [...list.ideas, { id, title: trimmedTitle, description: description.trim() }],
+    ideas: [...list.ideas, { id: idea.id, title, description: idea.description.trim() }],
   };
 }
 

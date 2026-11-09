@@ -20,7 +20,7 @@ type SavedFile = { app: string; schemaVersion: number; savedWith: string; data: 
 const ideasFile = (ideas: Idea[], schemaVersion = 1) =>
   dataFileText("app-ideen", schemaVersion, { ideas });
 
-async function addIdea(page: Page, title: string, description: string) {
+async function addIdeaInUi(page: Page, title: string, description: string) {
   await page.getByLabel("Titel").fill(title);
   await page.getByLabel("Beschreibung").fill(description);
   await page.getByRole("button", { name: "Hinzufügen" }).click();
@@ -47,10 +47,11 @@ test.describe("app-ideen", () => {
     await page.goto(releaseUrl("app-ideen.html"));
 
     await page.getByRole("button", { name: "Neue Datei" }).click();
-    await addIdea(page, "Pflanzen", "Gießplan");
-    await addIdea(page, "Rezepte", "Wochenplan");
-    await addIdea(page, "Wetter", "");
+    await addIdeaInUi(page, "Pflanzen", "Gießplan");
+    await addIdeaInUi(page, "Rezepte", "Wochenplan");
+    await addIdeaInUi(page, "Wetter", "");
     await page.getByRole("button", { name: "Wetter nach oben" }).click();
+    page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "Pflanzen löschen" }).click();
     await expect(titles(page)).toHaveText(["Wetter", "Rezepte"]);
 
@@ -109,7 +110,7 @@ test.describe("app-ideen", () => {
 
     await page.getByRole("button", { name: "Datei öffnen" }).click();
     await expect(titles(page)).toHaveText(["Tee"]);
-    await addIdea(page, "Kaffee", "Bohnen");
+    await addIdeaInUi(page, "Kaffee", "Bohnen");
 
     await expect(page.getByRole("status")).toHaveText("Gespeichert");
     const result = await readFakeFile(page);
@@ -127,5 +128,19 @@ test.describe("app-ideen", () => {
 
     await expect(page.getByRole("alert")).toContainText("neueren App-Version");
     await expect(page.getByRole("button", { name: "Neue Datei" })).toBeVisible();
+  });
+
+  test("wraps a very long word in a narrow window", async ({ page }) => {
+    await withoutDirectSave(page);
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(releaseUrl("app-ideen.html"));
+    await page.getByRole("button", { name: "Neue Datei" }).click();
+
+    await addIdeaInUi(page, "https://example.com/" + "x".repeat(80), "y".repeat(120));
+
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 });

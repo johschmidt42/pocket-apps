@@ -32,6 +32,9 @@ export const test = base.extend<{ pageErrors: string[] }>({
   },
 });
 
+/** The page globals that the fake File System Access API writes. */
+type FakeFileWindow = Window & { __written?: string; __permission?: string };
+
 /** Removes the File System Access API. Then an app works like in Firefox and Safari. */
 export async function withoutDirectSave(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -52,7 +55,7 @@ export async function withFakeDirectSave(
 ): Promise<void> {
   await page.addInitScript(
     ({ name, initialText }) => {
-      const target = window as Window & { __written?: string; __permission?: string };
+      const target: FakeFileWindow = window;
       const handle = {
         name,
         getFile: () => Promise.resolve(new File([initialText], name)),
@@ -82,7 +85,7 @@ export async function readFakeFile(
   page: Page,
 ): Promise<{ written: string; permission: string | undefined }> {
   return page.evaluate(() => {
-    const target = window as Window & { __written?: string; __permission?: string };
+    const target: FakeFileWindow = window;
     return { written: target.__written ?? "", permission: target.__permission };
   });
 }

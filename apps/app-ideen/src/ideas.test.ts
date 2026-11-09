@@ -24,7 +24,9 @@ describe("newId", () => {
 
 describe("addIdea", () => {
   it("adds a trimmed idea at the end", () => {
-    expect(addIdea(list, "  Wetter ", "  Regenradar ", "d").ideas.at(-1)).toEqual({
+    expect(
+      addIdea(list, { id: "d", title: "  Wetter ", description: "  Regenradar " }).ideas.at(-1),
+    ).toEqual({
       id: "d",
       title: "Wetter",
       description: "Regenradar",
@@ -32,11 +34,13 @@ describe("addIdea", () => {
   });
 
   it("allows an empty description", () => {
-    expect(addIdea(list, "Wetter", "   ", "d").ideas.at(-1)?.description).toBe("");
+    expect(
+      addIdea(list, { id: "d", title: "Wetter", description: "   " }).ideas.at(-1)?.description,
+    ).toBe("");
   });
 
   it("ignores an empty title", () => {
-    expect(addIdea(list, "   ", "Text", "d")).toBe(list);
+    expect(addIdea(list, { id: "d", title: "   ", description: "Text" })).toBe(list);
   });
 });
 

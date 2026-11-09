@@ -145,7 +145,7 @@ Each app declares its info in its `package.json`:
 - Model state variants as discriminated unions. Make every `switch` exhaustive.
 - Handle every promise. `await` it or mark it with `void`.
 - Use named exports. Only config files use a default export.
-- Write file names in kebab-case (`shopping-list-view.tsx`).
+- Write file names in kebab-case (`idea-list-view.tsx`).
 - Store dates in data files as ISO strings. Use `z.iso.date()` for a day (`"2026-11-09"`). Use `z.iso.datetime()` for a time (`"2026-11-09T14:30:00.000Z"`).
 
 ### React
