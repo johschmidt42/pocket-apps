@@ -72,3 +72,14 @@ URL: https://johschmidt42.github.io/pocket-apps/prototypes/workspace-folder/prot
 | Reads `users.json` from the Drive folder | Yes | Yes ("Johannes" shown) |
 | Permission text | "Allow on every visit" offered | "… while tabs of this site are open" |
 | After closing and reopening | 0 clicks (with "Allow on every visit") | Folder remembered, tap "Zugriff erlauben" again |
+
+## Result 4: speed on Android with the Google Drive folder (2026-11-09)
+
+| Measurement (Chrome on Android, Drive folder) | Value |
+| --- | --- |
+| Read `users.json` | ~2900 ms |
+| Add a note, fast mode (show at once, save in the background) | visible after 1 ms |
+| Background save of the note | ~2000 ms |
+| Slow mode (save, read all again, then show) | several seconds per click |
+
+Verdict: Google Drive is usable on Android. Each file access goes over the network (~2–3 s), so the app must read once at the start, work in memory and save in the background. To hide the start time, show the last known state from browser storage and refresh it in the background. Warn before the user closes the app while a save is running.
