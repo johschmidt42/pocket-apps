@@ -13,7 +13,27 @@ import testingLibrary from "eslint-plugin-testing-library";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import { tailwind4 } from "tailwind-csstree";
+import { listApps } from "./packages/vite-config/index.js";
 import tseslint from "typescript-eslint";
+
+// Apps must not use browser storage. The data file in @pocket-apps/core is the only storage.
+const STORAGE_GLOBALS = [
+  {
+    name: "localStorage",
+    message:
+      "Use the data file from @pocket-apps/core. localStorage is not reliable under file://.",
+  },
+  { name: "sessionStorage", message: "Use the data file from @pocket-apps/core." },
+];
+
+// Apps with "pocketApp.network": false must not use the network.
+const NETWORK_GLOBALS = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource"].map((name) => ({
+  name,
+  message:
+    'This app has "pocketApp.network": false. Set it to true in package.json to use the internet.',
+}));
+
+const offlineApps = listApps().filter((app) => !app.network);
 
 export default defineConfig([
   globalIgnores([
@@ -163,15 +183,7 @@ export default defineConfig([
           ],
         },
       ],
-      "no-restricted-globals": [
-        "error",
-        {
-          name: "localStorage",
-          message:
-            "Use the data file from @pocket-apps/core. localStorage is not reliable under file://.",
-        },
-        { name: "sessionStorage", message: "Use the data file from @pocket-apps/core." },
-      ],
+      "no-restricted-globals": ["error", ...STORAGE_GLOBALS],
       "no-restricted-properties": [
         "error",
         {
@@ -186,6 +198,17 @@ export default defineConfig([
         },
         { object: "window", property: "localStorage", message: "Use @pocket-apps/core/data-file." },
       ],
+    },
+  },
+
+  // Offline apps (and the launcher): no network access.
+  {
+    files: [
+      "launcher/src/**/*.{ts,tsx}",
+      ...offlineApps.map((app) => `apps/${app.name}/src/**/*.{ts,tsx}`),
+    ],
+    rules: {
+      "no-restricted-globals": ["error", ...STORAGE_GLOBALS, ...NETWORK_GLOBALS],
     },
   },
 

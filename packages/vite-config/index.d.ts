@@ -17,6 +17,8 @@ export type AppInfo = {
   emoji: string;
   /** True if the app has a data file (`pocketApp.stateful`). */
   stateful: boolean;
+  /** True if the app needs the internet, for example for an external API (`pocketApp.network`). */
+  network: boolean;
   /** The link back to the launcher, or `null` if it is off. */
   backLink: BackLink | null;
 };

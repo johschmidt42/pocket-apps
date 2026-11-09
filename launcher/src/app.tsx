@@ -17,7 +17,7 @@ export function App({ apps = __POCKET_APPS__ }: { apps?: readonly AppInfo[] }) {
       <AppHeader app={__POCKET_APP__} />
       <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
         <p className="text-sm text-muted-foreground">
-          Jede App ist eine einzelne Datei. Sie funktioniert ohne Internet.
+          Jede App ist eine einzelne Datei. Apps mit „Offline“ brauchen kein Internet.
         </p>
         <div className="relative">
           <Label htmlFor="search" className="sr-only">

@@ -3,6 +3,13 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: Apps declare internet access
+
+- **Decision:** Each app declares `pocketApp.network` (`true` or `false`) in its `package.json`. The launcher shows "Braucht Internet" or "Offline" on each card.
+- **Enforcement:** In apps with `"network": false`, ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket` and `EventSource`. `eslint.config.js` reads the flag of each app with `listApps()`.
+- **Why:** Users must see which apps work offline. The label must not be wrong, so a tool checks it.
+- **Rule:** No API keys or passwords in the code. Everyone who has the app file can read it.
+
 ## 2026-11-09: Fixes after the first code review
 
 - **No automatic save after a migration.** The backup is a download that the app cannot confirm. Thus the app waits for the user to click "Speichern" after a migration. It shows a notice about the backup.

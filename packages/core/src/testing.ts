@@ -9,6 +9,7 @@ export function testAppInfo(overrides: Partial<AppInfo> = {}): AppInfo {
     description: "Eine Demo-App.",
     emoji: "🧪",
     stateful: false,
+    network: false,
     backLink: { href: "./index.html", label: "Alle Apps" },
     ...overrides,
   };

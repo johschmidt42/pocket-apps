@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@pocket-apps/ui/components/card";
+import { Globe, WifiOff } from "lucide-react";
 
 /** One app on the launcher. The whole card is a link to the app file. */
 export function AppCard({ app }: { app: AppInfo }) {
@@ -31,9 +32,17 @@ export function AppCard({ app }: { app: AppInfo }) {
             <CardDescription>{app.description}</CardDescription>
           </div>
         </CardHeader>
-        <CardFooter className="mt-auto gap-2">
+        <CardFooter className="mt-auto flex-wrap gap-2">
           <Badge variant="secondary">Version {app.version}</Badge>
           <Badge variant="outline">{app.stateful ? "Mit Datendatei" : "Ohne Daten"}</Badge>
+          <Badge variant="outline">
+            {app.network ? (
+              <Globe data-icon="inline-start" />
+            ) : (
+              <WifiOff data-icon="inline-start" />
+            )}
+            {app.network ? "Braucht Internet" : "Offline"}
+          </Badge>
         </CardFooter>
       </Card>
     </a>

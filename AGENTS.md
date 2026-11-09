@@ -3,13 +3,14 @@
 ## Purpose
 
 pocket-apps is a monorepo of small personal apps ("home-cooked software").
-Each app builds into **one self-contained HTML file**. Users open the file from disk (`file://`). They need no server and no internet.
+Each app builds into **one self-contained HTML file**. Users open the file from disk (`file://`). They need no server.
 Apps that keep data store it in a **separate JSON file**. The user owns this file. No user data goes to a server.
+Most apps work offline. An app that needs an external API declares this in its `package.json`.
 
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/einkaufsliste.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app. The code is in `launcher/`.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card has three labels: the version, "Mit Datendatei" or "Ohne Daten", and "Offline" or "Braucht Internet". The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data file:** the JSON file with the user's data. The user chooses where it is.
 - **Stateful app:** an app with a data file. A stateless app keeps nothing after the tab closes.
@@ -75,15 +76,16 @@ ESLint checks TypeScript, JavaScript, JSON, Markdown, CSS and HTML files.
 
 Each app declares its info in its `package.json`:
 
-| Field                | Example                  | Meaning                                                 |
-| -------------------- | ------------------------ | ------------------------------------------------------- |
-| `name`               | `"einkaufsliste"`        | Package name and app file name.                         |
-| `version`            | `"0.1.0"`                | App version.                                            |
-| `description`        | `"Eine einfache Liste."` | German short text for the launcher card.                |
-| `pocketApp.title`    | `"Einkaufsliste"`        | German display name.                                    |
-| `pocketApp.emoji`    | `"🛒"`                   | One emoji as the icon on the launcher card.             |
-| `pocketApp.stateful` | `true`                   | `true` if the app has a data file.                      |
-| `pocketApp.backLink` | `false`                  | Optional. `false` turns the back link off for this app. |
+| Field                | Example                  | Meaning                                                                |
+| -------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| `name`               | `"einkaufsliste"`        | Package name and app file name.                                        |
+| `version`            | `"0.1.0"`                | App version.                                                           |
+| `description`        | `"Eine einfache Liste."` | German short text for the launcher card.                               |
+| `pocketApp.title`    | `"Einkaufsliste"`        | German display name.                                                   |
+| `pocketApp.emoji`    | `"🛒"`                   | One emoji as the icon on the launcher card.                            |
+| `pocketApp.stateful` | `true`                   | `true` if the app has a data file.                                     |
+| `pocketApp.network`  | `false`                  | `true` if the app needs the internet, for example for an external API. |
+| `pocketApp.backLink` | `false`                  | Optional. `false` turns the back link off for this app.                |
 
 - The build validates `package.json` and `pocket-apps.config.json` with zod. A wrong or missing field stops the build with a message.
 - The build makes this info available as `__POCKET_APP__`. Do not write the title or the version by hand anywhere else.
@@ -100,6 +102,16 @@ Each app declares its info in its `package.json`:
 - To turn the back link off for one app, add `"backLink": false` to the `pocketApp` object in its `package.json`. Keep the other `pocketApp` fields.
 - An app can only turn the back link off. If `enabled` is `false` in the config, no app shows a back link. Apps cannot change `href` or `label`.
 - `launcher/package.json` has `"backLink": false` in `pocketApp`.
+
+### Internet access
+
+- Set `pocketApp.network` to `true` only if the app needs an external API.
+- In apps with `"network": false` and in the launcher, ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket` and `EventSource`.
+- An app with `"network": true` must start without internet. Catch each failed request. Show a clear German message. Do not log the failure with `console.error`.
+- Use only APIs that allow requests from any origin (`Access-Control-Allow-Origin: *`). An app file under `file://` has the origin `null`. Test the API from a `file://` page before you build the app.
+- Keep settings such as a city in the data file. Then the app is stateful. Do not use `localStorage`.
+- Never put an API key or a password into the code. Everyone who has the app file can read it. If an API needs a key, the user types it in. A stateful app can keep it in the data file.
+- Send to an API only the data that the request needs, for example a city name for a weather API. Do not send the content of the data file.
 
 ### UI
 
@@ -213,7 +225,7 @@ Use a migration as soon as an app file with the old shape is in the shared folde
 - Do not mock internals. For data files, use `createMemoryFileAccess()` from `@pocket-apps/core/data-file/testing`. Pass it as `fileAccess` to `DataFileProvider`.
 - For app info in unit tests, use `testAppInfo()` from `@pocket-apps/core/testing`.
 - Keep pure logic (calculations, list operations) in `.ts` files with their own unit tests.
-- `e2e/all-apps.spec.ts` tests every app automatically: offline start, no errors, title and version, Tailwind styles, theme switch, back link, narrow window.
+- `e2e/all-apps.spec.ts` tests every app automatically: offline start, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests. An app with `"network": true` may try requests, but it must start without errors.
 - `e2e/launcher.spec.ts` tests the launcher.
 - Add `e2e/<app>.spec.ts` for the main flow of a stateful app: create, change, save, open.
 
@@ -221,7 +233,7 @@ Use a migration as soon as an app file with the old shape is in the shared folde
 
 1. Copy `apps/zinsrechner` (stateless) or `apps/einkaufsliste` (stateful) to `apps/<name>`.
 2. Delete the app logic, the components and the tests of the old app. Keep `index.html`, `vite.config.ts`, `tsconfig.json` and `src/main.tsx` (it only calls `mountApp(App)`).
-3. In `package.json`, set `name`, `version` (`"0.1.0"`), `description` and `pocketApp` (`title`, `emoji`, `stateful`).
+3. In `package.json`, set `name`, `version` (`"0.1.0"`), `description` and `pocketApp` (`title`, `emoji`, `stateful`, `network`).
 4. For a stateful app, set `app` in `schema.ts` to the package name. Start at schema version 1 with no migrations.
 5. Run `pnpm install`.
 6. Write the app, its unit tests and, for a stateful app, `e2e/<name>.spec.ts`.

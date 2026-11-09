@@ -6,8 +6,9 @@
   "description": "Eine einfache Einkaufsliste. Die Liste liegt in einer eigenen Datei.",
   "pocketApp": {
     "title": "Einkaufsliste",
+    "emoji": "🛒",
     "stateful": true,
-    "emoji": "🛒"
+    "network": false
   },
   "scripts": {
     "dev": "vite",

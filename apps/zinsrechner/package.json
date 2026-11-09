@@ -6,8 +6,9 @@
   "description": "Berechnet Zinseszins für ein Startkapital.",
   "pocketApp": {
     "title": "Zinsrechner",
+    "emoji": "💶",
     "stateful": false,
-    "emoji": "💶"
+    "network": false
   },
   "scripts": {
     "dev": "vite",

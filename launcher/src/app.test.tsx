@@ -6,7 +6,7 @@ import { App } from "./app.tsx";
 
 const apps = [
   testAppInfo({ name: "zinsrechner", title: "Zinsrechner", version: "1.2.0", stateful: false }),
-  testAppInfo({ name: "einkaufsliste", title: "Einkaufsliste", stateful: true }),
+  testAppInfo({ name: "einkaufsliste", title: "Einkaufsliste", stateful: true, network: true }),
 ];
 
 describe("Launcher", () => {
@@ -24,6 +24,8 @@ describe("Launcher", () => {
     expect(screen.getByText("Version 1.2.0")).toBeInTheDocument();
     expect(screen.getByText("Mit Datendatei")).toBeInTheDocument();
     expect(screen.getByText("Ohne Daten")).toBeInTheDocument();
+    expect(screen.getByText("Braucht Internet")).toBeInTheDocument();
+    expect(screen.getByText("Offline")).toBeInTheDocument();
   });
 
   it("filters the apps by the search text", async () => {

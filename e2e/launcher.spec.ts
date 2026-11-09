@@ -14,6 +14,7 @@ test.describe("launcher (release/index.html)", () => {
       await expect(card).toHaveAttribute("href", `./${app.name}.html`);
       await expect(card).toContainText(`Version ${app.version}`);
       await expect(card).toContainText(app.stateful ? "Mit Datendatei" : "Ohne Daten");
+      await expect(card).toContainText(app.network ? "Braucht Internet" : "Offline");
     }
     await expect(page.getByRole("link", { name: "Alle Apps" })).toHaveCount(0);
     expect(pageErrors).toEqual([]);

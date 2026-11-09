@@ -1,6 +1,6 @@
 # pocket-apps
 
-Small personal apps. Each app is **one HTML file**. You open it with a double-click. It works without internet and without a server.
+Small personal apps. Each app is **one HTML file**. You open it with a double-click. It needs no server. Most apps also work without internet.
 
 ## For users
 
@@ -10,6 +10,11 @@ Small personal apps. Each app is **one HTML file**. You open it with a double-cl
 2. Double-click `index.html`. It opens in your browser and shows all apps.
 3. Click an app card. The app opens.
 4. Click "Alle Apps" in the header to go back.
+
+Each card shows two labels:
+
+- "Mit Datendatei" or "Ohne Daten": the app keeps your data in a file, or it keeps nothing.
+- "Offline" or "Braucht Internet": the app works without internet, or it needs an external service.
 
 The header shows the app version. The moon button switches to dark mode. The sun button switches back to light mode.
 
@@ -54,7 +59,7 @@ To publish, copy the content of `release/` into the shared folder. Automation wi
 
 ## Apps
 
-| App           | Data file | Description                      |
-| ------------- | --------- | -------------------------------- |
-| zinsrechner   | no        | Compound interest for a capital. |
-| einkaufsliste | yes       | A simple shopping list.          |
+| App           | Data file | Internet | Description                      |
+| ------------- | --------- | -------- | -------------------------------- |
+| zinsrechner   | no        | no       | Compound interest for a capital. |
+| einkaufsliste | yes       | no       | A simple shopping list.          |

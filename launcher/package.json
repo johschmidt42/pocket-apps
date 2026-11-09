@@ -8,6 +8,7 @@
     "title": "Pocket Apps",
     "emoji": "🧰",
     "stateful": false,
+    "network": false,
     "backLink": false
   },
   "scripts": {

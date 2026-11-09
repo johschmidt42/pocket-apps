@@ -12,7 +12,15 @@ for (const app of listApps()) {
 
     test("opens from file:// without network and without errors", async ({ page, pageErrors }) => {
       await expect(page.getByRole("heading", { level: 1, name: app.title })).toBeVisible();
-      expect(pageErrors).toEqual([]);
+      // Apps with "network": true may try requests. They must still start offline without errors.
+      // The browser itself logs blocked requests ("Failed to load resource"). That is not an app error.
+      const errors = app.network
+        ? pageErrors.filter(
+            (error) =>
+              !error.startsWith("network request:") && !error.includes("Failed to load resource"),
+          )
+        : pageErrors;
+      expect(errors).toEqual([]);
     });
 
     test("has title and version as metadata and shows the version", async ({ page }) => {

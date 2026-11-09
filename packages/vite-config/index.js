@@ -26,6 +26,7 @@ const packageSchema = z.object({
     title: z.string().min(1),
     emoji: z.string().min(1),
     stateful: z.boolean(),
+    network: z.boolean(),
     backLink: z.boolean().optional(),
   }),
 });
@@ -70,6 +71,7 @@ export function readAppInfo(appDir) {
     description: pkg.description,
     emoji: pocketApp.emoji,
     stateful: pocketApp.stateful,
+    network: pocketApp.network,
     backLink: showBackLink ? { href: backLink.href, label: backLink.label } : null,
   };
 }
