@@ -3,7 +3,16 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-09: Apps from a web address (decided, not built yet)
+
+- **Decision:** The apps come from a web address (`https://…`), not from HTML files in the Drive folder. No login. The data stays in the Drive data folder.
+- **Why:** Under `file://`, Chrome asks for the folder access again after each restart (2 clicks). Under a web address, Chrome offers "Allow on every visit". After that, 0 clicks. Tested with `http://localhost` (prototype branch `prototype/workspace-folder`).
+- **Safety:** Everyone with the address can open the apps, but only with an empty state. The website has no access to the Drive. Each person grants access to a folder on their own computer. The apps send no data to the internet (ESLint and browser tests). The code has no secrets.
+- **Changes:** The early rule "apps are not offered online" no longer applies to the app code. It still applies to user data.
+
 ## 2026-11-09: Users and a shared data folder (validated, not built yet)
+
+- **Update:** See "Apps from a web address". Under a web address, the access needs no clicks after the first "Allow on every visit".
 
 - **Decision:** Users and their data live in one data folder that the user picks once in Chrome (`showDirectoryPicker`): `users.json` (all users) and `<user>/<app>.json` (data and preferences of one app). The launcher keeps the user preferences of the launcher in `<user>/launcher.json`, for example the order of the apps.
 - **Why:** Today each app needs a file dialog at each start. With the folder, the apps find the file of the active user themselves.
