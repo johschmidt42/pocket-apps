@@ -3,9 +3,10 @@ import { Alert, AlertDescription } from "@pocket-apps/ui/components/alert";
 import { Button } from "@pocket-apps/ui/components/button";
 import { createContext, use, useEffect, useReducer, useState, type ReactNode } from "react";
 import { AppHeader } from "../app-shell/app-header.tsx";
-import { browserFolderHost } from "./browser-folder-host.ts";
+import { browserFolderHost } from "./browser-folder.ts";
 import { DataFileStatus } from "./data-file-status.tsx";
 import { DataFolderGate } from "./data-folder-gate.tsx";
+import { LoadingStatus } from "./loading-status.tsx";
 import { serializeEnvelope } from "./envelope.ts";
 import { DataFileError } from "./errors.ts";
 import type { DataFolder, FolderHost } from "./folder.ts";
@@ -36,6 +37,12 @@ export type DataFileProviderProps = {
 
 function errorMessage(error: unknown): string {
   if (error instanceof DataFileError) return error.message;
+  if (error instanceof DOMException && error.name === "NotAllowedError") {
+    return "Die App hat keinen Zugriff auf den Datenordner.";
+  }
+  if (error instanceof DOMException && error.name === "NotFoundError") {
+    return "Die App findet den Datenordner nicht. Vielleicht hat jemand ihn verschoben oder gelöscht.";
+  }
   return `Unerwarteter Fehler: ${error instanceof Error ? error.message : String(error)}`;
 }
 
@@ -47,7 +54,6 @@ function errorMessage(error: unknown): string {
 export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileStoreOptions) {
   const Context = createContext<DataFileApi<T> | null>(null);
   const fileName = `${schema.app}.json`;
-  const backupName = (version: number) => `${schema.app}.backup-v${String(version)}.json`;
   const schemaVersion = currentVersion(schema);
   const autosaveDelayMs = options.autosaveDelayMs ?? 500;
   const retryDelayMs = options.retryDelayMs ?? 5000;
@@ -61,25 +67,32 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     });
   }
 
+  /** `<app>.backup-v<N>.json`. If that file exists: `<app>.backup-v<N>-2.json`, and so on. */
+  async function freeBackupName(folder: DataFolder, version: number): Promise<string> {
+    const base = `${schema.app}.backup-v${String(version)}`;
+    for (let count = 1; ; count += 1) {
+      const name = count === 1 ? `${base}.json` : `${base}-${String(count)}.json`;
+      if ((await folder.lastModified(name)) === null) return name;
+    }
+  }
+
   async function loadFile(folder: DataFolder): Promise<DataFileAction<T>> {
     try {
       const file = await folder.read(fileName);
       if (!file) {
-        const data = schema.initial();
-        return { type: "loaded", data, saved: data, lastModified: null };
+        return { type: "loaded", data: schema.initial(), needsSave: false, lastModified: null };
       }
       const result = loadData(file.text, schema);
-      if (result.migratedFrom === null) {
-        return {
-          type: "loaded",
-          data: result.data,
-          saved: result.data,
-          lastModified: file.lastModified,
-        };
+      if (result.migratedFrom !== null) {
+        // Keep the old file before the app writes the new shape. Never overwrite an older backup.
+        await folder.write(await freeBackupName(folder, result.migratedFrom), file.text);
       }
-      // Keep the old file before the app writes the new shape.
-      await folder.write(backupName(result.migratedFrom), file.text);
-      return { type: "loaded", data: result.data, saved: null, lastModified: file.lastModified };
+      return {
+        type: "loaded",
+        data: result.data,
+        needsSave: result.migratedFrom !== null,
+        lastModified: file.lastModified,
+      };
     } catch (error) {
       return { type: "broken", message: errorMessage(error) };
     }
@@ -155,9 +168,24 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
       };
     }, [unsaved]);
 
-    function reload() {
+    // After a click, ask for access again if the browser lost it. Then the next try can work.
+    async function regainAccess() {
+      try {
+        if ((await folder.queryAccess()) !== "granted") await folder.requestAccess();
+      } catch {
+        // The next try shows the error.
+      }
+    }
+
+    async function reload() {
+      await regainAccess();
       dispatch({ type: "loading" });
       setLoadCount((count) => count + 1);
+    }
+
+    async function retry() {
+      await regainAccess();
+      dispatch({ type: "retry" });
     }
 
     async function keepMine() {
@@ -169,11 +197,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     }
 
     if (state.status === "loading") {
-      return (
-        <p role="status" className="p-4 text-sm text-muted-foreground">
-          Lädt …
-        </p>
-      );
+      return <LoadingStatus />;
     }
     if (state.status === "broken") {
       return (
@@ -181,10 +205,10 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
           <Alert variant="destructive">
             <AlertDescription className="flex flex-col items-start gap-2">
               <span>
-                Die Datei „{fileName}“ im Ordner „{folder.name}“ lässt sich nicht öffnen.{" "}
+                Die App kann die Datei „{fileName}“ im Ordner „{folder.name}“ nicht öffnen.{" "}
                 {state.message}
               </span>
-              <Button size="sm" variant="outline" onClick={reload}>
+              <Button size="sm" variant="outline" onClick={() => void reload()}>
                 Erneut laden
               </Button>
             </AlertDescription>
@@ -206,10 +230,8 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
           fileName={fileName}
           save={state.save}
           error={state.error}
-          onRetry={() => {
-            dispatch({ type: "retry" });
-          }}
-          onReload={reload}
+          onRetry={() => void retry()}
+          onReload={() => void reload()}
           onKeepMine={() => void keepMine()}
         />
         {children}

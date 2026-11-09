@@ -132,13 +132,55 @@ describe("load", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("keine gültige JSON-Datei");
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Die Datei „demo.json“ im Ordner „Pocket Apps Daten“ lässt sich nicht öffnen.",
+      "Die App kann die Datei „demo.json“ im Ordner „Pocket Apps Daten“ nicht öffnen.",
     );
 
     folder.files.set("demo.json", { text: dataFile(2, { count: 7 }), lastModified: 2 });
     await user.click(screen.getByRole("button", { name: "Erneut laden" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 7" })).toBeInTheDocument();
+  });
+
+  it("keeps an older backup and writes the new backup next to it", async () => {
+    const { folder, host } = readyHost();
+    const oldText = dataFile(1, { n: 3 });
+    folder.files.set("demo.json", { text: oldText, lastModified: 1 });
+    folder.files.set("demo.backup-v1.json", { text: "older", lastModified: 1 });
+    folder.files.set("demo.backup-v1-2.json", { text: "older 2", lastModified: 1 });
+    setup(host);
+
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(folder.files.get("demo.backup-v1.json")?.text).toBe("older");
+    expect(folder.files.get("demo.backup-v1-2.json")?.text).toBe("older 2");
+    expect(folder.files.get("demo.backup-v1-3.json")?.text).toBe(oldText);
+  });
+
+  it("asks for access again when the browser lost it, then loads", async () => {
+    const { folder, host } = readyHost();
+    const read = folder.read;
+    folder.read = () => Promise.reject(new DOMException("Denied", "NotAllowedError"));
+    const user = setup(host);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Die App hat keinen Zugriff auf den Datenordner.",
+    );
+
+    folder.access = "prompt";
+    folder.read = read;
+    await user.click(screen.getByRole("button", { name: "Erneut laden" }));
+
+    expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
+    expect(folder.access).toBe("granted");
+  });
+
+  it("explains a missing folder", async () => {
+    const { folder, host } = readyHost();
+    folder.read = () => Promise.reject(new DOMException("Gone", "NotFoundError"));
+    setup(host);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Die App findet den Datenordner nicht.",
+    );
   });
 
   it("does not write the new shape when the backup fails", async () => {
@@ -220,6 +262,38 @@ describe("save", () => {
     expect(fileData(folder)).toEqual({ count: 1 });
   });
 
+  it("asks for access again on retry when the browser lost it", async () => {
+    const { folder, host } = readyHost();
+    folder.writeError = new DOMException("Denied", "NotAllowedError");
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Speichern fehlgeschlagen: Die App hat keinen Zugriff auf den Datenordner.",
+    );
+
+    folder.access = "prompt";
+    folder.writeError = null;
+    await user.click(screen.getByRole("button", { name: "Jetzt erneut versuchen" }));
+
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(folder.access).toBe("granted");
+  });
+
+  it("still tries again when the access request fails", async () => {
+    const { folder, host } = readyHost();
+    folder.writeError = new Error("disk full");
+    const user = setup(host);
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+    await screen.findByRole("alert");
+
+    folder.queryAccess = () => Promise.reject(new Error("no API"));
+    folder.writeError = null;
+    await user.click(screen.getByRole("button", { name: "Jetzt erneut versuchen" }));
+
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+  });
+
   it("tries again automatically after a failed save", async () => {
     const quick = makeStore({ retryDelayMs: 10 });
     const { folder, host } = readyHost();
@@ -271,7 +345,7 @@ describe("conflict", () => {
   it("does not overwrite a file that changed elsewhere", async () => {
     const { folder, user } = await conflict();
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Die Datei wurde woanders geändert");
+    expect(screen.getByRole("alert")).toHaveTextContent("Jemand hat die Datei woanders geändert");
     expect(fileData(folder)).toEqual({ count: 50 });
 
     // More changes keep the conflict.

@@ -8,7 +8,10 @@ import { ROOT_DIR } from "../packages/vite-config/index.js";
 const PORT = 4173;
 const PREFIX = "/pocket-apps/";
 const RELEASE_DIR = join(ROOT_DIR, "release");
-const TYPES = { ".html": "text/html; charset=utf-8", ".json": "application/json" };
+const TYPES = new Map([
+  [".html", "text/html; charset=utf-8"],
+  [".json", "application/json"],
+]);
 
 createServer((request, response) => {
   const path = new URL(request.url ?? "/", "http://localhost").pathname;
@@ -23,8 +26,8 @@ createServer((request, response) => {
   }
   readFile(join(RELEASE_DIR, relative))
     .then((body) => {
-      const type = TYPES[/** @type {keyof typeof TYPES} */ (extname(relative))];
-      response.writeHead(200, { "content-type": type ?? "application/octet-stream" }).end(body);
+      const type = TYPES.get(extname(relative)) ?? "application/octet-stream";
+      response.writeHead(200, { "content-type": type }).end(body);
     })
     .catch(() => {
       response.writeHead(404).end("Not found");

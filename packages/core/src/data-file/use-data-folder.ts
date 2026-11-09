@@ -8,14 +8,13 @@ export type FolderState =
   | { status: "locked"; folder: DataFolder; denied: boolean }
   | { status: "ready"; folder: DataFolder };
 
-async function stateFor(folder: DataFolder): Promise<FolderState> {
-  const access = await folder.queryAccess();
+function stateFor(folder: DataFolder, access: PermissionState): FolderState {
   return access === "granted"
     ? { status: "ready", folder }
     : { status: "locked", folder, denied: access === "denied" };
 }
 
-function message(error: unknown): string {
+function folderErrorMessage(error: unknown): string {
   return `Der Datenordner ist nicht verfügbar: ${error instanceof Error ? error.message : String(error)}`;
 }
 
@@ -29,16 +28,18 @@ export function useDataFolder(host: FolderHost) {
   // The remembered folder lives in the browser storage (an external system).
   useEffect(() => {
     if (state.status !== "checking") return;
-    // An object, so that the cleanup can change it while the request runs.
+    // An object: ESLint does not see that the cleanup changes a plain variable.
     const run = { active: true };
     void (async () => {
       try {
         const folder = await host.loadSaved();
-        const next: FolderState = folder ? await stateFor(folder) : { status: "missing" };
+        const next: FolderState = folder
+          ? stateFor(folder, await folder.queryAccess())
+          : { status: "missing" };
         if (run.active) setState(next);
       } catch (caught) {
         if (run.active) {
-          setError(message(caught));
+          setError(folderErrorMessage(caught));
           setState({ status: "missing" });
         }
       }
@@ -52,23 +53,18 @@ export function useDataFolder(host: FolderHost) {
     setError(null);
     try {
       const folder = await host.pick();
-      if (folder) setState(await stateFor(folder));
+      if (folder) setState(stateFor(folder, await folder.queryAccess()));
     } catch (caught) {
-      setError(message(caught));
+      setError(folderErrorMessage(caught));
     }
   }
 
   async function grant(folder: DataFolder): Promise<void> {
     setError(null);
     try {
-      const access = await folder.requestAccess();
-      setState(
-        access === "granted"
-          ? { status: "ready", folder }
-          : { status: "locked", folder, denied: access === "denied" },
-      );
+      setState(stateFor(folder, await folder.requestAccess()));
     } catch (caught) {
-      setError(message(caught));
+      setError(folderErrorMessage(caught));
     }
   }
 

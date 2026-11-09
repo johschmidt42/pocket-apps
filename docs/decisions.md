@@ -8,7 +8,9 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** `packages/core` gets the data folder: `DataFolderGate` (pick the folder, give access again) and a store that reads and writes `<app>.json` in the folder. The folder handle stays in IndexedDB (database `pocket-apps`, store `settings`).
 - **Decision:** The store saves each change automatically after 500 ms. Before each save, it compares the time of the last change of the file. If another device changed the file, the store does not save. The user loads the other version or saves their own version.
 - **Decision:** After a failed save, the store tries again after 5 seconds. It warns before the tab closes while a change is not saved.
-- **Decision:** Before a migration, the store writes the old file into the folder as `<app>.backup-v<N>.json`. Then it saves the new shape automatically. If the backup fails, it does not change the data file.
+- **Decision:** Before a migration, the store writes the old file into the folder as `<app>.backup-v<N>.json`. If this file exists, it uses `<app>.backup-v<N>-2.json` and so on. Then it saves the new shape automatically. If the backup fails, it does not change the data file.
+- **Decision:** When the browser lost the access to the folder while the app is open, the buttons "Jetzt erneut versuchen" and "Erneut laden" ask for access again.
+- **Limit:** The store checks for changes from other devices only before a save. A sync program can change the file between this check and the write. This gap is short, so we accept it.
 - **Decision:** The file name comes from the `app` field in `schema.ts`, not from `package.json`. The two are the same (see AGENTS.md), but the schema is the ID of the data.
 - **Decision:** The browser tests use a local web server (`pnpm serve`, `http://localhost:4173/pocket-apps/`) instead of `file://`. The path is the same as on GitHub Pages.
 - **Decision:** In Chromium, the tests replace the folder dialog. It returns a folder in the private file system of the browser (OPFS). Thus the tests use the real File System Access API for reading and writing. Firefox and WebKit test the notice "Bitte Chrome oder Edge verwenden".
@@ -69,7 +71,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 
 ## 2026-11-09: Fixes after the first code review
 
-- **Status:** The first three points are replaced by "Data folder store in core, browser tests over http".
+- **Status:** "Data folder store in core, browser tests over http" replaces the first three points.
 - **No automatic save after a migration.** The backup is a download that the app cannot confirm. Thus the app waits for the user to click "Speichern" after a migration. It shows a notice about the backup.
 - **Write access at open (Chrome, Edge).** The app asks for write access right after the user opens a file. If an automatic save still fails, the status shows "Nicht gespeichert". The user then saves with the button.
 - **Later release of download memory.** The app frees the memory of a download 1 second after the click. Some browsers start the download late.
@@ -97,7 +99,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Why:** Unit tests in jsdom do not see the build, the single-file inlining, missing Tailwind classes or browser differences.
 - **Proof:** The first run found a Firefox bug. Firefox sends a `cancel` event before the `change` event of a file selection. The file input fallback now waits 1 second after `cancel` (`CANCEL_GRACE_MS`).
 - **Limit:** The tests cannot use the real file pickers of Chrome and Edge. They use a fake File System Access API in the page.
-- **Status:** `file://`, the file input fallback and the fake API are replaced by "Data folder store in core, browser tests over http".
+- **Status:** "Data folder store in core, browser tests over http" replaces `file://`, the file input fallback and the fake API.
 
 ## 2026-11-09: Lint all file types with ESLint
 
@@ -162,5 +164,5 @@ Read the related entry before you change a decision. Add an entry for each new d
 
 - **Decision:** The app is one HTML file. The data is a separate JSON file that the user owns. There is no server, no hosting and no browser storage as the source of truth.
 - **Why:** Users can share the app file. Updates replace only the app file. Clearing the browser does not delete data.
-- **Consequence:** Chrome and Edge save directly into the file (File System Access API). Firefox and Safari save by download. (Replaced: only Chrome and Edge, with a data folder. See "Apps on GitHub Pages, data in a local folder".)
+- **Consequence:** Chrome and Edge save directly into the file (File System Access API). Firefox and Safari save by download. ("Apps on GitHub Pages, data in a local folder" replaces this: only Chrome and Edge, with a data folder.)
 - **Consequence:** Phones cannot open a local HTML file reliably. We do not support phones. Layouts must still work in narrow browser windows.

@@ -103,8 +103,6 @@ test.describe("app-ideen in Chrome and Edge", () => {
   test("does not overwrite a file that changed elsewhere", async ({ page }) => {
     await openWithFolder(page, ideasFile([{ id: "a1", title: "Tee", description: "" }]));
     await expect(titles(page)).toHaveText(["Tee"]);
-    // The file times have a resolution of 1 ms. Make sure that the change is newer.
-    await page.waitForTimeout(50);
     await writeDataFile(page, FILE, ideasFile([{ id: "b1", title: "Kakao", description: "" }]));
 
     await addIdeaInUi(page, "Kaffee", "");

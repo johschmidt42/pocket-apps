@@ -10,8 +10,6 @@ export type SaveStatus = "saved" | "pending" | "saving" | "failed" | "conflict";
 export type ReadyState<T> = {
   status: "ready";
   data: T;
-  /** The data that the file has. `null` = the file does not have the current shape yet. */
-  saved: T | null;
   /** The time of the last change of the file when the app read or wrote it. `null` = no file yet. */
   lastModified: number | null;
   save: SaveStatus;
@@ -23,7 +21,8 @@ export type DataFileState<T> =
 
 export type DataFileAction<T> =
   | { type: "loading" }
-  | { type: "loaded"; data: T; saved: T | null; lastModified: number | null }
+  /** `needsSave`: the file does not have the current shape yet (after a migration). */
+  | { type: "loaded"; data: T; needsSave: boolean; lastModified: number | null }
   | { type: "broken"; message: string }
   | { type: "updated"; updater: (data: T) => T }
   | { type: "saving" }
@@ -45,9 +44,8 @@ export function dataFileReducer<T>(
     return {
       status: "ready",
       data: action.data,
-      saved: action.saved,
       lastModified: action.lastModified,
-      save: action.saved === action.data ? "saved" : "pending",
+      save: action.needsSave ? "pending" : "saved",
       error: null,
     };
   }
@@ -69,7 +67,6 @@ function fileReducer<T>(state: ReadyState<T>, action: FileAction<T>): ReadyState
     case "saved":
       return {
         ...state,
-        saved: action.data,
         lastModified: action.lastModified,
         // If the data changed while the app saved, it saves again.
         save: state.data === action.data ? "saved" : "pending",

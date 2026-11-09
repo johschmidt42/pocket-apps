@@ -50,16 +50,23 @@ export async function withDataFolder(page: Page): Promise<void> {
   }, FOLDER_NAME);
 }
 
-/** Writes a file into the fake data folder, like a change on another computer. */
+/**
+ * Writes a file into the fake data folder, like a change on another computer.
+ * The file times have a resolution of 1 ms. Thus the function writes again until the time is newer.
+ */
 export async function writeDataFile(page: Page, fileName: string, text: string): Promise<void> {
   await page.evaluate(
     async ({ name, file, content }) => {
       const folder = await (
         await navigator.storage.getDirectory()
       ).getDirectoryHandle(name, { create: true });
-      const writable = await (await folder.getFileHandle(file, { create: true })).createWritable();
-      await writable.write(content);
-      await writable.close();
+      const handle = await folder.getFileHandle(file, { create: true });
+      const before = (await handle.getFile()).lastModified;
+      do {
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+      } while ((await handle.getFile()).lastModified <= before);
     },
     { name: FOLDER_NAME, file: fileName, content: text },
   );

@@ -6,7 +6,6 @@ type Data = { count: number };
 const ready: ReadyState<Data> = {
   status: "ready",
   data: { count: 1 },
-  saved: { count: 1 },
   lastModified: 5,
   save: "saved",
   error: null,
@@ -23,7 +22,7 @@ describe("dataFileReducer", () => {
   it("marks loaded data as pending when the file does not have it yet", () => {
     const state = dataFileReducer<Data>(
       { status: "loading" },
-      { type: "loaded", data: { count: 2 }, saved: null, lastModified: 1 },
+      { type: "loaded", data: { count: 2 }, needsSave: true, lastModified: 1 },
     );
 
     expect(state).toMatchObject({ status: "ready", save: "pending" });

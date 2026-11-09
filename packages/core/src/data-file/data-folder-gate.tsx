@@ -11,6 +11,7 @@ import {
 import { FolderOpen, KeyRound } from "lucide-react";
 import type { ReactNode } from "react";
 import type { DataFolder, FolderHost } from "./folder.ts";
+import { LoadingStatus } from "./loading-status.tsx";
 import { useDataFolder } from "./use-data-folder.ts";
 
 function Screen({ title, children }: { title: string; children: ReactNode }) {
@@ -56,11 +57,7 @@ export function DataFolderGate({
 
   switch (state.status) {
     case "checking":
-      return (
-        <p role="status" className="p-4 text-sm text-muted-foreground">
-          Lädt …
-        </p>
-      );
+      return <LoadingStatus />;
     case "unsupported":
       return (
         <Screen title="Bitte Chrome oder Edge verwenden">
@@ -97,7 +94,7 @@ export function DataFolderGate({
               „Bei jedem Besuch erlauben“. Dann fragt Chrome nicht wieder.
             </p>
             {state.denied && (
-              <p>Der Zugriff wurde abgelehnt. Erlaube ihn oder wähle einen anderen Ordner.</p>
+              <p>Chrome hat den Zugriff abgelehnt. Erlaube ihn oder wähle einen anderen Ordner.</p>
             )}
           </CardContent>
           {errorAlert}

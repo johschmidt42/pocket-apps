@@ -216,7 +216,7 @@ When the app reads its data file, `loadData()` in `packages/core` does these ste
 5. It validates the result with the zod schema. It stops with an error if the data does not match.
 
 On an error, the app shows the message and does not change the file.
-If step 4 ran a migration, the store first writes the unchanged old file into the data folder as `<app>.backup-v<old schema version>.json`. Then it saves the data in the new shape. If the backup fails, it shows an error and does not change the data file.
+If step 4 ran a migration, the store first writes the unchanged old file into the data folder as `<app>.backup-v<old schema version>.json`. Then it saves the data in the new shape. If this file exists, it uses `<app>.backup-v<N>-2.json` and so on. If the backup fails, it shows an error and does not change the data file.
 
 ### Change the data shape
 
@@ -239,7 +239,8 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - `apps/*/src/schema.ts` and `apps/*/src/migrations/` must have 100 % coverage.
 - All other code must have 95 % line coverage and 90 % branch coverage.
 - Test from the user's view. Query by role and label (`getByRole`, `getByLabelText`). Use `userEvent`, not `fireEvent`. Do not use snapshots.
-- Do not mock internals. For data files, use `createMemoryFolder()` and `createMemoryFolderHost()` from `@pocket-apps/core/data-file/testing`. Pass the host as `folderHost` to `DataFileProvider`. - `createMemoryFolderHost()` is the first visit (no folder). Set `host.nextPick` to the folder that "Ordner wählen …" returns.
+- Do not mock internals. For data files, use `createMemoryFolder()` and `createMemoryFolderHost()` from `@pocket-apps/core/data-file/testing`. Pass the host as `folderHost` to `DataFileProvider`.
+- `createMemoryFolderHost()` is the first visit (no folder). Set `host.nextPick` to the folder that "Ordner wählen …" returns.
 - `createMemoryFolderHost({ saved: folder })` is a folder from an earlier visit with access. Set `folder.access = "prompt"` to test the screen "Zugriff auf deinen Datenordner".
 - To start with data, put a file into `folder.files`: `folder.files.set("<app>.json", { text, lastModified: 1 })`. `text` is the full envelope as JSON.
 - `folder.writeError` makes saves fail. `folder.changeElsewhere(path, text)` simulates a change on another computer (conflict).

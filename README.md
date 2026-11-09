@@ -39,7 +39,7 @@ The bar under the header shows the folder, the file and the status:
 - "Gespeichert": the file has all your changes. The apps save each change automatically.
 - "Speichert …": the app writes the file now.
 - "Speichern fehlgeschlagen": the app could not write the file. It tries again after a few seconds. You can also click "Jetzt erneut versuchen".
-- "Nicht gespeichert: Konflikt": the file changed somewhere else, for example on another computer or in another tab. The app does not overwrite it. Click "Neu laden (meine Änderungen verwerfen)" to get the other version. Your new changes are then lost. Or click "Meine Version speichern". Then the other version is lost.
+- "Nicht gespeichert: Konflikt": the file changed somewhere else, for example on another computer or in another tab. The app does not overwrite it. Click "Neu laden (meine Änderungen verwerfen)" to get the other version. Then you lose your new changes. Or click "Meine Version speichern". Then you lose the other version.
 
 More tips:
 

@@ -78,7 +78,7 @@ describe("DataFolderGate", () => {
     expect(
       await screen.findByRole("heading", { level: 2, name: "Zugriff auf deinen Datenordner" }),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/wurde abgelehnt/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/hat den Zugriff abgelehnt/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Zugriff erlauben" }));
 
@@ -94,7 +94,7 @@ describe("DataFolderGate", () => {
 
     await user.click(await screen.findByRole("button", { name: "Zugriff erlauben" }));
 
-    expect(screen.getByText(/wurde abgelehnt/)).toBeInTheDocument();
+    expect(screen.getByText(/hat den Zugriff abgelehnt/)).toBeInTheDocument();
 
     const other = createMemoryFolder("Neu");
     other.access = "prompt";
@@ -102,7 +102,7 @@ describe("DataFolderGate", () => {
     await user.click(screen.getByRole("button", { name: "Anderen Ordner wählen …" }));
 
     expect(await screen.findByText(/Ordner „Neu“ wieder bearbeiten/)).toBeInTheDocument();
-    expect(screen.queryByText(/wurde abgelehnt/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/hat den Zugriff abgelehnt/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Zugriff erlauben" }));
 
@@ -114,7 +114,7 @@ describe("DataFolderGate", () => {
     folder.access = "denied";
     setup(createMemoryFolderHost({ saved: folder }));
 
-    expect(await screen.findByText(/wurde abgelehnt/)).toBeInTheDocument();
+    expect(await screen.findByText(/hat den Zugriff abgelehnt/)).toBeInTheDocument();
   });
 
   it("shows an error when the access request fails", async () => {

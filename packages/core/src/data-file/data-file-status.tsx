@@ -35,9 +35,8 @@ export function DataFileStatus(props: DataFileStatusProps) {
         {props.save === "failed" && (
           <Alert variant="destructive">
             <AlertDescription className="flex flex-col items-start gap-2">
-              <span>
-                Speichern fehlgeschlagen: {props.error}. Die App versucht es gleich noch einmal.
-              </span>
+              <span>Speichern fehlgeschlagen: {props.error}</span>
+              <span>Die App versucht es gleich noch einmal.</span>
               <Button size="sm" variant="outline" onClick={props.onRetry}>
                 Jetzt erneut versuchen
               </Button>
@@ -48,8 +47,8 @@ export function DataFileStatus(props: DataFileStatusProps) {
           <Alert variant="destructive">
             <AlertDescription className="flex flex-col items-start gap-2">
               <span>
-                Die Datei wurde woanders geändert, zum Beispiel auf einem anderen Rechner. Deine
-                Änderungen hier sind noch nicht gespeichert.
+                Jemand hat die Datei woanders geändert, zum Beispiel auf einem anderen Rechner. Die
+                App hat deine Änderungen hier noch nicht gespeichert.
               </span>
               <span className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={props.onReload}>

@@ -30,7 +30,10 @@ function failure(error: DOMException | null): Error {
   return error ?? new Error("IndexedDB failed.");
 }
 
-function request<T>(action: (store: IDBObjectStore) => IDBRequest<T>, mode: IDBTransactionMode) {
+function inSettingsStore<T>(
+  action: (store: IDBObjectStore) => IDBRequest<T>,
+  mode: IDBTransactionMode,
+) {
   return new Promise<T>((resolve, reject) => {
     const open = indexedDB.open("pocket-apps", 1);
     open.onupgradeneeded = () => {
@@ -57,9 +60,9 @@ function request<T>(action: (store: IDBObjectStore) => IDBRequest<T>, mode: IDBT
 
 /** The key-value store in IndexedDB (database "pocket-apps", store "settings"). */
 export const indexedDbStore: KeyValueStore = {
-  get: (key) => request((store) => store.get(key), "readonly"),
+  get: (key) => inSettingsStore((store) => store.get(key), "readonly"),
   set: async (key, value) => {
-    await request((store) => store.put(value, key), "readwrite");
+    await inSettingsStore((store) => store.put(value, key), "readwrite");
   },
 };
 
@@ -150,3 +153,6 @@ export function createBrowserFolderHost(storage: KeyValueStore = indexedDbStore)
     },
   };
 }
+
+/** The data folder of the browser, shared by all pages of the web address. */
+export const browserFolderHost = createBrowserFolderHost();
