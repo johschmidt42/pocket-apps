@@ -28,6 +28,12 @@
             <label>OAuth-Client-ID (Typ „Web“)<br /><input id="client-id" style="width: 100%" /></label>
             <label>API-Schlüssel (für die Ordnerauswahl)<br /><input id="api-key" style="width: 100%" /></label>
             <label>Projektnummer<br /><input id="app-id" style="width: 100%" /></label>
+            <label>Berechtigung<br />
+              <select id="scope">
+                <option value="drive.file">drive.file – nur selbst angelegte oder ausgewählte Dateien</option>
+                <option value="drive">drive – voller Zugriff (zeigt „App nicht überprüft“)</option>
+              </select>
+            </label>
             <div class="row"><button id="save-settings">Speichern</button></div>
           </div>
         </details>
@@ -74,7 +80,8 @@
     </main>
 
     <script>
-      const SCOPES = "https://www.googleapis.com/auth/drive.file email";
+      const scopeName = () => localStorage.getItem("proto-scope") ?? "drive.file";
+      const scopes = () => `https://www.googleapis.com/auth/${scopeName()} email`;
       const LOG_KEY = "proto-drive-log";
       const $ = (id) => document.getElementById(id);
       const settings = () => ({ clientId: localStorage.getItem("proto-client-id") ?? "", apiKey: localStorage.getItem("proto-api-key") ?? "", appId: localStorage.getItem("proto-app-id") ?? "" });
@@ -106,6 +113,7 @@
         $("state").innerHTML = `
           <dt>Browser</dt><dd>${navigator.userAgent.includes("iPhone") ? "iPhone" : navigator.userAgent.includes("Android") ? "Android" : "Computer"}</dd>
           <dt>Einstellungen</dt><dd>${s.clientId && s.apiKey && s.appId ? '<span class="ok">vollständig</span>' : '<span class="bad">fehlen – oben eintragen</span>'}</dd>
+          <dt>Berechtigung</dt><dd>${scopeName()}</dd>
           <dt>Angemeldet</dt><dd>${state.token ? `<span class="ok">${state.email ?? "ja"}</span> <span class="muted">(noch ${minutes} min gültig)</span>` : '<span class="warn">nein</span>'}</dd>
           <dt>Gewählter Ordner</dt><dd>${state.folder ? `${state.folder.name}` : "—"}</dd>
           <dt>Nutzer in users.json</dt><dd>${state.users.map((u) => u.name).join(", ") || "—"}</dd>
@@ -143,7 +151,7 @@
         const s = settings();
         const client = google.accounts.oauth2.initTokenClient({
           client_id: s.clientId,
-          scope: SCOPES,
+          scope: scopes(),
           callback: async (response) => {
             if (response.error) return log(`Anmeldung: ${response.error}`, "error");
             state.token = response.access_token;
@@ -153,7 +161,7 @@
               state.email = info.email ?? null;
             } catch { state.email = null; }
             sessionStorage.setItem("proto-drive-token", JSON.stringify({ token: state.token, expiresAt: state.expiresAt, email: state.email }));
-            log(`Angemeldet als ${state.email} (Token ${response.expires_in} s gültig)`, "prompt");
+            log(`Angemeldet als ${state.email} mit ${scopeName()} (Token ${response.expires_in} s gültig, gewährt: ${response.scope.replace(/https:\/\/www.googleapis.com\/auth\//g, "")})`, "prompt");
             await loadAll();
           },
         });
@@ -187,7 +195,9 @@
         localStorage.setItem("proto-client-id", $("client-id").value.trim());
         localStorage.setItem("proto-api-key", $("api-key").value.trim());
         localStorage.setItem("proto-app-id", $("app-id").value.trim());
-        log("Einstellungen gespeichert");
+        localStorage.setItem("proto-scope", $("scope").value);
+        log(`Einstellungen gespeichert (Berechtigung ${$("scope").value})`);
+        sessionStorage.removeItem("proto-drive-token"); state.token = null; state.email = null;
         render();
       };
       $("login").onclick = login;
@@ -225,6 +235,7 @@
       $("clear").onclick = () => { localStorage.removeItem(LOG_KEY); renderLog(); };
 
       const s0 = settings();
+      $("scope").value = scopeName();
       $("client-id").value = s0.clientId; $("api-key").value = s0.apiKey; $("app-id").value = s0.appId;
       if (!(s0.clientId && s0.apiKey && s0.appId)) $("settings").open = true;
       log(`Seite geladen (${state.token ? "Token aus dieser Sitzung vorhanden" : "nicht angemeldet"})`);
