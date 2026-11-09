@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@12.18.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "build": "pnpm --recursive --filter \"./apps/*\" --filter ./launcher build && node scripts/build-release.mjs",

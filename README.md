@@ -46,6 +46,7 @@ Then select your old data file in the save dialog. Confirm that you want to repl
 Read [AGENTS.md](AGENTS.md) for commands, layout and rules. Read [docs/decisions.md](docs/decisions.md) for the reasons behind them.
 
 ```sh
+nvm install && nvm use            # Node.js 24 from .nvmrc
 brew install pnpm
 pnpm install
 pnpm e2e:install                  # test browsers, once

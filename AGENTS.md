@@ -25,6 +25,7 @@ Most apps work offline. An app that needs an external API declares this in its `
 
 ## Commands
 
+Use Node.js 24. The file `.nvmrc` sets the version for nvm and for the CI. Run `nvm use` in the repository root folder (once: `nvm install`).
 Install pnpm once with Homebrew: `brew install pnpm`. pnpm then uses the version in `packageManager` of `package.json`.
 Install the test browsers once: `pnpm e2e:install`.
 
@@ -271,7 +272,7 @@ GitHub Actions run the pipelines in `.github/workflows/`.
 
 - Name a CI pipeline (checks) `CI - <what>`, for example `CI - Lint`. File name: `ci-<what>.yml`.
 - Name a CD pipeline (delivery) `CD - <what>`, for example `CD - Release`. File name: `cd-<what>.yml`.
-- Use the local action `./.github/actions/setup` to install Node.js, pnpm and the dependencies. Do not repeat these steps.
+- Use the local action `./.github/actions/setup` to install Node.js (version from `.nvmrc`), pnpm and the dependencies. Do not repeat these steps.
 - In CD pipelines, use only official GitHub actions. Pin them to a commit hash with the tag as a comment. CD pipelines have access to secrets.
 - Give each pipeline `permissions: contents: read`, unless it needs more.
 - Use the same commands as on your computer (`pnpm lint`, `pnpm typecheck`). Do not write special commands for CI.
