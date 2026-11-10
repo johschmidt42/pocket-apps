@@ -1,6 +1,6 @@
 {
   "name": "fixkosten",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Zeigt deine laufenden Kosten als Sankey, Balken und Kacheln. Mit Profilen und Einkommen.",

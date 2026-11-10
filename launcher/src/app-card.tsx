@@ -72,7 +72,7 @@ export function AppCard({ app, heading: Heading, favorite }: AppCardProps) {
       <a
         href={`./${app.name}.html`}
         aria-label={app.title}
-        className="group block rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="group block rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <Card className="h-full transition-colors group-hover:bg-muted/50">
           <CardHeader

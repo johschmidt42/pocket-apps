@@ -3,6 +3,15 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-10: UI style Maia with the base color stone
+
+- **Decision:** The shadcn components use the style `radix-maia` instead of `radix-nova`. Buttons and inputs are round ("pills"). Cards and dialogs have larger corners and more space inside.
+- **Decision:** The theme uses the base color `stone` instead of `neutral`. The grays are a little warm. The radius is `0.75rem`. The chart colors did not change.
+- **Why:** The user did not like the look of Nova. The user compared Maia locally and chose it.
+- **How:** `packages/ui/components.json` has the new style. `pnpm shadcn add <all components> --overwrite` generated the components again. The colors in `globals.css` are the stone values of shadcn. After the command, check the versions in `packages/ui/package.json`: the command set Recharts back to 3.8.0, so we pinned 3.10.1 again.
+- **Other styles:** Vega (classic), Lyra (sharp corners, small text), Mira (very compact).
+- **Versions:** The look of every app changed, so each app got a small version step.
+
 ## 2026-11-10: ETF prices from Alpha Vantage (kursverlauf)
 
 - **Decision:** `kursverlauf` gets the prices from Alpha Vantage, with a free key that the user types in. The free key allows 25 requests per day and 1 request per second.
