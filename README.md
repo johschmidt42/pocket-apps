@@ -78,7 +78,8 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 
 ## Apps
 
-| App         | Data file | Internet | Description                      |
-| ----------- | --------- | -------- | -------------------------------- |
-| zinsrechner | no        | no       | Compound interest for a capital. |
-| app-ideen   | yes       | no       | Collects ideas for new apps.     |
+| App         | Data file | Internet | Description                                                     |
+| ----------- | --------- | -------- | --------------------------------------------------------------- |
+| zinsrechner | no        | no       | Compound interest for a capital.                                |
+| app-ideen   | yes       | no       | Collects ideas for new apps.                                    |
+| fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles. |

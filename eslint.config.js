@@ -168,7 +168,7 @@ export default defineConfig([
               message: "No own CSS. Use Tailwind classes.",
             },
             {
-              group: ["radix-ui", "@radix-ui/*"],
+              group: ["radix-ui", "@radix-ui/*", "recharts"],
               message: "Use the components from @pocket-apps/ui.",
             },
             {

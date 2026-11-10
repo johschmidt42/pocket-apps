@@ -3,6 +3,19 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-10: Charts with Recharts (shadcn chart)
+
+- **Decision:** Charts use Recharts 3, through the shadcn component `chart` in `packages/ui`. `@pocket-apps/ui/charts` gives the chart parts (for example `Sankey`, `Treemap`, `BarChart`) to the apps. ESLint forbids a direct import of `recharts` in apps.
+- **Why:** One library has all the charts that we need: Sankey, treemap, bars and stacked bars. It draws SVG, so it reads the theme variables, and dark mode works with no extra code. It is MIT, well kept, and works with React 19. Actual Budget uses it for its Sankey report.
+- **Rejected:** ECharts (best Sankey, but canvas cannot read CSS variables, and it is about 2.5 times larger). Nivo (no release since May 2025). d3-sankey or visx (we would draw all SVG ourselves). Chart.js and Plotly (canvas, or too large).
+- **Cost:** Recharts adds about 155 KB (gzip) to an app file that uses it. Apps without charts do not get it.
+- **Decision:** The chart colors `--chart-1` to `--chart-8` are the 8 colors of a checked palette, in a fixed order, with their own values for dark mode. `--chart-other` is gray for "Sonstiges". The order passed a check for color blindness and contrast. In light mode, three colors (`--chart-3` aqua, `--chart-4` yellow, `--chart-5` pink) have less than 3:1 contrast. Thus charts also show their values as text.
+
+## 2026-11-10: Native select boxes, shared parseNumber
+
+- **Decision:** Select boxes use shadcn `native-select`, not the Radix `select`. A native select works on phones and in jsdom tests. A list of icons uses a `ToggleGroup`, because a native select cannot show icons.
+- **Decision:** `parseNumber()` moved from `zinsrechner` to `@pocket-apps/core/numbers`, because `fixkosten` also needs it. It reads German and plain inputs ("1.234,5", "10.000", "1234.5") and returns `null` for a wrong input.
+
 ## 2026-11-10: Favorite apps in the launcher
 
 - **Decision:** The user marks an app as a favorite with a star button on its card. A filled star shows a favorite. The launcher shows the favorites first, in the section "Favoriten". The other apps come after them, in the section "Weitere Apps".

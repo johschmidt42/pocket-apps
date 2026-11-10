@@ -50,8 +50,10 @@ launcher/                  The launcher. Builds to release/index.html.
 packages/core/             Shared code:
   src/app-shell/           AppHeader (back link, title, version, theme switch) and the theme logic.
   src/data-file/           Data folder and data file: pick, load, save, migrate, validate.
+  src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
+  src/charts.ts            The Recharts parts for apps (own code, not vendor code).
 packages/vite-config/      Shared Vite config. Reads app info and pocket-apps.config.json.
 pocket-apps.config.json    Settings for all apps, for example the back link.
 scripts/build-release.mjs  Copies the built files to release/.
@@ -121,6 +123,11 @@ Each app declares its info in its `package.json`:
 ### UI
 
 - Take UI components only from `packages/ui`. Today these are shadcn components.
+- For charts, use `ChartContainer` from `@pocket-apps/ui/components/chart` and the chart parts from `@pocket-apps/ui/charts` (Recharts). ESLint forbids a direct import of `recharts` in `apps/` and `launcher/`. If you need a Recharts part that `packages/ui/src/charts.ts` does not export, add it to the export list there.
+- Give each category or series one fixed chart color: `--chart-1` to `--chart-8`, in this order of the categories, not of the values. The color stays the same in all tabs and filters. Use `--chart-other` (gray) for "Sonstiges". If there are more than 8 categories, put the rest into "Sonstiges". Do not invent more colors.
+- Give the color to an SVG attribute, for example `fill="var(--chart-1)"`, or to the `color` field of a `ChartConfig`. This is not inline `style`. For HTML elements, use the classes `bg-chart-1` and so on.
+- Show the values of a chart as text too: labels, a legend or a list. A tooltip alone is not enough, because it shows only on hover. Some colors have less than 3:1 contrast in light mode.
+- For a select box, use `NativeSelect` from `@pocket-apps/ui/components/native-select`. It works with the keyboard, on phones and in jsdom tests. For a choice among icons, use `ToggleGroup`, because a native select cannot show icons.
 - You can add components from another library to `packages/ui`. Add a decision entry first. Use one library per kind of component.
 - Do not change vendor components. Change the look only through the theme variables in `globals.css`.
 - Do not write your own UI primitives (button, input, dialog and similar).
@@ -258,6 +265,7 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - `folder.writeError` makes saves fail. `folder.changeElsewhere(path, text)` simulates a change on another computer (conflict).
 - Saves come 500 ms after a change. Do not use fake timers. Wait with `findBy…` queries.
 - For app info in unit tests, use `testAppInfo()` from `@pocket-apps/core/testing`.
+- jsdom has no layout. Recharts measures its container with `getBoundingClientRect()` and draws nothing at 0 px. In a unit test of a chart, give elements a size with `vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")`. Return all fields of a `DOMRect`, for example `width: 640` and `height: 400`. See `apps/fixkosten/src/app.test.tsx`. This replaces a browser API, not an internal of our code, so it is allowed. `vitest.setup.ts` restores all mocks after each test and gives jsdom an empty `ResizeObserver`.
 - Keep pure logic (calculations, list operations) in `.ts` files with their own unit tests.
 - The browser tests use the local web server of `pnpm serve`. Playwright starts it.
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.

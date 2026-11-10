@@ -7,6 +7,7 @@
     "./app-shell": "./src/app-shell/index.ts",
     "./data-file": "./src/data-file/index.ts",
     "./data-file/testing": "./src/data-file/testing.ts",
+    "./numbers": "./src/numbers.ts",
     "./testing": "./src/testing.ts"
   },
   "scripts": {

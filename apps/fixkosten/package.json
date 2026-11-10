@@ -1,0 +1,33 @@
+{
+  "name": "fixkosten",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Zeigt deine laufenden Kosten als Sankey, Balken und Kacheln. Mit Profilen und Einkommen.",
+  "pocketApp": {
+    "title": "Fixkosten",
+    "emoji": "💸",
+    "stateful": true,
+    "network": false
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pocket-apps/core": "workspace:*",
+    "@pocket-apps/ui": "workspace:*",
+    "lucide-react": "1.70.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@pocket-apps/vite-config": "workspace:*",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.7"
+  }
+}
