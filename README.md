@@ -85,3 +85,4 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 | fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles. |
 | kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.            |
 | countdown   | yes       | no       | Days, hours, minutes and seconds until your events.             |
+| attraktor   | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.  |

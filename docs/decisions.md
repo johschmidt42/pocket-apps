@@ -3,6 +3,21 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-10: 3D graphics with three.js (attraktor)
+
+- **Context:** `attraktor` shows a strange attractor: a chaotic system of formulas. Points follow the formulas, and their trails are glowing 3D lines that move slowly. The mouse pulls on the lines. The first attractor (Aizawa) copies the start page of zensical.org.
+- **Decision:** The app draws with three.js 0.187 (WebGL 2, the 3D graphics interface of the browser). three.js is a dependency of the app, not of `packages/ui`, because it is a graphics library and not a component library. If a second app needs it, move the shared code into a package.
+- **Why:** zensical.org uses three.js for this picture: 225 lines with 192 to 384 points each (about 65,000 points), additive blending (the colors of lines that cross add up) and a glow effect after the render (`UnrealBloomPass`). three.js gives all of this.
+- **Cost:** The app file is about 914 KB (246 KB compressed with gzip). three.js adds about 150 KB of it. Other apps do not get it.
+- **Decision:** The picture is always dark, also in light mode. Added light needs a dark background. The line colors are hex values in `palettes.ts`, not theme variables, because WebGL cannot read CSS variables. The small color bars of the color choice (`palette-swatch.tsx`, SVG) use the same hex values, so that they show the colors of the picture.
+- **Decision:** The simulation and the mouse effects (the mouse bends the picture, pulls on the points, or pulls the lines like rubber) are plain TypeScript in `simulation.ts`, `mouse-effects.ts` and `attractor-scene.ts`. They run on the CPU. three.js only draws (`webgl-view.ts`). Thus unit tests cover all logic.
+- **Decision:** The unit tests run in jsdom, which has no WebGL. Thus `webgl-view.test.ts` replaces two three.js parts with fakes (`vi.mock`): the WebGL renderer and the chain of effects after the render (glow, colors). The camera, the mouse ray (the line from the camera through the mouse pointer) and the line geometry are the real three.js classes. For the same reason, `App` has the optional prop `viewFactory`. Only the tests use it: they give a view that records the calls and draws nothing. All other code (scene, simulation, mouse, React) runs as in the browser.
+- **Decision:** `e2e/attraktor.spec.ts` starts Chromium with the flags `--use-angle=swiftshader --enable-unsafe-swiftshader`. CI computers have no graphics card. With these flags, Chromium calculates WebGL in software (SwiftShader).
+- **Decision:** Two round icon buttons with a tooltip sit in the bottom right corner of the picture: "Zurücksetzen" and "Vollbild". "Vollbild" uses the Fullscreen API of the browser. In the full screen, the same button ("Vollbild beenden") and the Esc key end it. Without the Fullscreen API (for example on an iPhone), this button is not there.
+- **Decision:** The whole page goes into full screen (`document.documentElement`), and the picture covers it (`fixed inset-0`). The tooltips of `packages/ui` show in an element at the end of `<body>`. With only the picture in full screen, the browser does not show them. jsdom has no Fullscreen API. Thus `app.test.tsx` adds a small copy of it, as the tests do for `getBoundingClientRect`.
+- **Detail:** The values of Aizawa come from the page code of zensical.org. The formula has 6 parameters (α to ζ). The page moves them slowly between 5 sets of values ("profiles"), one move every 3 to 6 minutes. The app does the same. In the term `1 + ε·z` of the standard Aizawa formula, zensical.org uses ε/4. The app does the same, so that the shape is the same.
+- **Rejected:** Canvas 2D (no glow without a lot of extra code, slow with 65,000 points). Plain WebGL without a library (then we must write the glow and the line buffers ourselves).
+
 ## 2026-11-10: UI style Maia with the base color stone
 
 - **Decision:** The shadcn components use the style `radix-maia` instead of `radix-nova`. Buttons and inputs are round ("pills"). Cards and dialogs have larger corners and more space inside.
