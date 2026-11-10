@@ -10,7 +10,7 @@ Most apps use no online services. An app that needs an external API declares thi
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`. The launcher is also the place to pick the data folder. With a folder, the user can change the order of the apps ("Reihenfolge ändern"). The launcher keeps the order in `launcher.json` in the data folder. Without a folder, it shows the apps in the build order.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data folder:** the folder that the user picks once, for example "Pocket Apps Daten". It can be in a OneDrive or Google Drive folder. The apps use the File System Access API. Thus only Chrome and Edge on a computer can use it.
 - **Data file:** the JSON file of one app in the data folder: `<app>.json`, for example `app-ideen.json`.
@@ -204,6 +204,17 @@ When the app is open, the store does these things:
 - Before each save, it compares the time of the last change of the file with the time when the app read or wrote it. If the file changed elsewhere (for example on another computer through Google Drive), it does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
 - After a failed save, it shows an error and tries again after 5 seconds.
 - While a change is not saved, it warns before the tab closes.
+- The status line has the button "Ordner wechseln". It lets the user pick another folder. The button works only when all changes are saved. After the change, the app loads the file of the new folder.
+
+#### Optional folder (only for the launcher)
+
+`createDataFileStore(schema, { app, folderOptional: true })` makes the folder optional:
+
+- The app always shows its content. Without a folder, a card above the content asks for the folder ("Datenordner wählen"). If the browser lost the access, the card is "Zugriff auf deinen Datenordner". In Firefox and Safari, a short notice replaces the card.
+- Without a folder, `useDataFile()` gives `initial()` as `data`, and `update` does nothing. `hasFolder` is `false`. Hide the actions that change data.
+- With a folder, the store works as in a normal stateful app: status line, "Ordner wechseln", automatic save and conflict check. `hasFolder` is `true`.
+
+A normal stateful app does not use `folderOptional`. It needs its folder.
 
 ### How a migration runs
 

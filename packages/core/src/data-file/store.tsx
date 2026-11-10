@@ -17,7 +17,10 @@ import { currentVersion, type DataSchema } from "./schema.ts";
 /** What the app components get from `useDataFile()`. */
 export type DataFileApi<T> = {
   data: T;
+  /** Changes the data. Without a folder (only with `folderOptional`), it does nothing. */
   update: (updater: (data: T) => T) => void;
+  /** False only with `folderOptional` before the person picked a folder with access. */
+  hasFolder: boolean;
 };
 
 export type DataFileStoreOptions = {
@@ -27,6 +30,11 @@ export type DataFileStoreOptions = {
   autosaveDelayMs?: number;
   /** Wait time before the next try after a failed save. Default: 5000 ms. */
   retryDelayMs?: number;
+  /**
+   * True: the app also works without a data folder, with `initial()` data and without saving.
+   * Then a task card above the app asks for the folder. For the launcher. Default: false.
+   */
+  folderOptional?: boolean;
 };
 
 export type DataFileProviderProps = {
@@ -57,6 +65,13 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
   const schemaVersion = currentVersion(schema);
   const autosaveDelayMs = options.autosaveDelayMs ?? 500;
   const retryDelayMs = options.retryDelayMs ?? 5000;
+  const folderOptional = options.folderOptional ?? false;
+  // Without a folder, the data stays `initial()`. Nothing can change it.
+  const withoutFolder: DataFileApi<T> = {
+    data: schema.initial(),
+    hasFolder: false,
+    update: () => undefined,
+  };
 
   function serialize(data: T): string {
     return serializeEnvelope({
@@ -117,7 +132,9 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     }
   }
 
-  function FileView({ folder, children }: { folder: DataFolder; children: ReactNode }) {
+  type FileViewProps = { folder: DataFolder; changeFolder: () => void; children: ReactNode };
+
+  function FileView({ folder, changeFolder, children }: FileViewProps) {
     const [state, dispatch] = useReducer(dataFileReducer<T>, { status: "loading" });
     const [loadCount, setLoadCount] = useState(0);
 
@@ -219,6 +236,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
 
     const api: DataFileApi<T> = {
       data: state.data,
+      hasFolder: true,
       update: (updater) => {
         dispatch({ type: "updated", updater });
       },
@@ -233,6 +251,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
           onRetry={() => void retry()}
           onReload={() => void reload()}
           onKeepMine={() => void keepMine()}
+          onChangeFolder={changeFolder}
         />
         {children}
       </Context>
@@ -243,8 +262,16 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     return (
       <>
         <AppHeader app={options.app} />
-        <DataFolderGate host={folderHost}>
-          {(folder) => <FileView folder={folder}>{children}</FileView>}
+        <DataFolderGate host={folderHost} optional={folderOptional}>
+          {(folder, changeFolder) =>
+            folder ? (
+              <FileView folder={folder} changeFolder={changeFolder}>
+                {children}
+              </FileView>
+            ) : (
+              <Context value={withoutFolder}>{children}</Context>
+            )
+          }
         </DataFolderGate>
       </>
     );

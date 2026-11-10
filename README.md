@@ -13,7 +13,7 @@ Small personal apps for Chrome and Edge on a computer. Open them at **https://jo
 
 ### Start an app
 
-1. Open https://johschmidt42.github.io/pocket-apps/ in Chrome or Edge. The page shows all apps.
+1. Open https://johschmidt42.github.io/pocket-apps/ in Chrome or Edge. The page shows all apps. On the first visit, it also asks for your data folder. Apps without data work without a folder. For apps with data, see "Keep your data".
 2. Click an app card. The app opens.
 3. Click "Alle Apps" in the header to go back.
 
@@ -29,10 +29,10 @@ The header shows the app version, for example `1.0`. The moon button switches to
 Some apps keep data, for example a list of ideas. All these apps use one data folder on your computer.
 
 1. Make a folder, for example "Pocket Apps Daten". If you have the desktop program of OneDrive or Google Drive, put the folder into its folder on your computer. Then you have a backup automatically.
-2. Open an app that keeps data. The app shows "Datenordner wählen". Click the button "Ordner wählen …" and select your folder.
+2. On the start page or in an app that keeps data, find "Datenordner wählen". Click the button "Ordner wählen …" and select your folder. All apps use this folder.
 3. A Chrome window asks if the page can edit the folder. Allow it.
 
-Each app keeps its data in its own file in this folder, for example `app-ideen.json`.
+Each app keeps its data in its own file in this folder, for example `app-ideen.json`. The start page keeps the order of the apps in `launcher.json`.
 
 The bar under the header shows the folder, the file and the status:
 
@@ -43,11 +43,13 @@ The bar under the header shows the folder, the file and the status:
 
 More tips:
 
+- To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only when the start page has your data folder. Move the apps with the arrow buttons. Click "Fertig". The start page keeps the order in `launcher.json` in your data folder.
+- To use another folder, click "Ordner wechseln" in the bar under the header.
 - When you open an app later, the app can show "Zugriff auf deinen Datenordner". Click "Zugriff erlauben" in the app. Then a Chrome window opens. Select "Bei jedem Besuch erlauben" in it. Then Chrome does not ask again.
 - On a second computer, select the same synced folder. Then both computers use the same data. Use the apps on one computer at a time.
 - Do you have a data file from an earlier version of Pocket Apps (before the data folder), for example `app-ideen.json`? Put it into the data folder before you open the app. Do not replace a newer file with the same name. The app then opens the file.
 
-Pocket Apps work only in Chrome and Edge on a computer. Other browsers show a notice.
+Apps with data work only in Chrome and Edge on a computer. Other browsers show a notice. Apps without data, for example the Zinsrechner, also work in other browsers.
 
 ### Updates
 

@@ -18,12 +18,14 @@ function folderErrorMessage(error: unknown): string {
   return `Der Datenordner ist nicht verfügbar: ${error instanceof Error ? error.message : String(error)}`;
 }
 
-/** Finds the remembered data folder and its access state. Offers pick and grant. */
+/** Finds the remembered data folder and its access state. Offers pick (also to change the folder) and grant. */
 export function useDataFolder(host: FolderHost) {
   const [state, setState] = useState<FolderState>(() =>
     host.isSupported() ? { status: "checking" } : { status: "unsupported" },
   );
   const [error, setError] = useState<string | null>(null);
+  // Counts the picked folders. A new number gives the app a fresh start with the new folder.
+  const [picks, setPicks] = useState(0);
 
   // The remembered folder lives in the browser storage (an external system).
   useEffect(() => {
@@ -53,7 +55,9 @@ export function useDataFolder(host: FolderHost) {
     setError(null);
     try {
       const folder = await host.pick();
-      if (folder) setState(stateFor(folder, await folder.queryAccess()));
+      if (!folder) return;
+      setState(stateFor(folder, await folder.queryAccess()));
+      setPicks((count) => count + 1);
     } catch (caught) {
       setError(folderErrorMessage(caught));
     }
@@ -68,5 +72,5 @@ export function useDataFolder(host: FolderHost) {
     }
   }
 
-  return { state, error, pick, grant };
+  return { state, error, picks, pick, grant };
 }

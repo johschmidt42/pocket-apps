@@ -1,6 +1,6 @@
 {
   "name": "app-ideen",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "description": "Sammelt Ideen für neue Apps. Die Ideen liegen in einer eigenen Datei.",

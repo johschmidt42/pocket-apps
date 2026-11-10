@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { listApps, releaseUrl, test } from "./helpers.ts";
+import { listApps, readDataFile, releaseUrl, test, withDataFolder } from "./helpers.ts";
 
 test.describe("launcher (release/index.html)", () => {
   test.beforeEach(async ({ page, pageErrors }) => {
@@ -83,5 +83,59 @@ test.describe("launcher (release/index.html)", () => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+});
+
+test.describe("launcher with the data folder", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "Only Chromium can open a folder.");
+
+  test("sets up the folder for all apps and keeps the order of the apps", async ({
+    page,
+    pageErrors,
+  }) => {
+    const apps = listApps();
+    const last = apps.at(-1);
+    if (!last || apps.length < 2) throw new Error("This test needs two apps.");
+    await withDataFolder(page);
+    await page.goto(releaseUrl("index.html"));
+
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+    await page.getByRole("button", { name: "Reihenfolge ändern" }).click();
+    for (let step = 1; step < apps.length; step += 1) {
+      await page.getByRole("button", { name: `${last.title} nach oben` }).click();
+    }
+    await page.getByRole("button", { name: "Fertig" }).click();
+
+    const cards = page.getByRole("main").getByRole("list").getByRole("link");
+    await expect(cards.first()).toHaveAccessibleName(last.title);
+    await expect(page.getByRole("status")).toHaveText("Gespeichert");
+    const saved = JSON.parse((await readDataFile(page, "launcher.json")) ?? "") as {
+      data: { order: string[] };
+    };
+    expect(saved.data.order[0]).toBe(last.name);
+
+    await page.reload();
+
+    await expect(cards.first()).toHaveAccessibleName(last.title);
+
+    // A stateful app uses the same folder. It does not ask again.
+    const stateful = apps.find((app) => app.stateful);
+    if (stateful) {
+      await page.getByRole("link", { name: stateful.title }).click();
+      await expect(page.getByText(`/ ${stateful.name}.json`)).toBeVisible();
+    }
+    expect(pageErrors).toEqual([]);
+  });
+});
+
+test.describe("launcher in other browsers", () => {
+  test.skip(({ browserName }) => browserName === "chromium", "Chromium can open a folder.");
+
+  test("shows the apps and a notice about Chrome and Edge", async ({ page }) => {
+    await page.goto(releaseUrl("index.html"));
+
+    await expect(page.getByText(/funktionieren nur in Chrome und Edge/)).toBeVisible();
+    await expect(page.getByRole("main").getByRole("link")).toHaveCount(listApps().length);
+    await expect(page.getByRole("button", { name: "Reihenfolge ändern" })).toHaveCount(0);
   });
 });

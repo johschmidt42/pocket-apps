@@ -1,53 +1,23 @@
 import type { AppInfo } from "@pocket-apps/vite-config";
-import { AppHeader } from "@pocket-apps/core/app-shell";
-import { Input } from "@pocket-apps/ui/components/input";
-import { Label } from "@pocket-apps/ui/components/label";
+import type { FolderHost } from "@pocket-apps/core/data-file";
 import { TooltipProvider } from "@pocket-apps/ui/components/tooltip";
-import { Search } from "lucide-react";
-import { useState } from "react";
-import { AppCard } from "./app-card.tsx";
-import { filterApps } from "./filter-apps.ts";
+import { LauncherView } from "./launcher-view.tsx";
+import { DataFileProvider } from "./schema.ts";
 
-/** The launcher: a searchable grid of all apps. `apps` is only for tests. */
-export function App({ apps = __POCKET_APPS__ }: { apps?: readonly AppInfo[] }) {
-  const [query, setQuery] = useState("");
-  const visible = filterApps(apps, query);
+export type AppProps = {
+  /** Only for tests. Default: all apps of the build. */
+  apps?: readonly AppInfo[];
+  /** Only for tests. Default: the data folder of the browser. */
+  folderHost?: FolderHost;
+};
 
+/** The launcher: all apps, the data folder and the order of the apps (`launcher.json`). */
+export function App({ apps = __POCKET_APPS__, folderHost }: AppProps) {
   return (
     <TooltipProvider>
-      <AppHeader app={__POCKET_APP__} />
-      <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
-        <div className="relative">
-          <Label htmlFor="search" className="sr-only">
-            Apps durchsuchen
-          </Label>
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            id="search"
-            type="search"
-            placeholder="Apps durchsuchen"
-            className="pl-8"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-            }}
-          />
-        </div>
-        {visible.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Keine App passt zu „{query}“.</p>
-        ) : (
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {visible.map((app) => (
-              <li key={app.name}>
-                <AppCard app={app} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
+      <DataFileProvider {...(folderHost && { folderHost })}>
+        <LauncherView apps={apps} />
+      </DataFileProvider>
     </TooltipProvider>
   );
 }

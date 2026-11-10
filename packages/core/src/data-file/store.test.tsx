@@ -387,6 +387,64 @@ describe("conflict", () => {
   });
 });
 
+describe("change folder", () => {
+  it("loads the file of the new folder", async () => {
+    const { folder, host } = readyHost();
+    const other = createMemoryFolder("Andere Daten");
+    other.files.set("demo.json", { text: dataFile(2, { count: 9 }), lastModified: 1 });
+    host.nextPick = other;
+    const user = setup(host);
+    await screen.findByRole("button", { name: "Zähler 0" });
+
+    await user.click(screen.getByRole("button", { name: "Ordner wechseln" }));
+
+    expect(await screen.findByRole("button", { name: "Zähler 9" })).toBeInTheDocument();
+    expect(screen.getByText("Andere Daten / demo.json")).toBeInTheDocument();
+    expect(folder.files.size).toBe(0);
+  });
+
+  it("is only possible when all changes are saved", async () => {
+    const { folder, host } = readyHost();
+    folder.writeError = new Error("disk full");
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
+    await screen.findByRole("alert");
+
+    expect(screen.getByRole("button", { name: "Ordner wechseln" })).toBeDisabled();
+  });
+});
+
+describe("optional folder", () => {
+  it("shows the app with the initial data before the person picks a folder", async () => {
+    const optional = createDataFileStore(schema, { app, folderOptional: true });
+    function Info() {
+      const { data, hasFolder, update } = optional.useDataFile();
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            update((current) => ({ count: current.count + 1 }));
+          }}
+        >
+          {hasFolder ? "mit Ordner" : "ohne Ordner"} {data.count}
+        </button>
+      );
+    }
+    const user = userEvent.setup();
+    render(
+      <optional.DataFileProvider folderHost={createMemoryFolderHost()}>
+        <Info />
+      </optional.DataFileProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "ohne Ordner 0" }));
+
+    expect(screen.getByRole("button", { name: "ohne Ordner 0" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Datenordner wählen" })).toBeInTheDocument();
+  });
+});
+
 describe("options", () => {
   it("uses the default delays and ignores a late load after it closed", async () => {
     const defaults = createDataFileStore(schema, { app });

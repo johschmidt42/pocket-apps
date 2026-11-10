@@ -18,6 +18,7 @@ export type DataFileStatusProps = {
   onRetry: () => void;
   onReload: () => void;
   onKeepMine: () => void;
+  onChangeFolder: () => void;
 };
 
 /** The line under the header: where the data is, whether it is saved, and what to do on a problem. */
@@ -25,13 +26,24 @@ export function DataFileStatus(props: DataFileStatusProps) {
   return (
     <div className="border-b">
       <div className="mx-auto flex max-w-3xl flex-col gap-2 p-2">
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">
-            {props.folderName} / {props.fileName}
-          </span>
-          {" · "}
-          <span role="status">{STATUS_TEXT[props.save]}</span>
-        </p>
+        <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+          <p>
+            <span className="font-medium text-foreground">
+              {props.folderName} / {props.fileName}
+            </span>
+            {" · "}
+            <span role="status">{STATUS_TEXT[props.save]}</span>
+          </p>
+          {/* Only when all is saved. Else the change would lose data. */}
+          <Button
+            size="xs"
+            variant="link"
+            disabled={props.save !== "saved"}
+            onClick={props.onChangeFolder}
+          >
+            Ordner wechseln
+          </Button>
+        </div>
         {props.save === "failed" && (
           <Alert variant="destructive">
             <AlertDescription className="flex flex-col items-start gap-2">

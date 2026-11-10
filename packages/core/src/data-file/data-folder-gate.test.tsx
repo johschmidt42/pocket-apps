@@ -5,10 +5,19 @@ import { DataFolderGate } from "./data-folder-gate.tsx";
 import type { FolderHost } from "./folder.ts";
 import { createMemoryFolder, createMemoryFolderHost } from "./testing.ts";
 
-function setup(host: FolderHost) {
+function setup(host: FolderHost, optional = false) {
   const user = userEvent.setup();
   const view = render(
-    <DataFolderGate host={host}>{(folder) => <p>Ordner: {folder.name}</p>}</DataFolderGate>,
+    <DataFolderGate host={host} optional={optional}>
+      {(folder, changeFolder) => (
+        <>
+          <p>Ordner: {folder?.name ?? "keiner"}</p>
+          <button type="button" onClick={changeFolder}>
+            Wechseln
+          </button>
+        </>
+      )}
+    </DataFolderGate>,
   );
   return { user, view };
 }
@@ -141,5 +150,56 @@ describe("DataFolderGate", () => {
     await Promise.resolve();
 
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("lets the person change the folder", async () => {
+    const host = createMemoryFolderHost({ saved: createMemoryFolder("Alt") });
+    const { user } = setup(host);
+    await screen.findByText("Ordner: Alt");
+
+    host.nextPick = createMemoryFolder("Neu");
+    await user.click(screen.getByRole("button", { name: "Wechseln" }));
+
+    expect(await screen.findByText("Ordner: Neu")).toBeInTheDocument();
+  });
+
+  it("keeps the app and shows an error when the change fails", async () => {
+    const host = createMemoryFolderHost({ saved: createMemoryFolder("Alt") });
+    const { user } = setup(host);
+    await screen.findByText("Ordner: Alt");
+
+    host.pick = () => Promise.reject(new Error("blocked"));
+    await user.click(screen.getByRole("button", { name: "Wechseln" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("blocked");
+    expect(screen.getByText("Ordner: Alt")).toBeInTheDocument();
+  });
+});
+
+describe("DataFolderGate with an optional folder", () => {
+  it("shows a notice and the app in other browsers", () => {
+    setup(createMemoryFolderHost({ supported: false }), true);
+
+    expect(screen.getByText(/funktionieren nur in Chrome und Edge/)).toBeInTheDocument();
+    expect(screen.getByText("Ordner: keiner")).toBeInTheDocument();
+  });
+
+  it("shows the task as a section above the app", async () => {
+    setup(createMemoryFolderHost(), true);
+
+    expect(await screen.findByRole("region", { name: "Datenordner wählen" })).toBeInTheDocument();
+    expect(screen.queryByRole("main")).not.toBeInTheDocument();
+    expect(screen.getByText("Ordner: keiner")).toBeInTheDocument();
+  });
+
+  it("shows the access task and the app", async () => {
+    const folder = createMemoryFolder();
+    folder.access = "prompt";
+    setup(createMemoryFolderHost({ saved: folder }), true);
+
+    expect(
+      await screen.findByRole("region", { name: "Zugriff auf deinen Datenordner" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ordner: keiner")).toBeInTheDocument();
   });
 });
