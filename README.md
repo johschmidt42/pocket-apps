@@ -32,7 +32,7 @@ Some apps keep data, for example a list of ideas. All these apps use one data fo
 2. On the start page or in an app that keeps data, find "Datenordner wählen". Click the button "Ordner wählen …" and select your folder. All apps use this folder.
 3. A Chrome window asks if the page can edit the folder. Allow it.
 
-Each app keeps its data in its own file in this folder, for example `app-ideen.json`. The start page keeps the order of the apps in `launcher.json`.
+Each app keeps its data in its own file in this folder, for example `app-ideen.json`. The start page keeps the order of the apps and your favorite apps in `launcher.json`.
 
 The bar under the header shows the folder, the file and the status:
 
@@ -44,6 +44,7 @@ The bar under the header shows the folder, the file and the status:
 More tips:
 
 - To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only when the start page has your data folder. Move the apps with the arrow buttons. Click "Fertig". The start page keeps the order in `launcher.json` in your data folder.
+- To mark an app as a favorite, click the star on its card. The star is there only when the start page has your data folder. A filled star shows a favorite. The start page shows your favorite apps first, under "Favoriten". The other apps come under "Weitere Apps". Both sections use your order of the apps. To remove a favorite, click the star again. The start page keeps the favorites in `launcher.json` in your data folder.
 - To use another folder, click "Ordner wechseln" in the bar under the header.
 - When you open an app later, the app can show "Zugriff auf deinen Datenordner". Click "Zugriff erlauben" in the app. Then a Chrome window opens. Select "Bei jedem Besuch erlauben" in it. Then Chrome does not ask again.
 - On a second computer, select the same synced folder. Then both computers use the same data. Use the apps on one computer at a time.

@@ -3,9 +3,12 @@ import { describe, expect, it } from "vitest";
 import { schema } from "./schema.ts";
 
 describe("launcher schema", () => {
-  it("starts at version 1 with an empty order", () => {
-    expect(currentVersion(schema)).toBe(1);
-    expect(schema.initial()).toEqual({ order: [] });
-    expect(schema.validate.parse({ order: ["app-ideen"] })).toEqual({ order: ["app-ideen"] });
+  it("is at version 2 and starts with no order and no favorites", () => {
+    expect(currentVersion(schema)).toBe(2);
+    expect(schema.initial()).toEqual({ order: [], favorites: [] });
+    expect(schema.validate.parse({ order: ["app-ideen"], favorites: ["app-ideen"] })).toEqual({
+      order: ["app-ideen"],
+      favorites: ["app-ideen"],
+    });
   });
 });

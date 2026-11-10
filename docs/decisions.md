@@ -3,6 +3,16 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-10: Favorite apps in the launcher
+
+- **Decision:** The user marks an app as a favorite with a star button on its card. A filled star shows a favorite. The launcher shows the favorites first, in the section "Favoriten". The other apps come after them, in the section "Weitere Apps".
+- **Decision:** There is one order for all apps. "Reihenfolge ändern" shows one list without sections. The launcher splits this order into the two sections. Thus an arrow button cannot move an app into the other section.
+- **Decision:** Without favorites, the launcher shows one grid without sections, as before. It hides a section that has no apps.
+- **Decision:** `launcher.json` keeps the favorite apps in the field `favorites`, as a list of app names (the `name` in `package.json`). The order of this list has no effect. Names of removed apps have no effect. A new app is not a favorite. This is schema version 2. The migration `to-v2` gives old files an empty list.
+- **Decision:** The star button is not inside the link of the card. It is a separate element, positioned over the top right corner of the card. A button inside a link is not valid HTML.
+- **Decision:** Without a folder, the launcher shows no star buttons and no sections. It cannot save the favorites.
+- **Detail:** `vitest.setup.ts` gives jsdom an empty `ResizeObserver`. The tooltip of the star button needs it in unit tests.
+
 ## 2026-11-10: Browser tests only in Chromium
 
 - **Decision:** The browser tests run only in Chromium. Firefox and WebKit are gone from `playwright.config.ts` and from `pnpm e2e:install`.

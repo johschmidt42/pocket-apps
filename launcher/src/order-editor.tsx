@@ -1,7 +1,7 @@
 import type { AppInfo } from "@pocket-apps/vite-config";
 import { Button } from "@pocket-apps/ui/components/button";
 import { Card, CardAction, CardHeader, CardTitle } from "@pocket-apps/ui/components/card";
-import { ArrowDown, ArrowUp, Check } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Star } from "lucide-react";
 import { flushSync } from "react-dom";
 import type { Direction } from "./app-order.ts";
 
@@ -15,12 +15,14 @@ function buttonId(name: string, direction: Direction): string {
 export type OrderEditorProps = {
   /** The apps in the current order. */
   apps: readonly AppInfo[];
+  /** Names of the favorite apps. They get a star. */
+  favorites: readonly string[];
   onMove: (name: string, direction: Direction) => void;
   onDone: () => void;
 };
 
 /** Lets the person move each app up or down. The launcher shows the apps in this order. */
-export function OrderEditor({ apps, onMove, onDone }: OrderEditorProps) {
+export function OrderEditor({ apps, favorites, onMove, onDone }: OrderEditorProps) {
   const lastIndex = apps.length - 1;
 
   function move(app: AppInfo, index: number, direction: Direction) {
@@ -51,6 +53,13 @@ export function OrderEditor({ apps, onMove, onDone }: OrderEditorProps) {
                 <CardTitle className="flex min-w-0 items-center gap-2">
                   <span aria-hidden="true">{app.emoji}</span>
                   <h3 className="wrap-anywhere">{app.title}</h3>
+                  {favorites.includes(app.name) && (
+                    <Star
+                      role="img"
+                      aria-label="Favorit"
+                      className="size-3.5 shrink-0 fill-current text-muted-foreground"
+                    />
+                  )}
                 </CardTitle>
                 <CardAction className="flex gap-1">
                   <Button

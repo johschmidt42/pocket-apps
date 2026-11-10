@@ -133,6 +133,34 @@ test.describe("launcher with the data folder", () => {
   });
 });
 
+test.describe("launcher with favorites", () => {
+  test("shows a favorite first and keeps it after a reload", async ({ page, pageErrors }) => {
+    const last = listApps().at(-1);
+    if (!last) throw new Error("There are no apps.");
+    await withDataFolder(page);
+    await page.goto(releaseUrl("index.html"));
+
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+    await page.getByRole("button", { name: `${last.title} zu Favoriten hinzufügen` }).click();
+
+    const favorites = page.getByRole("region", { name: "Favoriten" });
+    await expect(favorites.getByRole("link")).toHaveAccessibleName(last.title);
+    await expect(page.getByRole("status")).toHaveText("Gespeichert");
+    const saved = JSON.parse((await readDataFile(page, "launcher.json")) ?? "") as {
+      data: { favorites: string[] };
+    };
+    expect(saved.data.favorites).toEqual([last.name]);
+
+    await page.reload();
+
+    await expect(favorites.getByRole("link")).toHaveAccessibleName(last.title);
+    await expect(
+      page.getByRole("button", { name: `${last.title} aus Favoriten entfernen` }),
+    ).toBeVisible();
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 test.describe("launcher in browsers without folder access", () => {
   test("shows the apps and a notice about Chrome and Edge", async ({ page }) => {
     await withoutFolderAccess(page);
@@ -141,5 +169,6 @@ test.describe("launcher in browsers without folder access", () => {
     await expect(page.getByText(/funktionieren nur in Chrome und Edge/)).toBeVisible();
     await expect(page.getByRole("main").getByRole("link")).toHaveCount(listApps().length);
     await expect(page.getByRole("button", { name: "Reihenfolge ändern" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Favoriten/ })).toHaveCount(0);
   });
 });

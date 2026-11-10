@@ -67,6 +67,7 @@ describe("Launcher", () => {
     // jsdom has no File System Access API.
     expect(screen.getByText(/funktionieren nur in Chrome und Edge/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Reihenfolge ändern" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Favoriten/ })).not.toBeInTheDocument();
   });
 
   it("asks for the data folder above the apps on the first visit", async () => {
@@ -109,6 +110,72 @@ describe("Launcher with a data folder", () => {
     await screen.findByRole("button", { name: "Reihenfolge ändern" });
 
     expect(linkNames()).toEqual(["App-Ideen", "Zinsrechner"]);
+    // The file has schema version 1. The store keeps a backup before it saves version 2.
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(folder.files.has("launcher.backup-v1.json")).toBe(true);
+    expect(JSON.parse(folder.files.get("launcher.json")?.text ?? "")).toMatchObject({
+      schemaVersion: 2,
+      data: { order: ["app-ideen"], favorites: [] },
+    });
+  });
+
+  it("shows the favorites first and saves them in launcher.json", async () => {
+    const folder = createMemoryFolder();
+    const user = userEvent.setup();
+    render(<App apps={apps} folderHost={createMemoryFolderHost({ saved: folder })} />);
+
+    await user.click(
+      await screen.findByRole("button", { name: "App-Ideen zu Favoriten hinzufügen" }),
+    );
+
+    const favorites = screen.getByRole("region", { name: "Favoriten" });
+    const others = screen.getByRole("region", { name: "Weitere Apps" });
+    expect(within(favorites).getByRole("heading", { level: 3 })).toHaveTextContent("App-Ideen");
+    expect(within(others).getByRole("heading", { level: 3 })).toHaveTextContent("Zinsrechner");
+    expect(screen.getByRole("button", { name: "App-Ideen aus Favoriten entfernen" })).toHaveFocus();
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(JSON.parse(folder.files.get("launcher.json")?.text ?? "")).toMatchObject({
+      data: { favorites: ["app-ideen"] },
+    });
+
+    await user.click(screen.getByRole("button", { name: "Reihenfolge ändern" }));
+
+    const editorItems = within(screen.getByRole("list")).getAllByRole("listitem");
+    expect(within(editorItems[0]!).queryByRole("img", { name: "Favorit" })).not.toBeInTheDocument();
+    expect(within(editorItems[1]!).getByRole("img", { name: "Favorit" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Fertig" }));
+    await user.click(screen.getByRole("button", { name: "App-Ideen aus Favoriten entfernen" }));
+
+    expect(screen.queryByRole("region", { name: "Favoriten" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "App-Ideen zu Favoriten hinzufügen" })).toHaveFocus();
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
+      "Zinsrechner",
+      "App-Ideen",
+    ]);
+  });
+
+  it("keeps the sections while the search hides all favorites", async () => {
+    const folder = createMemoryFolder();
+    folder.files.set("launcher.json", {
+      text: JSON.stringify({
+        app: "launcher",
+        schemaVersion: 2,
+        savedWith: "3.0",
+        savedAt: "2026-11-10T12:00:00.000Z",
+        data: { order: [], favorites: ["app-ideen"] },
+      }),
+      lastModified: 1,
+    });
+    const user = userEvent.setup();
+    render(<App apps={apps} folderHost={createMemoryFolderHost({ saved: folder })} />);
+
+    await user.type(await screen.findByLabelText("Apps durchsuchen"), "zins");
+
+    expect(screen.queryByRole("region", { name: "Favoriten" })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Weitere Apps" })).getByRole("link"),
+    ).toHaveAccessibleName("Zinsrechner");
   });
 
   it("changes the order and saves it in launcher.json", async () => {
