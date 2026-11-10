@@ -1,6 +1,7 @@
 import { createDataFileStore, defineDataSchema } from "@pocket-apps/core/data-file";
 import { z } from "zod";
 import { toV2 } from "./migrations/to-v2.ts";
+import { toV3 } from "./migrations/to-v3.ts";
 
 /** The most ETFs in the app. There are 8 chart colors, and each ETF costs one request per day. */
 export const MAX_ETFS = 8;
@@ -22,11 +23,20 @@ const pointSchema = z.object({
   total: z.number().positive(),
 });
 
+const dividendSchema = z.object({
+  /** The week of the ex-date (the last trading day of that week). The payment is some weeks later. */
+  date: z.iso.date(),
+  /** The dividend per share in EUR, adjusted for splits. */
+  amount: z.number().positive(),
+});
+
 /** The last download of one ETF. Each download replaces the one before. */
 const pricesSchema = z.object({
   fetchedAt: z.iso.datetime(),
   /** Oldest first. */
   points: z.array(pointSchema),
+  /** Oldest first. Empty for an accumulating ETF. */
+  dividends: z.array(dividendSchema),
 });
 
 const kursverlaufSchema = z.object({
@@ -40,6 +50,7 @@ const kursverlaufSchema = z.object({
 
 export type Etf = z.infer<typeof etfSchema>;
 export type PricePoint = z.infer<typeof pointSchema>;
+export type Dividend = z.infer<typeof dividendSchema>;
 export type Prices = z.infer<typeof pricesSchema>;
 export type KursverlaufData = z.infer<typeof kursverlaufSchema>;
 
@@ -48,7 +59,7 @@ export const schema = defineDataSchema<KursverlaufData>({
   validate: kursverlaufSchema,
   initial: () => ({ apiKey: "", etfs: [], prices: {} }),
   // Append new migrations at the end. Never change old ones.
-  migrations: [toV2],
+  migrations: [toV2, toV3],
 });
 
 export const { DataFileProvider, useDataFile } = createDataFileStore(schema, {

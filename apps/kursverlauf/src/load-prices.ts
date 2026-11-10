@@ -28,7 +28,14 @@ export async function loadPrices(
   const result = parseWeekly(response.json);
   switch (result.kind) {
     case "ok":
-      return { kind: "ok", prices: { fetchedAt: now.toISOString(), points: result.points } };
+      return {
+        kind: "ok",
+        prices: {
+          fetchedAt: now.toISOString(),
+          points: result.points,
+          dividends: result.dividends,
+        },
+      };
     case "bad-key":
       return { kind: "error", message: "Alpha Vantage kennt deinen API-Key nicht. Prüfe den Key." };
     case "unknown-symbol":

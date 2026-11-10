@@ -19,6 +19,7 @@ describe("parseWeekly", () => {
 
     expect(parseWeekly(json)).toEqual({
       kind: "ok",
+      dividends: [],
       points: [
         { date: "2026-11-06", close: 10, total: 10 },
         { date: "2026-11-09", close: 11, total: 11 },
@@ -54,6 +55,21 @@ describe("parseWeekly", () => {
     expect(result.kind === "ok" ? result.points.map((point) => point.close) : []).toEqual([
       143.22, 144,
     ]);
+  });
+
+  it("gives the dividends per share, adjusted for splits", () => {
+    const json = weeklyJson([
+      { date: "2026-02-13", close: 250, adjusted: 10, dividend: 2.5 },
+      { date: "2026-02-20", close: 10.5 },
+      { date: "2026-03-20", close: 11, adjusted: 11, dividend: 0.4 },
+    ]);
+
+    const result = parseWeekly(json);
+    const dividends = result.kind === "ok" ? result.dividends : [];
+
+    expect(dividends.map((dividend) => dividend.date)).toEqual(["2026-02-13", "2026-03-20"]);
+    expect(dividends[0]?.amount).toBeCloseTo(0.1);
+    expect(dividends[1]?.amount).toBeCloseTo(0.4);
   });
 
   it.each([

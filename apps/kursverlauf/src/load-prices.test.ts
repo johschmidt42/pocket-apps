@@ -25,6 +25,7 @@ describe("loadPrices", () => {
       prices: {
         fetchedAt: now.toISOString(),
         points: [{ date: "2026-11-09", close: 11.5, total: 11.5 }],
+        dividends: [],
       },
     });
     expect(urls[0]).toContain("apikey=KEY1");
@@ -59,8 +60,8 @@ const data: KursverlaufData = {
     { id: "3", isin: "", symbol: "C.DEX", name: "C" },
   ],
   prices: {
-    "A.DEX": { fetchedAt: new Date(2026, 10, 10, 8, 0).toISOString(), points: [] },
-    "B.DEX": { fetchedAt: new Date(2026, 10, 9, 20, 0).toISOString(), points: [] },
+    "A.DEX": { fetchedAt: new Date(2026, 10, 10, 8, 0).toISOString(), points: [], dividends: [] },
+    "B.DEX": { fetchedAt: new Date(2026, 10, 9, 20, 0).toISOString(), points: [], dividends: [] },
   },
 };
 
@@ -87,7 +88,7 @@ describe("stale prices", () => {
   });
 
   it("stores prices only for ETFs in the list", () => {
-    const prices = { fetchedAt: now.toISOString(), points: [] };
+    const prices = { fetchedAt: now.toISOString(), points: [], dividends: [] };
 
     expect(storePrices(data, "C.DEX", prices).prices["C.DEX"]).toBe(prices);
     expect(storePrices(data, "X.DEX", prices)).toBe(data);

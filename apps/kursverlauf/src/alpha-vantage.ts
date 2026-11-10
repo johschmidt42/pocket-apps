@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PricePoint } from "./schema.ts";
+import type { Dividend, PricePoint } from "./schema.ts";
 
 /** Alpha Vantage allows 1 request per second with a free key. Keep a safe gap. */
 export const REQUEST_GAP_MS = 1500;
@@ -17,6 +17,7 @@ export function weeklyUrl(symbol: string, apiKey: string): string {
 const weekSchema = z.object({
   "4. close": z.coerce.number().positive(),
   "5. adjusted close": z.coerce.number().positive(),
+  "7. dividend amount": z.coerce.number().min(0).optional(),
 });
 
 const weeklySchema = z.object({
@@ -31,7 +32,7 @@ const noticeSchema = z.union([
 ]);
 
 export type WeeklyResult =
-  | { kind: "ok"; points: PricePoint[] }
+  | { kind: "ok"; points: PricePoint[]; dividends: Dividend[] }
   /** The key is wrong or missing. */
   | { kind: "bad-key" }
   /** Alpha Vantage does not know the symbol. */
@@ -52,6 +53,7 @@ const SPLIT_THRESHOLD = 1.5;
  * Reads the weekly prices. `close` is the real close (without dividends), adjusted for splits:
  * the closes before a split are divided by the split ratio. Thus a 25:1 split is not a drop of 96 %.
  * `total` is the adjusted close of Alpha Vantage: adjusted for splits and dividends.
+ * The dividends are per share, adjusted for splits like the closes.
  */
 export function parseWeekly(json: unknown): WeeklyResult {
   const parsed = weeklySchema.safeParse(json);
@@ -63,6 +65,7 @@ export function parseWeekly(json: unknown): WeeklyResult {
 
   // Walk from the newest week to the oldest. Collect the split factors on the way.
   const points: PricePoint[] = [];
+  const dividends: Dividend[] = [];
   let factor = 1;
   let newerRatio: number | null = null;
   for (const [date, week] of weeks.reverse()) {
@@ -73,8 +76,10 @@ export function parseWeekly(json: unknown): WeeklyResult {
     }
     newerRatio = ratio;
     points.push({ date, close: week["4. close"] * factor, total: week["5. adjusted close"] });
+    const dividend = week["7. dividend amount"] ?? 0;
+    if (dividend > 0) dividends.push({ date, amount: dividend * factor });
   }
-  return { kind: "ok", points: points.reverse() };
+  return { kind: "ok", points: points.reverse(), dividends: dividends.reverse() };
 }
 
 function parseNotice(json: unknown): WeeklyResult {

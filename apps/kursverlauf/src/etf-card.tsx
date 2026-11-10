@@ -12,13 +12,18 @@ import { etfColor } from "./colors.ts";
 import { formatChange, formatDay, formatEuro } from "./format.ts";
 import { PriceChart } from "./price-chart.tsx";
 import { rangeStats } from "./ranges.ts";
-import type { Etf, PricePoint } from "./schema.ts";
+import { DividendsBlock } from "./dividends-block.tsx";
+import type { Dividend, Etf, PricePoint } from "./schema.ts";
 
 export type EtfCardProps = {
   etf: Etf;
   index: number;
   /** The points in the selected range. */
   points: readonly PricePoint[];
+  /** All points, for the dividend yield. */
+  allPoints: readonly PricePoint[];
+  dividends: readonly Dividend[];
+  today: Date;
   /** The text of the range, for example "1 Jahr". */
   rangeLabel: string;
   loading: boolean;
@@ -31,6 +36,9 @@ export function EtfCard({
   etf,
   index,
   points,
+  allPoints,
+  dividends,
+  today,
   rangeLabel,
   loading,
   error,
@@ -95,6 +103,7 @@ export function EtfCard({
               </div>
             </div>
             <PriceChart points={points} color={color} name={etf.name} />
+            <DividendsBlock dividends={dividends} points={allPoints} today={today} />
           </>
         ) : (
           <p className="text-sm text-muted-foreground">

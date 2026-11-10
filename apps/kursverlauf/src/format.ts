@@ -24,6 +24,17 @@ export function formatAxisEuro(value: number): string {
   return Number.isInteger(value) ? euroRounded.format(value) : euro.format(value);
 }
 
+const plainPercent = new Intl.NumberFormat("de-DE", {
+  style: "percent",
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+
+/** 0.013 → "1,3 %", without a sign. */
+export function formatPercent(fraction: number): string {
+  return plainPercent.format(fraction);
+}
+
 /** 0.123 → "+12,3 %". */
 export function formatChange(fraction: number): string {
   return percent.format(fraction);

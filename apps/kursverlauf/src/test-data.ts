@@ -1,7 +1,7 @@
 import type { FetchJson, FetchResult } from "./fetch-json.ts";
 import type { PricePoint } from "./schema.ts";
 
-type Week = { date: string; close: number; adjusted?: number };
+type Week = { date: string; close: number; adjusted?: number; dividend?: number };
 
 /** A weekly answer of Alpha Vantage. Without `adjusted`, the adjusted close is the close. */
 export function weeklyJson(weeks: readonly Week[]): unknown {
@@ -14,7 +14,7 @@ export function weeklyJson(weeks: readonly Week[]): unknown {
           "1. open": String(week.close),
           "4. close": week.close.toFixed(4),
           "5. adjusted close": (week.adjusted ?? week.close).toFixed(4),
-          "7. dividend amount": "0.0000",
+          "7. dividend amount": (week.dividend ?? 0).toFixed(4),
         },
       ]),
     ),

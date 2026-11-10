@@ -29,7 +29,7 @@ const weekly = (start: number, step: number): FetchResult => ({
 function fileText(data: KursverlaufData): string {
   return JSON.stringify({
     app: "kursverlauf",
-    schemaVersion: 2,
+    schemaVersion: 3,
     savedWith: "1.0",
     savedAt: "2026-11-10T12:00:00.000Z",
     data,
@@ -63,6 +63,7 @@ const ETF_A = { id: "a", isin: "IE00B3RBWM25", symbol: "VGWL.DEX", name: "Vangua
 const ETF_B = { id: "b", isin: "", symbol: "SPYI.DEX", name: "SPDR" };
 const pricesOf = (start: number, step: number, fetchedAt = today) => ({
   fetchedAt,
+  dividends: [],
   points: weeksUntilToday(60, start, step).map((week) => ({
     date: week.date,
     close: week.close,
@@ -251,12 +252,52 @@ describe("Prices", () => {
     expect(urls.filter((url) => url.includes("alphavantage"))).toHaveLength(3);
   });
 
+  it("shows the returns per year, the average and the dividends", async () => {
+    const weeks = weeksUntilToday(120, 100, 1);
+    const dividendWeek = weeks[110]?.date ?? "";
+    const rules: Rule[] = [
+      {
+        match: "VGWL.DEX",
+        result: {
+          kind: "ok",
+          json: weeklyJson(
+            // The adjusted close grows faster than the close: the dividends are in it.
+            weeks.map((week, index) => ({
+              ...week,
+              adjusted: week.close + index,
+              ...(week.date === dividendWeek && { dividend: 0.75 }),
+            })),
+          ),
+        },
+      },
+    ];
+    const { user } = await openApp(rules, { ...READY, etfs: [ETF_A], prices: {} });
+
+    expect(await screen.findByRole("heading", { name: "Ausschüttungen" })).toBeInTheDocument();
+    expect(screen.getByText(/Letzte 12 Monate:/)).toHaveTextContent(/0,75 €.*je Anteil.*vom Kurs/);
+    expect(screen.getByRole("heading", { name: "Rendite pro Jahr" })).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Ø pro Jahr")).toBeInTheDocument();
+    expect(within(table).getAllByText(/\*/)).not.toHaveLength(0);
+
+    const average = () =>
+      within(table).getByRole("rowheader", { name: "Ø pro Jahr" }).nextElementSibling?.textContent;
+    const withoutDividends = average();
+    await user.click(screen.getByLabelText("Mit Ausschüttungen"));
+
+    expect(average()).not.toBe(withoutDividends);
+  });
+
   it("says when there are no prices in the range", async () => {
     await openApp([], {
       ...READY,
       etfs: [ETF_A],
       prices: {
-        "VGWL.DEX": { fetchedAt: today, points: [{ date: daysAgo(800), close: 50, total: 50 }] },
+        "VGWL.DEX": {
+          fetchedAt: today,
+          points: [{ date: daysAgo(800), close: 50, total: 50 }],
+          dividends: [],
+        },
       },
     });
 

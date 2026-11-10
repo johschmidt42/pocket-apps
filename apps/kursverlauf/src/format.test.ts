@@ -6,6 +6,7 @@ import {
   formatEuro,
   formatFetchedAt,
   formatMonth,
+  formatPercent,
 } from "./format.ts";
 
 const plain = (text: string) => text.replace(/\s/g, " ");
@@ -17,6 +18,7 @@ describe("format", () => {
     expect(plain(formatAxisEuro(7.5))).toBe("7,50 €");
     expect(plain(formatChange(0.123))).toBe("+12,3 %");
     expect(plain(formatChange(-0.05))).toBe("-5,0 %");
+    expect(plain(formatPercent(0.013))).toBe("1,3 %");
     expect(formatDay("2026-11-09")).toBe("09.11.2026");
     expect(formatMonth("2026-11-09")).toBe("Nov. 26");
   });

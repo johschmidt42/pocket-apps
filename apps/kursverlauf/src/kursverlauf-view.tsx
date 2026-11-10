@@ -21,7 +21,8 @@ import { addEtf, priceStatus, removeEtf } from "./etfs.ts";
 import { formatDay, formatFetchedAt } from "./format.ts";
 import { refreshableSymbols } from "./load-prices.ts";
 import { pointsInRange, RANGE_LABELS, RANGES, withTotals, type Range } from "./ranges.ts";
-import { MAX_ETFS, useDataFile } from "./schema.ts";
+import { ReturnsCard } from "./returns-card.tsx";
+import { MAX_ETFS, useDataFile, type PricePoint } from "./schema.ts";
 import { usePriceRefresh } from "./use-price-refresh.ts";
 
 export type KursverlaufViewProps = { fetchJson: FetchJson; gapMs: number };
@@ -59,12 +60,22 @@ export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
     );
   }
 
-  const series = data.etfs.map((etf, index) => ({
-    etf,
-    index,
-    points: pointsInRange(data.prices[etf.symbol]?.points ?? [], range, today),
-  }));
+  const series = data.etfs.map((etf, index) => {
+    const prices = data.prices[etf.symbol];
+    const allPoints = prices?.points ?? [];
+    return {
+      etf,
+      index,
+      allPoints,
+      dividends: prices?.dividends ?? [],
+      points: pointsInRange(allPoints, range, today),
+    };
+  });
   const withPoints = series.filter((item) => item.points.length > 0);
+  const withAllPoints = series.filter((item) => item.allPoints.length > 0);
+  // Returns use the value with dividends if the user wants it. The price charts always use the real close.
+  const returnPoints = (points: readonly PricePoint[]) =>
+    withDividends ? withTotals(points) : [...points];
   const status = priceStatus(data);
   const refreshable = refreshableSymbols(data, errors, today);
 
@@ -144,19 +155,12 @@ export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
         </Card>
       ) : (
         <>
-          {withPoints.length > 1 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <h2>Vergleich</h2>
-                </CardTitle>
-                <CardDescription>
-                  Veränderung seit dem Start des Zeitraums. So siehst du, welcher ETF besser lief.
-                  Ausschüttende ETFs zahlen einen Teil der Rendite aus. Mit Ausschüttungen zählt die
-                  App diesen Teil dazu.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
+          {withPoints.length > 0 && (
+            <section aria-labelledby="returns-heading" className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 id="returns-heading" className="text-lg font-semibold">
+                  Rendite
+                </h2>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="with-dividends"
@@ -167,16 +171,45 @@ export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
                   />
                   <Label htmlFor="with-dividends">Mit Ausschüttungen</Label>
                 </div>
-                <ComparisonChart
-                  withDividends={withDividends}
-                  series={withPoints.map((item) => ({
-                    index: item.index,
-                    name: item.etf.name,
-                    points: withDividends ? withTotals(item.points) : item.points,
-                  }))}
-                />
-              </CardContent>
-            </Card>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Ausschüttende ETFs zahlen einen Teil der Rendite aus. Ihr Kurs fällt dabei. Mit
+                Ausschüttungen zählt die App diesen Teil dazu. So ist der Vergleich fair.
+              </p>
+              {withPoints.length > 1 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>
+                      <h3>Vergleich</h3>
+                    </CardTitle>
+                    <CardDescription>
+                      Veränderung seit dem Start des Zeitraums. So siehst du, welcher ETF besser
+                      lief.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ComparisonChart
+                      withDividends={withDividends}
+                      series={withPoints.map((item) => ({
+                        id: item.etf.id,
+                        index: item.index,
+                        name: item.etf.name,
+                        points: returnPoints(item.points),
+                      }))}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+              <ReturnsCard
+                today={today}
+                series={withAllPoints.map((item) => ({
+                  id: item.etf.id,
+                  index: item.index,
+                  name: item.etf.name,
+                  points: returnPoints(item.allPoints),
+                }))}
+              />
+            </section>
           )}
 
           <section aria-labelledby="etfs-heading" className="flex flex-col gap-4">
@@ -202,6 +235,9 @@ export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
                 etf={item.etf}
                 index={item.index}
                 points={item.points}
+                allPoints={item.allPoints}
+                dividends={item.dividends}
+                today={today}
                 rangeLabel={RANGE_LABELS[range]}
                 loading={loading.has(item.etf.symbol)}
                 error={errors.get(item.etf.symbol) ?? null}

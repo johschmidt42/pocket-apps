@@ -19,7 +19,12 @@ import { formatChange, formatDay, formatMonth } from "./format.ts";
 import { commonStart, comparisonChanges, comparisonRows } from "./ranges.ts";
 import type { PricePoint } from "./schema.ts";
 
-export type ComparisonSeries = { index: number; name: string; points: readonly PricePoint[] };
+export type ComparisonSeries = {
+  id: string;
+  index: number;
+  name: string;
+  points: readonly PricePoint[];
+};
 
 /** All ETFs in one chart. Each line starts at 0 % at the first date that all ETFs have. */
 export type ComparisonChartProps = {
@@ -81,7 +86,7 @@ export function ComparisonChart({ series, withDividends }: ComparisonChartProps)
           <ChartLegend content={<ChartLegendContent className="flex-wrap gap-x-4 gap-y-1" />} />
           {series.map((item) => (
             <Line
-              key={item.index}
+              key={item.id}
               dataKey={key(item.index)}
               type="monotone"
               stroke={etfColor(item.index).color}
