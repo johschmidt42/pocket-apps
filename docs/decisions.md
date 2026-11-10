@@ -7,9 +7,9 @@ Read the related entry before you change a decision. Add an entry for each new d
 
 - **Decision:** The launcher is the main place to pick the data folder. It keeps the order of the apps in `launcher.json`.
 - **Decision:** The launcher uses the data file store with `folderOptional: true`. It always shows the apps. Without a folder, a card above the apps asks for the folder. In Firefox and Safari, a short notice says that apps with data need Chrome or Edge. Stateless apps still work there.
-- **Decision:** `launcher.json` keeps the names of all apps (the `name` in `package.json`, also of stateless apps) in the order of the person. New apps come after them, in build order. Names of removed apps have no effect.
+- **Decision:** `launcher.json` keeps the names of all apps (the `name` in `package.json`, also of stateless apps) in the order that the user chose. New apps come after them, in build order. Names of removed apps have no effect.
 - **Decision:** Each stateful app has the button "Ordner wechseln" in the status line. It works only when all changes are saved. Then a change of the folder cannot lose data.
-- **Why:** The person sets up the folder once at the start page. A visit to the launcher in Firefox must not show an empty page.
+- **Why:** The user sets up the folder once at the start page. A visit to the launcher in Firefox must not show an empty page.
 
 ## 2026-11-10: Data folder store in core, browser tests over http
 

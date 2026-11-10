@@ -19,7 +19,7 @@ export type DataFileApi<T> = {
   data: T;
   /** Changes the data. Without a folder (only with `folderOptional`), it does nothing. */
   update: (updater: (data: T) => T) => void;
-  /** False only with `folderOptional` before the person picked a folder with access. */
+  /** It is false only with `folderOptional`, while the app has no folder with access. */
   hasFolder: boolean;
 };
 
@@ -67,7 +67,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
   const retryDelayMs = options.retryDelayMs ?? 5000;
   const folderOptional = options.folderOptional ?? false;
   // Without a folder, the data stays `initial()`. Nothing can change it.
-  const withoutFolder: DataFileApi<T> = {
+  const noFolderApi: DataFileApi<T> = {
     data: schema.initial(),
     hasFolder: false,
     update: () => undefined,
@@ -217,20 +217,34 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
       return <LoadingStatus />;
     }
     if (state.status === "broken") {
-      return (
-        <main className="mx-auto flex max-w-md flex-col gap-4 p-4 pt-12">
-          <Alert variant="destructive">
-            <AlertDescription className="flex flex-col items-start gap-2">
-              <span>
-                Die App kann die Datei „{fileName}“ im Ordner „{folder.name}“ nicht öffnen.{" "}
-                {state.message}
-              </span>
+      const problem = (
+        <Alert variant="destructive">
+          <AlertDescription className="flex flex-col items-start gap-2">
+            <span>
+              Die App kann die Datei „{fileName}“ im Ordner „{folder.name}“ nicht öffnen.{" "}
+              {state.message}
+            </span>
+            <span className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={() => void reload()}>
                 Erneut laden
               </Button>
-            </AlertDescription>
-          </Alert>
-        </main>
+              <Button size="sm" variant="outline" onClick={changeFolder}>
+                Anderen Ordner wählen …
+              </Button>
+            </span>
+          </AlertDescription>
+        </Alert>
+      );
+      // With an optional folder, the app stays usable without its file.
+      return folderOptional ? (
+        <>
+          <section aria-label="Datenordner" className="mx-auto max-w-3xl px-4 pt-4">
+            {problem}
+          </section>
+          <Context value={noFolderApi}>{children}</Context>
+        </>
+      ) : (
+        <main className="mx-auto flex max-w-md flex-col gap-4 p-4 pt-12">{problem}</main>
       );
     }
 
@@ -269,7 +283,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
                 {children}
               </FileView>
             ) : (
-              <Context value={withoutFolder}>{children}</Context>
+              <Context value={noFolderApi}>{children}</Context>
             )
           }
         </DataFolderGate>

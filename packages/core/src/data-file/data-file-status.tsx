@@ -34,7 +34,7 @@ export function DataFileStatus(props: DataFileStatusProps) {
             {" · "}
             <span role="status">{STATUS_TEXT[props.save]}</span>
           </p>
-          {/* Only when all is saved. Else the change would lose data. */}
+          {/* The button works only when all changes are saved. Then the change cannot lose data. */}
           <Button
             size="xs"
             variant="link"

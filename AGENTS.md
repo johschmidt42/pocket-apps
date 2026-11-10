@@ -204,7 +204,7 @@ When the app is open, the store does these things:
 - Before each save, it compares the time of the last change of the file with the time when the app read or wrote it. If the file changed elsewhere (for example on another computer through Google Drive), it does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
 - After a failed save, it shows an error and tries again after 5 seconds.
 - While a change is not saved, it warns before the tab closes.
-- The status line has the button "Ordner wechseln". It lets the user pick another folder. The button works only when all changes are saved. After the change, the app loads the file of the new folder.
+- The status line has the button "Ordner wechseln". It lets the user pick another folder. The button works only when all changes are saved. After the change, the app loads the file of the new folder. The new folder is then the folder of all apps. Other open tabs keep the old folder until they load again.
 
 #### Optional folder (only for the launcher)
 
@@ -212,6 +212,7 @@ When the app is open, the store does these things:
 
 - The app always shows its content. Without a folder, a card above the content asks for the folder ("Datenordner wählen"). If the browser lost the access, the card is "Zugriff auf deinen Datenordner". In Firefox and Safari, a short notice replaces the card.
 - Without a folder, `useDataFile()` gives `initial()` as `data`, and `update` does nothing. `hasFolder` is `false`. Hide the actions that change data.
+- If the file is broken (for example not JSON), the app shows the error above its content and works as without a folder.
 - With a folder, the store works as in a normal stateful app: status line, "Ordner wechseln", automatic save and conflict check. `hasFolder` is `true`.
 
 A normal stateful app does not use `folderOptional`. It needs its folder.
@@ -263,7 +264,7 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - `e2e/launcher.spec.ts` tests the launcher.
 - Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. Run these tests only in Chromium: `test.skip(({ browserName }) => browserName !== "chromium")`. See `e2e/app-ideen.spec.ts`.
 - In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile(page, fileName, text)` and `readDataFile(page, fileName)` for the files in it. Write files after `page.goto()`. `readDataFile()` returns the text or `null`.
-- In Firefox and WebKit, test only the notice "Bitte Chrome oder Edge verwenden".
+- In Firefox and WebKit, test that a stateful app shows only the notice "Bitte Chrome oder Edge verwenden". The launcher shows the apps and a short notice there.
 
 ## Add a new app
 

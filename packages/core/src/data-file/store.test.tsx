@@ -445,6 +445,36 @@ describe("optional folder", () => {
   });
 });
 
+describe("broken file", () => {
+  it("lets the user pick another folder", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: "not json", lastModified: 1 });
+    host.nextPick = createMemoryFolder("Neu");
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", { name: "Anderen Ordner wählen …" }));
+
+    expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
+    expect(screen.getByText("Neu / demo.json")).toBeInTheDocument();
+  });
+
+  it("keeps an app with an optional folder usable", async () => {
+    const optional = createDataFileStore(schema, { app, folderOptional: true });
+    const folder = createMemoryFolder();
+    folder.files.set("demo.json", { text: "not json", lastModified: 1 });
+    render(
+      <optional.DataFileProvider folderHost={createMemoryFolderHost({ saved: folder })}>
+        <p>Inhalt</p>
+      </optional.DataFileProvider>,
+    );
+
+    expect(await screen.findByRole("region", { name: "Datenordner" })).toHaveTextContent(
+      "keine gültige JSON-Datei",
+    );
+    expect(screen.getByText("Inhalt")).toBeInTheDocument();
+  });
+});
+
 describe("options", () => {
   it("uses the default delays and ignores a late load after it closed", async () => {
     const defaults = createDataFileStore(schema, { app });

@@ -17,8 +17,9 @@ import { useDataFolder } from "./use-data-folder.ts";
 const TITLE_ID = "data-folder-title";
 
 /**
- * A card with a task for the person.
- * Full screen (`<main>`) when the app needs the folder. A section above the page when the folder is optional.
+ * A card with a task for the user.
+ * If the app needs the folder, the card fills the screen (`<main>`).
+ * If the folder is optional, the card is a section above the app.
  */
 function TaskCard({
   title,
@@ -64,7 +65,7 @@ export type DataFolderGateProps = {
  * Shows the app when the folder is ready (or always, if the folder is optional).
  */
 export function DataFolderGate({ host, optional = false, children }: DataFolderGateProps) {
-  const { state, error, picks, pick, grant } = useDataFolder(host);
+  const { state, error, pickCount, pick, grant } = useDataFolder(host);
   const changeFolder = () => void pick();
   const errorAlert = error && (
     <Alert variant="destructive">
@@ -90,13 +91,13 @@ export function DataFolderGate({ host, optional = false, children }: DataFolderG
     case "unsupported":
       return optional ? (
         withoutFolder(
-          <div className="mx-auto max-w-3xl px-4 pt-4">
-            <Alert>
-              <AlertDescription>
-                Apps mit Daten funktionieren nur in Chrome und Edge am Computer.
-              </AlertDescription>
-            </Alert>
-          </div>,
+          // A static note, not an alert: screen readers must not announce it at each visit.
+          <aside
+            aria-label="Hinweis"
+            className="mx-auto max-w-3xl px-4 pt-4 text-sm text-muted-foreground"
+          >
+            <p>Apps mit Daten funktionieren nur in Chrome und Edge am Computer.</p>
+          </aside>,
         )
       ) : (
         <TaskCard title="Bitte Chrome oder Edge verwenden" optional={false}>
@@ -150,9 +151,13 @@ export function DataFolderGate({ host, optional = false, children }: DataFolderG
     case "ready":
       return (
         <>
-          {errorAlert && <div className="mx-auto max-w-3xl px-4 pt-4">{errorAlert}</div>}
+          {errorAlert && (
+            <section aria-label="Datenordner" className="mx-auto max-w-3xl px-4 pt-4">
+              {errorAlert}
+            </section>
+          )}
           {/* A new key for each picked folder: the app starts fresh and cannot save old data into it. */}
-          <Fragment key={picks}>{children(state.folder, changeFolder)}</Fragment>
+          <Fragment key={pickCount}>{children(state.folder, changeFolder)}</Fragment>
         </>
       );
   }

@@ -25,7 +25,7 @@ export function useDataFolder(host: FolderHost) {
   );
   const [error, setError] = useState<string | null>(null);
   // Counts the picked folders. A new number gives the app a fresh start with the new folder.
-  const [picks, setPicks] = useState(0);
+  const [pickCount, setPickCount] = useState(0);
 
   // The remembered folder lives in the browser storage (an external system).
   useEffect(() => {
@@ -57,7 +57,7 @@ export function useDataFolder(host: FolderHost) {
       const folder = await host.pick();
       if (!folder) return;
       setState(stateFor(folder, await folder.queryAccess()));
-      setPicks((count) => count + 1);
+      setPickCount((count) => count + 1);
     } catch (caught) {
       setError(folderErrorMessage(caught));
     }
@@ -72,5 +72,5 @@ export function useDataFolder(host: FolderHost) {
     }
   }
 
-  return { state, error, picks, pick, grant };
+  return { state, error, pickCount, pick, grant };
 }

@@ -11,7 +11,7 @@ import { filterApps } from "./filter-apps.ts";
 import { DONE_BUTTON_ID, OrderEditor } from "./order-editor.tsx";
 import { useDataFile } from "./schema.ts";
 
-const SORT_BUTTON_ID = "order-start";
+const SORT_BUTTON_ID = "order-edit";
 
 /** The searchable grid of all apps, in the order of the person. Use it inside `DataFileProvider`. */
 export function LauncherView({ apps }: { apps: readonly AppInfo[] }) {
