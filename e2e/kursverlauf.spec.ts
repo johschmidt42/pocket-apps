@@ -85,11 +85,14 @@ test.describe("kursverlauf in Chrome and Edge", () => {
     await writeDataFile(
       page,
       FILE,
-      dataFileText("kursverlauf", 1, {
+      dataFileText("kursverlauf", 2, {
         apiKey: "TESTKEY123",
         etfs: [{ id: "a", isin: "", symbol: "VGWL.DEX", name: "Vanguard" }],
         prices: {
-          "VGWL.DEX": { fetchedAt: yesterday, points: [{ date: daysAgo(3), close: 161.68 }] },
+          "VGWL.DEX": {
+            fetchedAt: yesterday,
+            points: [{ date: daysAgo(3), close: 161.68, total: 161.68 }],
+          },
         },
       }),
     );

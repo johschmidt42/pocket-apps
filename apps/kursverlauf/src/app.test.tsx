@@ -29,7 +29,7 @@ const weekly = (start: number, step: number): FetchResult => ({
 function fileText(data: KursverlaufData): string {
   return JSON.stringify({
     app: "kursverlauf",
-    schemaVersion: 1,
+    schemaVersion: 2,
     savedWith: "1.0",
     savedAt: "2026-11-10T12:00:00.000Z",
     data,
@@ -63,7 +63,11 @@ const ETF_A = { id: "a", isin: "IE00B3RBWM25", symbol: "VGWL.DEX", name: "Vangua
 const ETF_B = { id: "b", isin: "", symbol: "SPYI.DEX", name: "SPDR" };
 const pricesOf = (start: number, step: number, fetchedAt = today) => ({
   fetchedAt,
-  points: weeksUntilToday(60, start, step).map((week) => ({ date: week.date, close: week.close })),
+  points: weeksUntilToday(60, start, step).map((week) => ({
+    date: week.date,
+    close: week.close,
+    total: week.close,
+  })),
 });
 const READY: KursverlaufData = {
   apiKey: "KEY12345",
@@ -216,6 +220,10 @@ describe("Prices", () => {
     await user.click(screen.getByRole("radio", { name: "6 Monate" }));
 
     expect(screen.getAllByText("6 Monate")).toHaveLength(3);
+
+    await user.click(screen.getByLabelText("Mit Ausschüttungen"));
+
+    expect(screen.getByText(/^Seit .*, mit Ausschüttungen:$/)).toBeInTheDocument();
   });
 
   it("loads old prices at the start and shows the errors, and loads again on request", async () => {
@@ -247,10 +255,47 @@ describe("Prices", () => {
     await openApp([], {
       ...READY,
       etfs: [ETF_A],
-      prices: { "VGWL.DEX": { fetchedAt: today, points: [{ date: daysAgo(800), close: 50 }] } },
+      prices: {
+        "VGWL.DEX": { fetchedAt: today, points: [{ date: daysAgo(800), close: 50, total: 50 }] },
+      },
     });
 
     expect(screen.getByText("Keine Kurse in diesem Zeitraum.")).toBeInTheDocument();
+  });
+});
+
+describe("Old data files", () => {
+  it("keeps the key and the ETFs of version 1 and loads the prices again", async () => {
+    const folder = createMemoryFolder();
+    const v1 = {
+      apiKey: "KEY12345",
+      etfs: [ETF_A],
+      prices: { "VGWL.DEX": { fetchedAt: today, points: [{ date: daysAgo(3), close: 161.68 }] } },
+    };
+    folder.files.set("kursverlauf.json", {
+      text: JSON.stringify({
+        app: "kursverlauf",
+        schemaVersion: 1,
+        savedWith: "1.0",
+        savedAt: today,
+        data: v1,
+      }),
+      lastModified: 1,
+    });
+    const fake = fakeFetch([{ match: "VGWL.DEX", result: weekly(100, 1) }]);
+    render(
+      <App
+        folderHost={createMemoryFolderHost({ saved: folder })}
+        fetchJson={fake.fetchJson}
+        gapMs={0}
+      />,
+    );
+
+    expect(await screen.findByText(/Schlusskurs/)).toBeInTheDocument();
+    expect(fake.urls).toHaveLength(1);
+    expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
+    expect(folder.files.has("kursverlauf.backup-v1.json")).toBe(true);
+    expect(savedData(folder).prices["VGWL.DEX"]?.points[0]?.total).toBe(100);
   });
 });
 

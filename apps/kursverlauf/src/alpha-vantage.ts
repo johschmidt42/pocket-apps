@@ -49,8 +49,9 @@ export type WeeklyResult =
 const SPLIT_THRESHOLD = 1.5;
 
 /**
- * Reads the weekly prices. Gives the real close (without dividends), adjusted for splits:
+ * Reads the weekly prices. `close` is the real close (without dividends), adjusted for splits:
  * the closes before a split are divided by the split ratio. Thus a 25:1 split is not a drop of 96 %.
+ * `total` is the adjusted close of Alpha Vantage: adjusted for splits and dividends.
  */
 export function parseWeekly(json: unknown): WeeklyResult {
   const parsed = weeklySchema.safeParse(json);
@@ -71,7 +72,7 @@ export function parseWeekly(json: unknown): WeeklyResult {
       if (jump > SPLIT_THRESHOLD || jump < 1 / SPLIT_THRESHOLD) factor *= jump;
     }
     newerRatio = ratio;
-    points.push({ date, close: week["4. close"] * factor });
+    points.push({ date, close: week["4. close"] * factor, total: week["5. adjusted close"] });
   }
   return { kind: "ok", points: points.reverse() };
 }

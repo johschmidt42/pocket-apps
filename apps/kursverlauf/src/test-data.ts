@@ -37,7 +37,11 @@ export function weeksUntilToday(count: number, start: number, step: number): Wee
   }));
 }
 
-export const point = (date: string, close: number): PricePoint => ({ date, close });
+export const point = (date: string, close: number, total = close): PricePoint => ({
+  date,
+  close,
+  total,
+});
 
 /**
  * A fake `fetchJson`. It answers each URL with the first matching rule and records all URLs.

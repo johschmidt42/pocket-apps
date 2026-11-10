@@ -9,8 +9,14 @@ const data: KursverlaufData = {
     { id: "b", isin: "", symbol: "B.DEX", name: "B" },
   ],
   prices: {
-    "A.DEX": { fetchedAt: "2026-11-10T08:00:00.000Z", points: [{ date: "2026-11-09", close: 1 }] },
-    "B.DEX": { fetchedAt: "2026-11-09T08:00:00.000Z", points: [{ date: "2026-11-06", close: 2 }] },
+    "A.DEX": {
+      fetchedAt: "2026-11-10T08:00:00.000Z",
+      points: [{ date: "2026-11-09", close: 1, total: 1 }],
+    },
+    "B.DEX": {
+      fetchedAt: "2026-11-09T08:00:00.000Z",
+      points: [{ date: "2026-11-06", close: 2, total: 2 }],
+    },
   },
 };
 

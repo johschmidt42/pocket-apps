@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { schema } from "./schema.ts";
 
 describe("kursverlauf schema", () => {
-  it("starts at version 1 without key, ETFs and prices", () => {
-    expect(currentVersion(schema)).toBe(1);
+  it("is at version 2 and starts without key, ETFs and prices", () => {
+    expect(currentVersion(schema)).toBe(2);
     expect(schema.initial()).toEqual({ apiKey: "", etfs: [], prices: {} });
   });
 
@@ -15,7 +15,7 @@ describe("kursverlauf schema", () => {
       prices: {
         "VGWL.DEX": {
           fetchedAt: "2026-11-10T09:00:00.000Z",
-          points: [{ date: "2026-11-09", close: 161.68 }],
+          points: [{ date: "2026-11-09", close: 161.68, total: 161.68 }],
         },
       },
     };

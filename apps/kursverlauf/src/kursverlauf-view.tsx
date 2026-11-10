@@ -6,6 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@pocket-apps/ui/components/card";
+import { Checkbox } from "@pocket-apps/ui/components/checkbox";
+import { Label } from "@pocket-apps/ui/components/label";
 import { ToggleGroup, ToggleGroupItem } from "@pocket-apps/ui/components/toggle-group";
 import { KeyRound, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
@@ -18,7 +20,7 @@ import type { FetchJson } from "./fetch-json.ts";
 import { addEtf, priceStatus, removeEtf } from "./etfs.ts";
 import { formatDay, formatFetchedAt } from "./format.ts";
 import { refreshableSymbols } from "./load-prices.ts";
-import { pointsInRange, RANGE_LABELS, RANGES, type Range } from "./ranges.ts";
+import { pointsInRange, RANGE_LABELS, RANGES, withTotals, type Range } from "./ranges.ts";
 import { MAX_ETFS, useDataFile } from "./schema.ts";
 import { usePriceRefresh } from "./use-price-refresh.ts";
 
@@ -30,6 +32,7 @@ const isRange = (value: string): value is Range => RANGES.some((range) => range 
 export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
   const { data, update } = useDataFile();
   const [range, setRange] = useState<Range>("1y");
+  const [withDividends, setWithDividends] = useState(false);
   const [dialog, setDialog] = useState<"none" | "add" | "key">("none");
   const { loading, errors, refresh } = usePriceRefresh({ data, update, fetchJson, gapMs });
   const today = new Date();
@@ -149,14 +152,27 @@ export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
                 </CardTitle>
                 <CardDescription>
                   Veränderung seit dem Start des Zeitraums. So siehst du, welcher ETF besser lief.
+                  Ausschüttende ETFs zahlen einen Teil der Rendite aus. Mit Ausschüttungen zählt die
+                  App diesen Teil dazu.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="with-dividends"
+                    checked={withDividends}
+                    onCheckedChange={(checked) => {
+                      setWithDividends(checked === true);
+                    }}
+                  />
+                  <Label htmlFor="with-dividends">Mit Ausschüttungen</Label>
+                </div>
                 <ComparisonChart
+                  withDividends={withDividends}
                   series={withPoints.map((item) => ({
                     index: item.index,
                     name: item.etf.name,
-                    points: item.points,
+                    points: withDividends ? withTotals(item.points) : item.points,
                   }))}
                 />
               </CardContent>

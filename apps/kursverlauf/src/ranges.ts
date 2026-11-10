@@ -36,6 +36,11 @@ export function pointsInRange(
   return start === null ? [...points] : points.filter((point) => point.date >= start);
 }
 
+/** The points with the value with dividends as the close. For the comparison "mit Ausschüttungen". */
+export function withTotals(points: readonly PricePoint[]): PricePoint[] {
+  return points.map((point) => ({ ...point, close: point.total }));
+}
+
 export type RangeStats = {
   first: PricePoint;
   last: PricePoint;

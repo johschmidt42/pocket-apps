@@ -20,8 +20,8 @@ describe("parseWeekly", () => {
     expect(parseWeekly(json)).toEqual({
       kind: "ok",
       points: [
-        { date: "2026-11-06", close: 10 },
-        { date: "2026-11-09", close: 11 },
+        { date: "2026-11-06", close: 10, total: 10 },
+        { date: "2026-11-09", close: 11, total: 11 },
       ],
     });
   });

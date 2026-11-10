@@ -22,7 +22,13 @@ import type { PricePoint } from "./schema.ts";
 export type ComparisonSeries = { index: number; name: string; points: readonly PricePoint[] };
 
 /** All ETFs in one chart. Each line starts at 0 % at the first date that all ETFs have. */
-export function ComparisonChart({ series }: { series: readonly ComparisonSeries[] }) {
+export type ComparisonChartProps = {
+  series: readonly ComparisonSeries[];
+  /** Only for the text below the chart. The caller gives the points with or without dividends. */
+  withDividends: boolean;
+};
+
+export function ComparisonChart({ series, withDividends }: ComparisonChartProps) {
   const key = (index: number) => `etf${String(index)}`;
   const config: ChartConfig = Object.fromEntries(
     series.map((item) => [
@@ -89,7 +95,9 @@ export function ComparisonChart({ series }: { series: readonly ComparisonSeries[
       </ChartContainer>
       {start && (
         <div className="flex flex-col gap-1 text-sm">
-          <p className="text-muted-foreground">Seit {formatDay(start)}:</p>
+          <p className="text-muted-foreground">
+            {`Seit ${formatDay(start)}${withDividends ? ", mit Ausschüttungen" : ""}:`}
+          </p>
           <ul className="flex flex-col gap-1">
             {changes.map((item) => (
               <li key={item.key} className="flex items-center justify-between gap-3">

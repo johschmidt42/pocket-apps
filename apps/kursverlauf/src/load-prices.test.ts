@@ -22,7 +22,10 @@ describe("loadPrices", () => {
 
     expect(await loadPrices("SPYI.DEX", "KEY1", fetchJson, now)).toEqual({
       kind: "ok",
-      prices: { fetchedAt: now.toISOString(), points: [{ date: "2026-11-09", close: 11.5 }] },
+      prices: {
+        fetchedAt: now.toISOString(),
+        points: [{ date: "2026-11-09", close: 11.5, total: 11.5 }],
+      },
     });
     expect(urls[0]).toContain("apikey=KEY1");
   });
