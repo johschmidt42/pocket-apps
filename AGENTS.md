@@ -51,9 +51,11 @@ packages/core/             Shared code:
   src/app-shell/           AppHeader (back link, title, version, theme switch) and the theme logic.
   src/data-file/           Data folder and data file: pick, load, save, migrate, validate.
   src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
+  src/fetch-json.ts        fetchJson() for apps with "network": true. It never throws.
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
   src/charts.ts            The Recharts parts for apps (own code, not vendor code).
+  src/day-picker.ts        The calendar DayPicker (react-day-picker) for apps (own code, not vendor code).
 packages/vite-config/      Shared Vite config. Reads app info and pocket-apps.config.json.
 pocket-apps.config.json    Settings for all apps, for example the back link.
 scripts/build-release.mjs  Copies the built files to release/.
@@ -113,7 +115,8 @@ Each app declares its info in its `package.json`:
 ### Internet access
 
 - Set `pocketApp.network` to `true` only if the app needs an external API.
-- In apps with `"network": false` and in the launcher, ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket` and `EventSource`.
+- In apps with `"network": false` and in the launcher, ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` and `@pocket-apps/core/fetch-json`.
+- For JSON requests, use `fetchJson(url)` from `@pocket-apps/core/fetch-json`. It never throws. It returns `{ kind: "ok", json }` with `json` as `unknown`, or a failure: `offline`, `http-error` (with `status`) or `bad-body` (the answer is not JSON). Validate `json` with zod. Give `App` the optional prop `fetchJson` (type `FetchJson`), so that unit tests can give a fake. See `apps/schuljahr/src/app.tsx`.
 - An app with `"network": true` must start without internet. Catch each failed request. Show a clear German message. Do not log the failure with `console.error`.
 - Use only APIs that allow requests from the origin `https://johschmidt42.github.io` (CORS). Test the API from that origin before you build the app.
 - Keep settings such as a city in the data file. Then the app is stateful. Do not use `localStorage`.
@@ -127,6 +130,7 @@ Each app declares its info in its `package.json`:
 - Give each category or series one fixed chart color: `--chart-1` to `--chart-8`, in this order of the categories, not of the values. The color stays the same in all tabs and filters. Use `--chart-other` (gray) for "Sonstiges". If there are more than 8 categories, put the rest into "Sonstiges". Do not invent more colors.
 - Give the color to an SVG attribute, for example `fill="var(--chart-1)"`, or to the `color` field of a `ChartConfig`. This is not inline `style`. For HTML elements, use the classes `bg-chart-1` and so on.
 - Show the values of a chart as text too: labels, a legend or a list. A tooltip alone is not enough, because it shows only on hover. Some colors have less than 3:1 contrast in light mode.
+- For a calendar, use `DayPicker` from `@pocket-apps/ui/day-picker` (react-day-picker). Give it Tailwind classes through `classNames`. ESLint forbids a direct import of `react-day-picker`. Do not add the shadcn component `calendar`: it does not pass the typecheck. See `apps/schuljahr/src/year-calendar.tsx`.
 - For a select box, use `NativeSelect` from `@pocket-apps/ui/components/native-select`. It works with the keyboard, on phones and in jsdom tests. For a choice among icons, use `ToggleGroup`, because a native select cannot show icons.
 - You can add components from another library to `packages/ui`. Add a decision entry first. Use one library per kind of component.
 - Do not change vendor components. Change the look only through the theme variables in `globals.css`.

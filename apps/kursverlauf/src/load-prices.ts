@@ -1,5 +1,5 @@
 import { parseWeekly, weeklyUrl } from "./alpha-vantage.ts";
-import type { FetchJson } from "./fetch-json.ts";
+import type { FetchJson } from "@pocket-apps/core/fetch-json";
 import type { KursverlaufData, Prices } from "./schema.ts";
 
 export type LoadResult = { kind: "ok"; prices: Prices } | { kind: "error"; message: string };

@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
-import type { FetchResult } from "./fetch-json.ts";
+import type { FetchResult } from "@pocket-apps/core/fetch-json";
 import type { KursverlaufData } from "./schema.ts";
 import { daysAgo, fakeFetch, weeklyJson, weeksUntilToday } from "./test-data.ts";
 

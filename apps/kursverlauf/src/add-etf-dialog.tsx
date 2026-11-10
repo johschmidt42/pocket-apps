@@ -11,7 +11,7 @@ import { Label } from "@pocket-apps/ui/components/label";
 import { NativeSelect, NativeSelectOption } from "@pocket-apps/ui/components/native-select";
 import { Search } from "lucide-react";
 import { useState } from "react";
-import type { FetchJson } from "./fetch-json.ts";
+import type { FetchJson } from "@pocket-apps/core/fetch-json";
 import type { Etf } from "./schema.ts";
 import { isIsin, parseSearch, searchUrl, type SearchHit } from "./twelve-data.ts";
 

@@ -1,6 +1,6 @@
 import type { FolderHost } from "@pocket-apps/core/data-file";
 import { REQUEST_GAP_MS } from "./alpha-vantage.ts";
-import { fetchJson as browserFetchJson, type FetchJson } from "./fetch-json.ts";
+import { fetchJson as browserFetchJson, type FetchJson } from "@pocket-apps/core/fetch-json";
 import { KursverlaufView } from "./kursverlauf-view.tsx";
 import { DataFileProvider } from "./schema.ts";
 

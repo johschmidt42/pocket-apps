@@ -28,11 +28,32 @@ const STORAGE_GLOBALS = [
 ];
 
 // Apps with "pocketApp.network": false must not use the network.
+const OFFLINE_MESSAGE =
+  'This app has "pocketApp.network": false. Set it to true in package.json to use the internet.';
 const NETWORK_GLOBALS = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource"].map((name) => ({
   name,
-  message:
-    'This app has "pocketApp.network": false. Set it to true in package.json to use the internet.',
+  message: OFFLINE_MESSAGE,
 }));
+
+// Import boundaries of apps and the launcher.
+const APP_IMPORT_PATTERNS = [
+  {
+    group: ["**/apps/**", "../../*"],
+    message: "Apps import only from packages/*, never from other apps.",
+  },
+  {
+    group: ["*.css", "!@pocket-apps/ui/globals.css"],
+    message: "No own CSS. Use Tailwind classes.",
+  },
+  {
+    group: ["radix-ui", "@radix-ui/*", "recharts", "react-day-picker", "react-day-picker/*"],
+    message: "Use the components from @pocket-apps/ui.",
+  },
+  {
+    group: ["redux", "@reduxjs/*", "zustand", "jotai", "react-router*", "@tanstack/react-router"],
+    message: "No state or router libraries. Use useState/useReducer and the data hook from core.",
+  },
+];
 
 const offlineApps = listApps().filter((app) => !app.network);
 
@@ -158,32 +179,7 @@ export default defineConfig([
       "no-restricted-imports": [
         "error",
         {
-          patterns: [
-            {
-              group: ["**/apps/**", "../../*"],
-              message: "Apps import only from packages/*, never from other apps.",
-            },
-            {
-              group: ["*.css", "!@pocket-apps/ui/globals.css"],
-              message: "No own CSS. Use Tailwind classes.",
-            },
-            {
-              group: ["radix-ui", "@radix-ui/*", "recharts"],
-              message: "Use the components from @pocket-apps/ui.",
-            },
-            {
-              group: [
-                "redux",
-                "@reduxjs/*",
-                "zustand",
-                "jotai",
-                "react-router*",
-                "@tanstack/react-router",
-              ],
-              message:
-                "No state or router libraries. Use useState/useReducer and the data hook from core.",
-            },
-          ],
+          patterns: APP_IMPORT_PATTERNS,
         },
       ],
       "no-restricted-globals": ["error", ...STORAGE_GLOBALS],
@@ -218,6 +214,18 @@ export default defineConfig([
     ],
     rules: {
       "no-restricted-globals": ["error", ...STORAGE_GLOBALS, ...NETWORK_GLOBALS],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...APP_IMPORT_PATTERNS,
+            {
+              group: ["@pocket-apps/core/fetch-json"],
+              message: OFFLINE_MESSAGE,
+            },
+          ],
+        },
+      ],
     },
   },
 

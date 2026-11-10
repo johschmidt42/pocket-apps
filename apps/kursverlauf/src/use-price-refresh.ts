@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import type { FetchJson } from "./fetch-json.ts";
+import type { FetchJson } from "@pocket-apps/core/fetch-json";
 import { loadPrices, staleSymbols, storePrices } from "./load-prices.ts";
 import type { KursverlaufData } from "./schema.ts";
 

@@ -1,4 +1,4 @@
-import type { FetchJson, FetchResult } from "./fetch-json.ts";
+import type { FetchJson, FetchResult } from "@pocket-apps/core/fetch-json";
 import type { PricePoint } from "./schema.ts";
 
 type Week = { date: string; close: number; adjusted?: number; dividend?: number };

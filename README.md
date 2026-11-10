@@ -86,3 +86,4 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 | kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.            |
 | countdown   | yes       | no       | Days, hours, minutes and seconds until your events.             |
 | attraktor   | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.  |
+| schuljahr   | yes       | yes      | Holidays, public holidays and school days of a school year.     |

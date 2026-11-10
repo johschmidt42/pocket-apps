@@ -16,7 +16,7 @@ import { ApiKeyDialog } from "./api-key-dialog.tsx";
 import { ApiKeyForm } from "./api-key-form.tsx";
 import { ComparisonChart } from "./comparison-chart.tsx";
 import { EtfCard } from "./etf-card.tsx";
-import type { FetchJson } from "./fetch-json.ts";
+import type { FetchJson } from "@pocket-apps/core/fetch-json";
 import { addEtf, priceStatus, removeEtf } from "./etfs.ts";
 import { formatDay, formatFetchedAt } from "./format.ts";
 import { refreshableSymbols } from "./load-prices.ts";
