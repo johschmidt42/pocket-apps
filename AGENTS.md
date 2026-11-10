@@ -37,7 +37,7 @@ Install the test browsers once: `pnpm e2e:install`.
 | `pnpm check`                               | Typecheck, lint, format check, unit tests with coverage.          |
 | `pnpm build`                               | Build all apps and the launcher into `release/`.                  |
 | `pnpm serve`                               | Serve `release/` at `http://localhost:4173/pocket-apps/`.         |
-| `pnpm e2e`                                 | Build, then test the files in Chromium, Firefox and WebKit.       |
+| `pnpm e2e`                                 | Build, then test the files in Chromium.                           |
 | `pnpm check:all`                           | `pnpm check` and `pnpm e2e`.                                      |
 | `pnpm format`                              | Format all files with Prettier.                                   |
 | `cd packages/ui && pnpm shadcn add <name>` | Add a shadcn component to `packages/ui`.                          |
@@ -262,9 +262,10 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - The browser tests use the local web server of `pnpm serve`. Playwright starts it.
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.
 - `e2e/launcher.spec.ts` tests the launcher.
-- Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. Run these tests only in Chromium: `test.skip(({ browserName }) => browserName !== "chromium")`. See `e2e/app-ideen.spec.ts`.
+- Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. See `e2e/app-ideen.spec.ts`.
 - In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile(page, fileName, text)` and `readDataFile(page, fileName)` for the files in it. Write files after `page.goto()`. `readDataFile()` returns the text or `null`.
-- In Firefox and WebKit, test that a stateful app shows only the notice "Bitte Chrome oder Edge verwenden". The launcher shows the apps and a short notice there.
+- The browser tests run only in Chromium. Edge uses the same engine. We do not support other browsers.
+- To test a browser without folder access (like Firefox or Safari), call `withoutFolderAccess(page)` before `page.goto()`. A stateful app then shows only the notice "Bitte Chrome oder Edge verwenden". The launcher shows the apps and a short notice.
 
 ## Add a new app
 

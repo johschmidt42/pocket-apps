@@ -1,5 +1,12 @@
 import { expect } from "@playwright/test";
-import { listApps, readDataFile, releaseUrl, test, withDataFolder } from "./helpers.ts";
+import {
+  listApps,
+  readDataFile,
+  releaseUrl,
+  test,
+  withDataFolder,
+  withoutFolderAccess,
+} from "./helpers.ts";
 
 test.describe("launcher (release/index.html)", () => {
   test.beforeEach(async ({ page, pageErrors }) => {
@@ -87,8 +94,6 @@ test.describe("launcher (release/index.html)", () => {
 });
 
 test.describe("launcher with the data folder", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "Only Chromium can open a folder.");
-
   test("sets up the folder for all apps and keeps the order of the apps", async ({
     page,
     pageErrors,
@@ -128,10 +133,9 @@ test.describe("launcher with the data folder", () => {
   });
 });
 
-test.describe("launcher in other browsers", () => {
-  test.skip(({ browserName }) => browserName === "chromium", "Chromium can open a folder.");
-
+test.describe("launcher in browsers without folder access", () => {
   test("shows the apps and a notice about Chrome and Edge", async ({ page }) => {
+    await withoutFolderAccess(page);
     await page.goto(releaseUrl("index.html"));
 
     await expect(page.getByText(/funktionieren nur in Chrome und Edge/)).toBeVisible();

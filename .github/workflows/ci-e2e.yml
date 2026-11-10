@@ -30,9 +30,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
 
-      - name: Install browsers and system dependencies
+      - name: Install Chromium and its system dependencies
         run: pnpm e2e:install --with-deps
 
       - name: Build and run browser tests

@@ -51,6 +51,16 @@ export async function withDataFolder(page: Page): Promise<void> {
 }
 
 /**
+ * Removes the folder dialog. Then the page works like Firefox or Safari, which have no folder access.
+ * Call it before `page.goto()`.
+ */
+export async function withoutFolderAccess(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    delete window.showDirectoryPicker;
+  });
+}
+
+/**
  * Writes a file into the fake data folder, like a change on another computer.
  * The file times have a resolution of 1 ms. Thus the function writes again until the time is newer.
  */

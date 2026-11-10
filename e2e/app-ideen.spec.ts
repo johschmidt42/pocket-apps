@@ -7,6 +7,7 @@ import {
   releaseUrl,
   test,
   withDataFolder,
+  withoutFolderAccess,
   writeDataFile,
 } from "./helpers.ts";
 
@@ -46,8 +47,6 @@ async function openWithFolder(page: Page, fileText?: string) {
 }
 
 test.describe("app-ideen in Chrome and Edge", () => {
-  test.skip(({ browserName }) => browserName !== "chromium", "Only Chromium can open a folder.");
-
   test("adds, sorts and removes ideas and saves them in the data folder", async ({
     page,
     pageErrors,
@@ -143,10 +142,9 @@ test.describe("app-ideen in Chrome and Edge", () => {
   });
 });
 
-test.describe("app-ideen in other browsers", () => {
-  test.skip(({ browserName }) => browserName === "chromium", "Chromium can open a folder.");
-
+test.describe("app-ideen in browsers without folder access", () => {
   test("asks for Chrome or Edge", async ({ page, pageErrors }) => {
+    await withoutFolderAccess(page);
     await page.goto(releaseUrl("app-ideen.html"));
 
     await expect(

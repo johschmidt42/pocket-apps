@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-10: Browser tests only in Chromium
+
+- **Decision:** The browser tests run only in Chromium. Firefox and WebKit are gone from `playwright.config.ts` and from `pnpm e2e:install`.
+- **Why:** We support only Chrome and Edge. Edge uses the Chromium engine. Firefox and WebKit tested only the notice for other browsers. The installation of their system libraries made `CI - E2E` slow and unstable. WebKit also failed locally on macOS.
+- **Detail:** `withoutFolderAccess(page)` in `e2e/helpers.ts` removes `showDirectoryPicker` before the page loads. Thus Chromium tests the notice for other browsers.
+- **Limit:** No test checks the stateless apps in Firefox or Safari anymore.
+- **Replaces:** The three browsers in "Browser tests with Playwright".
+
 ## 2026-11-10: Launcher with the data folder and the order of the apps
 
 - **Decision:** The launcher is the main place to pick the data folder. It keeps the order of the apps in `launcher.json`.
