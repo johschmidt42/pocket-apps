@@ -3,6 +3,20 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-10: ETF prices from Alpha Vantage (kursverlauf)
+
+- **Decision:** `kursverlauf` gets the prices from Alpha Vantage, with a free key that the user types in. The free key allows 25 requests per day and 1 request per second.
+- **Decision:** The app uses only the weekly prices (`TIME_SERIES_WEEKLY_ADJUSTED`). With the free key, daily prices go back only 100 days, but weekly prices go back to the start of the ETF (for example 2011). One request per ETF gives all of it. The newest entry is the close of the last trading day, also in a week that is not complete. There are no live prices.
+- **Decision:** The app shows the close with splits corrected, but not adjusted for dividends. Alpha Vantage gives two values per week: the close and the adjusted close (adjusted for splits and dividends). The app compares the ratio "adjusted close / close" of each week with the ratio of the next newer week. If the ratio changes by more than 1.5 times (up or down), there was a split. The size of this change is the split ratio (for example 1/25). The app multiplies all older closes by it. A dividend changes the ratio by a few percent only, so the app ignores it. Example: the 25:1 split of SPDR MSCI ACWI IMI (IE00B3YLTY66) on 2026-02-23.
+- **Decision:** The data file keeps only the last download per ETF. A new download replaces it. A failed download keeps the old data, and the app shows a German message on the card of that ETF.
+- **Decision:** At the start, the app downloads the ETFs whose download is from an earlier day (local time of the computer), or that have no download. It tries each ETF once per session automatically. The button "Kurse aktualisieren" downloads only the ETFs with an error, without prices, or with a download older than 1 hour. Else the button is off. Thus 3 ETFs need about 3 requests per day. A new key tries all ETFs again. If the user reaches 25 requests in a day, the app says so.
+- **Decision:** The app sends one request to Alpha Vantage at a time, at least 1.5 seconds apart. Alpha Vantage answers each refused request with HTTP 200 and a JSON field `Information`. The text tells the reason: "per second" or the daily limit. The app shows a message and does not try again by itself.
+- **Decision:** The search by ISIN or ticker uses Twelve Data (`symbol_search`). The search needs no key. Only the prices of Twelve Data need a paid plan (see "Rejected"). The app keeps the hits with `mic_code` `XETR` (Xetra), because Alpha Vantage has prices for Xetra. It adds `.DEX` to the ticker: `VGWL` becomes `VGWL.DEX`. The names of Twelve Data are not always right, so the user can change the name before the app adds the ETF.
+- **Decision:** The comparison chart starts all lines at the first date that all ETFs have. Else an ETF with a longer history would compare a longer time. Below the chart, a list shows the change of each ETF as text.
+- **Accepted risk:** The key is in the data file. The data file can be in a cloud folder (OneDrive, Google Drive). The key is free and gives access only to market data, so this risk is small.
+- **Rejected:** onvista (no key and good data, but its terms forbid automatic requests). Yahoo, justETF, Börse Frankfurt, EODHD, Stooq (no CORS or bot blocking). The prices of Twelve Data (Xetra needs a paid plan). Marketstack (100 requests per month, 1 year). A GitHub Action that copies prices to GitHub Pages (the terms of the sources forbid publishing them).
+- **Size:** About 800 weekly prices per ETF are about 40 KB in the data file. This is no problem.
+
 ## 2026-11-10: Charts with Recharts (shadcn chart)
 
 - **Decision:** Charts use Recharts 3, through the shadcn component `chart` in `packages/ui`. `@pocket-apps/ui/charts` gives the chart parts (for example `Sankey`, `Treemap`, `BarChart`) to the apps. ESLint forbids a direct import of `recharts` in apps.

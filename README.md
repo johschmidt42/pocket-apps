@@ -83,3 +83,4 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 | zinsrechner | no        | no       | Compound interest for a capital.                                |
 | app-ideen   | yes       | no       | Collects ideas for new apps.                                    |
 | fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles. |
+| kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.            |
