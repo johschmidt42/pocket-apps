@@ -1,0 +1,273 @@
+/*
+ * The design "klassisch". This CSS applies only inside the CV frame (an iframe), never to the app.
+ * In print, the browser splits the pages, and an entry stays on one page.
+ *
+ * The page has no margin. Chrome prints its headers and footers (date, title, address, page
+ * number) into the page margin. Without a margin, it prints none. The padding of the CV sheet
+ * makes the space at the top and the bottom of each page instead (see `.cv` in print).
+ */
+
+/* eslint-disable-next-line css/use-baseline -- the apps support only Chrome and Edge, which print with @page */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+:root {
+  --cv-blue: #1f3d7a;
+  --cv-band: #f2f2f2;
+  --cv-stripe: #f4f4f4;
+  --cv-head: #f8f8f8;
+
+  color-scheme: light;
+  background: #d6d3d1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #000;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 10pt;
+  line-height: 1.18;
+  /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; else the gray bands are not printed */
+  print-color-adjust: exact;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+dl,
+dd,
+p,
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+.cv {
+  width: 210mm;
+  min-height: 297mm;
+  /* The padding is the margin of the page (@page). The preview depends on this. */
+  margin: 0 auto;
+  padding: 12mm 0;
+  background: #fff;
+}
+
+/*
+ * The head: a light gray box from 15 mm to 20 mm before the right edge of the page. The photo
+ * is at its right end and sticks out by 3 mm at the top and at the bottom.
+ */
+.cv-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  position: relative;
+  gap: 4mm 10mm;
+  min-height: 39mm;
+  margin: 3mm 20mm 5mm 15mm;
+  /* The right padding keeps the contact lines away from the photo. */
+  padding: 4mm 42mm 4mm 0;
+  background: var(--cv-head);
+}
+
+/* A soft shadow, stronger to the bottom right, like a photo on paper. */
+.cv-photo {
+  display: flex;
+  position: absolute;
+  top: -3mm;
+  right: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36mm;
+  height: 45mm;
+  overflow: hidden;
+  background: #e7e5e4;
+  color: #a8a29e;
+  box-shadow:
+    0.6mm 0.9mm 2.4mm rgb(0 0 0 / 35%),
+    0 0 0.8mm rgb(0 0 0 / 15%);
+}
+
+.cv-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cv-photo svg {
+  width: 14mm;
+  height: 14mm;
+  stroke-width: 1.2;
+}
+
+/*
+ * The blue bar starts at the left edge of the page. The name is not in its middle: the bar has
+ * more space on the left of the name than on the right.
+ */
+.cv-name {
+  align-self: flex-start;
+  margin-left: -15mm;
+  padding: 1.8mm 2.8mm 1.8mm 7mm;
+  background: var(--cv-blue);
+  color: #fff;
+  font-size: 16pt;
+  font-weight: bold;
+  line-height: 1.25;
+}
+
+.cv-contacts {
+  display: grid;
+  gap: 1mm;
+  padding: 0;
+  font-size: 10.5pt;
+  list-style: none;
+}
+
+.cv-contacts li {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+}
+
+.cv-contacts svg {
+  width: 4.5mm;
+  height: 4.5mm;
+  stroke-width: 1.5;
+}
+
+/* Sections: a gray band with a blue title over the full width. */
+
+.cv-section + .cv-section {
+  margin-top: 4mm;
+}
+
+.cv-section-title {
+  padding: 1.5mm 10mm;
+  background: var(--cv-band);
+  color: var(--cv-blue);
+  font-size: 14pt;
+  font-weight: bold;
+  /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; keeps a title with its first entry */
+  break-after: avoid;
+}
+
+.cv-section-body {
+  padding: 3mm 20mm 0 18mm;
+}
+
+/* Rows: an italic label on the left, a blue line, the text on the right. */
+
+.cv-rows {
+  display: block;
+}
+
+.cv-row {
+  display: flex;
+  break-inside: avoid;
+}
+
+.cv-row > dt {
+  flex: 0 0 24mm;
+  padding-right: 2mm;
+  font-style: italic;
+  text-align: right;
+}
+
+.cv-row > dd {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0 2mm;
+  border-left: 1px solid var(--cv-blue);
+  overflow-wrap: anywhere;
+}
+
+.cv-project .cv-row:nth-child(odd) > dd,
+.cv-station:nth-child(odd) > dd {
+  background: var(--cv-stripe);
+}
+
+.cv-bullets {
+  padding-left: 4.5mm;
+  list-style: circle;
+}
+
+/* Projects: a title with a line under it, then the rows. */
+
+.cv-project {
+  break-inside: avoid;
+}
+
+.cv-project + .cv-project {
+  margin-top: 4mm;
+}
+
+.cv-project-title {
+  padding-left: 5mm;
+  border-bottom: 1px solid #000;
+  font-size: 11.5pt;
+  font-weight: normal;
+}
+
+.cv-tool {
+  white-space: nowrap;
+}
+
+/* Stations: the time range on the left. */
+
+.cv-station + .cv-station {
+  padding-top: 2mm;
+}
+
+/* Lists: a label on the left, one value per line with stripes. */
+
+.cv-list-row + .cv-list-row {
+  padding-top: 2mm;
+}
+
+.cv-list-row > dd {
+  padding: 0;
+}
+
+.cv-items {
+  padding: 0;
+  list-style: none;
+}
+
+.cv-items li {
+  padding: 0 2mm;
+}
+
+.cv-items li:nth-child(odd) {
+  background: var(--cv-stripe);
+}
+
+@media print {
+  :root {
+    background: none;
+  }
+
+  /* Without a photo, the PDF keeps the place free but shows no placeholder. */
+  .cv-photo-empty {
+    visibility: hidden;
+  }
+
+  /*
+   * The padding repeats at the top and the bottom of each page (box-decoration-break: clone).
+   * It is 12 mm, as on screen. The preview uses the same value (pageMargin in designs.ts).
+   */
+  .cv {
+    width: auto;
+    min-height: 0;
+    /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; repeats the padding on each page */
+    box-decoration-break: clone;
+  }
+}
