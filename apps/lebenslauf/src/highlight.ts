@@ -41,10 +41,10 @@ export function targetInPages(
     const rect = clip.getBoundingClientRect();
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
   });
-  const clip = clips[index];
-  const page = pages[index];
-  if (!clip || !page) return null;
-  const height = page.start + (y - clip.getBoundingClientRect().top) / pixelsPerMm;
+  // The copy in the box starts with the top of the CV. Its position gives the height in the CV.
+  const copy = clips[index]?.querySelector(".cv-shift");
+  if (!copy || !pages[index]) return null;
+  const height = (y - copy.getBoundingClientRect().top) / pixelsPerMm;
   const at = (selector: string) =>
     Array.from(flow.querySelectorAll(selector)).find((element) => {
       const rect = element.getBoundingClientRect();
