@@ -28,7 +28,7 @@ describe("lebenslauf schema", () => {
   it("starts at version 1 with one empty variant", () => {
     const data = schema.initial();
 
-    expect(currentVersion(schema)).toBe(1);
+    expect(currentVersion(schema)).toBe(2);
     expect(data.person).toEqual({ name: "", contacts: [] });
     expect(data.variants).toHaveLength(1);
     expect(data.variants[0]).toMatchObject({

@@ -358,6 +358,27 @@ test.describe("lebenslauf in Chrome and Edge", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("switches to the design modern with its own look", async ({ page, pageErrors }) => {
+    await page.setViewportSize({ width: 1400, height: 1000 });
+    await openWithFolder(page);
+    await page.getByRole("button", { name: "Beispiel laden" }).click();
+
+    await page.getByLabel("Design", { exact: true }).selectOption("modern");
+
+    await expect(cv(page).locator("article")).toHaveCSS("font-family", /Helvetica Neue/);
+    const firstTool = cv(page)
+      .getByRole("list", { name: "Tools" })
+      .first()
+      .getByRole("listitem")
+      .first();
+    await expect(firstTool).toHaveText("Python");
+    await expect(firstTool).toHaveCSS("background-color", "rgb(236, 254, 255)");
+    await expect(frame(page).locator(".cv-sheet")).toHaveCount(1);
+    const saved = await savedFile(page);
+    expect(saved.data.variants[0]).toMatchObject({ design: "modern" });
+    expect(pageErrors).toEqual([]);
+  });
+
   test("prints only the CV", async ({ page, pageErrors }) => {
     await openWithFolder(page);
     await page.getByRole("button", { name: "Beispiel laden" }).click();

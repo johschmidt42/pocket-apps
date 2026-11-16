@@ -7,7 +7,7 @@ import { CV_LABELS, type CvLabels } from "./labels.ts";
 
 export type KlassischCvProps = {
   person: Person;
-  variant: Extract<Variant, { design: "klassisch" }>;
+  variant: Variant;
   /** The photo as a data URL, or `null`. */
   photoUrl: string | null;
 };

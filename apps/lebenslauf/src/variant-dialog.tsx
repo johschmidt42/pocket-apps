@@ -102,7 +102,7 @@ function VariantForm({ onSave }: { onSave: (choice: VariantChoice) => void }) {
         </div>
       </div>
       <p className="text-sm text-muted-foreground">
-        Das Design legt die Arten der Abschnitte fest. Du kannst es später nicht ändern.
+        Du kannst das Design später in der Leiste wechseln. Der Inhalt bleibt gleich.
       </p>
       <DialogFooter>
         <Button type="submit" disabled={name.trim() === ""}>

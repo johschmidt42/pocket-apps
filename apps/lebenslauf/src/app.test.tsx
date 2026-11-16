@@ -452,6 +452,52 @@ describe("Lebenslauf", () => {
     expect(screen.getByRole("option", { name: /Standard \(Kopie\)/, selected: true })).toBeTruthy();
   });
 
+  it("shows the projects of the example in the design modern", async () => {
+    const { user } = await openApp();
+    await user.click(screen.getByRole("button", { name: "Beispiel laden" }));
+
+    await user.selectOptions(screen.getByLabelText("Design"), "modern");
+
+    expect(cv().getByRole("heading", { level: 3, name: "Order Analytics Platform" })).toBeTruthy();
+    expect(
+      within(cv().getAllByRole("list", { name: "Tools" })[0]!)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Python", "FastAPI", "PostgreSQL", "Docker", "GitHub Actions"]);
+    expect(cv().getByText("Developing REST APIs with FastAPI")).toBeTruthy();
+    expect(cv().getByText("Master thesis: Image segmentation with neural networks")).toBeTruthy();
+  });
+
+  it("switches the design of a variant and keeps its content", async () => {
+    const { folder, user } = await openApp(DATA);
+
+    await user.selectOptions(screen.getByLabelText("Design"), "modern");
+
+    expect(screen.getByLabelText("Variante")).toHaveDisplayValue("Standard · Modern");
+    // The design splits the name and the section titles into parts (for their colors).
+    expect(
+      cv()
+        .getAllByRole("heading")
+        .map((heading) => heading.textContent),
+    ).toEqual([
+      "Erika Mustermann",
+      "Work History",
+      "Freelancer",
+      "Data Engineer",
+      "Skills",
+      "Languages",
+    ]);
+    expect(cv().getByText("Since 01/2024")).toBeTruthy();
+    expect((await saved(folder)).variants[0]).toMatchObject({
+      design: "modern",
+      sections: DATA.variants[0]!.sections,
+    });
+    const envelope = JSON.parse(folder.files.get(FILE)?.text ?? "") as { schemaVersion: number };
+    expect(envelope.schemaVersion).toBe(2);
+    // The file of version 1 stays as a backup.
+    expect(folder.files.has("lebenslauf/lebenslauf.backup-v1.json")).toBe(true);
+  });
+
   it("keeps a section if the user cancels the question", async () => {
     const { user } = await openApp(DATA);
     vi.spyOn(window, "confirm").mockReturnValue(false);
@@ -477,7 +523,10 @@ describe("Lebenslauf", () => {
     await user.click(screen.getByRole("button", { name: "Neue Variante" }));
     await user.type(screen.getByLabelText("Name der Variante"), "Leer");
     await user.selectOptions(screen.getByLabelText("Sprache"), "en");
-    await user.selectOptions(screen.getByLabelText("Design"), "klassisch");
+    await user.selectOptions(
+      within(screen.getByRole("dialog")).getByLabelText("Design"),
+      "klassisch",
+    );
     await user.click(screen.getByRole("button", { name: "Anlegen" }));
     expect(screen.getByRole("heading", { level: 3, name: "Noch keine Abschnitte" })).toBeVisible();
     expect(screen.getByRole("radio", { name: "Englisch" })).toBeChecked();

@@ -252,6 +252,9 @@ export function LebenslaufView({ preparePhoto }: LebenslaufViewProps) {
           if (files && photo !== null) void files.remove(photo).catch(() => undefined);
           document.getElementById(VARIANT_SELECT_ID)?.focus();
         }}
+        onDesign={(design) => {
+          update((current) => updateActiveVariant(current, (active) => ({ ...active, design })));
+        }}
         onLanguage={(language) => {
           update((current) => updateActiveVariant(current, (active) => ({ ...active, language })));
         }}

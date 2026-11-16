@@ -1,10 +1,7 @@
 import type { Person, Variant } from "../schema.ts";
 import { KlassischCv } from "./klassisch-cv.tsx";
+import { ModernCv } from "./modern-cv.tsx";
 
-/**
- * The CV of a variant in the design of the variant. Today "klassisch" is the only design.
- * A second design adds a `switch` on `variant.design` here.
- */
 export type CvDocumentProps = {
   person: Person;
   variant: Variant;
@@ -12,6 +9,12 @@ export type CvDocumentProps = {
   photoUrl: string | null;
 };
 
+/** The CV of a variant in the design of the variant. */
 export function CvDocument({ person, variant, photoUrl }: CvDocumentProps) {
-  return <KlassischCv person={person} variant={variant} photoUrl={photoUrl} />;
+  switch (variant.design) {
+    case "klassisch":
+      return <KlassischCv person={person} variant={variant} photoUrl={photoUrl} />;
+    case "modern":
+      return <ModernCv person={person} variant={variant} photoUrl={photoUrl} />;
+  }
 }

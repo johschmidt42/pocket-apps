@@ -4,10 +4,10 @@ import { Label } from "@pocket-apps/ui/components/label";
 import { NativeSelect, NativeSelectOption } from "@pocket-apps/ui/components/native-select";
 import { ToggleGroup, ToggleGroupItem } from "@pocket-apps/ui/components/toggle-group";
 import { Copy, Pencil, Plus, Printer, Trash2 } from "lucide-react";
-import { DESIGN_INFO } from "./designs/designs.ts";
+import { DESIGN_INFO, DESIGNS } from "./designs/designs.ts";
 import { VARIANT_SELECT_ID } from "./dom-ids.ts";
 import { LANGUAGE_LABELS } from "./designs/labels.ts";
-import { LANGUAGES, type Language, type Variant } from "./schema.ts";
+import { LANGUAGES, type Design, type Language, type Variant } from "./schema.ts";
 
 export type VariantBarProps = {
   /** True while the app saves or copies a photo. Then duplicate and delete wait. */
@@ -20,6 +20,7 @@ export type VariantBarProps = {
   onRename: () => void;
   onRemove: () => void;
   onLanguage: (language: Language) => void;
+  onDesign: (design: Design) => void;
   onPrint: () => void;
 };
 
@@ -73,6 +74,22 @@ export function VariantBar(props: VariantBarProps) {
           <Copy data-icon="inline-start" />
           Duplizieren
         </Button>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="variant-design-switch">Design</Label>
+        <NativeSelect
+          id="variant-design-switch"
+          value={active.design}
+          onChange={(event) => {
+            if (isOneOf(DESIGNS, event.target.value)) props.onDesign(event.target.value);
+          }}
+        >
+          {DESIGNS.map((design) => (
+            <NativeSelectOption key={design} value={design}>
+              {DESIGN_INFO[design].label}
+            </NativeSelectOption>
+          ))}
+        </NativeSelect>
       </div>
       <ToggleGroup
         type="single"

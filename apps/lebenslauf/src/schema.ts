@@ -1,5 +1,6 @@
 import { createDataFileStore, defineDataSchema } from "@pocket-apps/core/data-file";
 import { z } from "zod";
+import { toV2 } from "./migrations/to-v2.ts";
 
 /** The languages of the fixed words of a design, for example "Description" or "Beschreibung". */
 export const LANGUAGES = ["de", "en"] as const;
@@ -14,7 +15,7 @@ export const CONTACT_KINDS = [
   "location",
 ] as const;
 
-/** The kinds of sections in the design "klassisch". */
+/** The kinds of sections. All designs show the same kinds. */
 export const SECTION_KINDS = ["projects", "stations", "list"] as const;
 
 /** A month, for example "2024-01". */
@@ -71,7 +72,7 @@ const listRowSchema = z.object({
 
 const sectionFields = { id: z.string().min(1), title: z.string().trim().min(1) };
 
-const klassischSectionSchema = z.discriminatedUnion("kind", [
+const sectionSchema = z.discriminatedUnion("kind", [
   z.object({ ...sectionFields, kind: z.literal("projects"), entries: z.array(projectSchema) }),
   z.object({ ...sectionFields, kind: z.literal("stations"), entries: z.array(stationSchema) }),
   z.object({ ...sectionFields, kind: z.literal("list"), entries: z.array(listRowSchema) }),
@@ -88,18 +89,19 @@ const variantFields = {
   photo: z.string().min(1).nullable().default(null),
 };
 
+/** The designs of the CV. Each design shows the same sections in its own look. */
+export const DESIGN_NAMES = ["klassisch", "modern"] as const;
+
 /**
- * A variant of the CV, for example for one job ad. The design sets which sections and fields
- * the variant has. A new design adds a new member to this union.
+ * A variant of the CV, for example for one job ad. All designs use the same sections, so a
+ * variant can change its design. A design with other fields would need a union here.
  */
-const variantSchema = z.discriminatedUnion("design", [
-  z.object({
-    ...variantFields,
-    design: z.literal("klassisch"),
-    /** The order of the array is the order in the CV. */
-    sections: z.array(klassischSectionSchema),
-  }),
-]);
+const variantSchema = z.object({
+  ...variantFields,
+  design: z.enum(DESIGN_NAMES),
+  /** The order of the array is the order in the CV. */
+  sections: z.array(sectionSchema),
+});
 
 const lebenslaufSchema = z
   .object({
@@ -119,9 +121,9 @@ export type Person = z.infer<typeof personSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Station = z.infer<typeof stationSchema>;
 export type ListRow = z.infer<typeof listRowSchema>;
-export type Section = z.infer<typeof klassischSectionSchema>;
+export type Section = z.infer<typeof sectionSchema>;
 export type Variant = z.infer<typeof variantSchema>;
-export type Design = Variant["design"];
+export type Design = (typeof DESIGN_NAMES)[number];
 export type LebenslaufData = z.infer<typeof lebenslaufSchema>;
 
 /** A new file has one empty variant with the design "klassisch". */
@@ -146,8 +148,8 @@ export const schema = defineDataSchema<LebenslaufData>({
   app: "lebenslauf",
   validate: lebenslaufSchema,
   initial: () => initialData(),
-  // Version 1 has no migrations. Append new ones at the end. Never change old ones.
-  migrations: [],
+  // Append new migrations at the end. Never change old ones.
+  migrations: [toV2],
 });
 
 export const { DataFileProvider, useDataFile } = createDataFileStore(schema, {

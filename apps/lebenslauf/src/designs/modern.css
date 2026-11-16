@@ -1,0 +1,303 @@
+/*
+ * The design "modern". This CSS applies only inside the CV frame (an iframe), never to the app.
+ * A sans-serif font, one accent color (petrol), a round photo, section titles with colored
+ * first letters and a thin line, and the tools of a project as chips.
+ *
+ * As in "klassisch": the page has no margin, so that Chrome prints no headers and footers.
+ * The padding of `.cv` (12 mm, `pageMargin` in designs.ts) makes the space at the top and the
+ * bottom of each page, and print repeats it on each page (box-decoration-break: clone).
+ */
+
+/* eslint-disable-next-line css/use-baseline -- the apps support only Chrome and Edge, which print with @page */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+:root {
+  --cv-accent: #0e7490;
+  --cv-text: #1f2937;
+  --cv-muted: #6b7280;
+  --cv-line: #d1d5db;
+  --cv-chip: #ecfeff;
+  --cv-chip-text: #155e75;
+  --cv-chip-line: #a5f3fc;
+
+  color-scheme: light;
+  background: #d6d3d1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--cv-text);
+  font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
+  font-size: 9pt;
+  line-height: 1.32;
+  /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; else the chips lose their color in print */
+  print-color-adjust: exact;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+p,
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+.cv {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 12mm 16mm;
+  background: #fff;
+}
+
+/* Head: the round photo, the name (last name bold) and the contact lines in one row. */
+
+.cv-head {
+  display: flex;
+  align-items: center;
+  gap: 7mm;
+  margin-bottom: 6mm;
+  padding-bottom: 5mm;
+  border-bottom: 0.6mm solid var(--cv-accent);
+}
+
+.cv-photo {
+  display: flex;
+  flex: 0 0 30mm;
+  align-items: center;
+  justify-content: center;
+  height: 30mm;
+  overflow: hidden;
+  border: 0.8mm solid #fff;
+  border-radius: 50%;
+  background: #e7e5e4;
+  color: #a8a29e;
+  box-shadow:
+    0 0 0 0.4mm var(--cv-accent),
+    0 0.6mm 2.5mm rgb(0 0 0 / 25%);
+}
+
+.cv-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cv-photo svg {
+  width: 12mm;
+  height: 12mm;
+  stroke-width: 1.2;
+}
+
+.cv-head-text {
+  min-width: 0;
+}
+
+.cv-name {
+  font-size: 25pt;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+.cv-name-last {
+  font-weight: 700;
+}
+
+.cv-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5mm 5mm;
+  margin-top: 3mm;
+  padding: 0;
+  color: var(--cv-muted);
+  font-size: 8.5pt;
+  list-style: none;
+}
+
+.cv-contacts li {
+  display: flex;
+  align-items: center;
+  gap: 1.5mm;
+}
+
+.cv-contacts svg {
+  width: 3.4mm;
+  height: 3.4mm;
+  color: var(--cv-accent);
+  stroke-width: 2;
+}
+
+/* Sections: a title with colored first letters and a thin line to the right. */
+
+.cv-section + .cv-section {
+  margin-top: 4.5mm;
+}
+
+.cv-section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2.5mm;
+  font-size: 12.5pt;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; keeps a title with its first entry */
+  break-after: avoid;
+}
+
+.cv-section-title::after {
+  flex: 1;
+  height: 0.3mm;
+  margin-left: 3mm;
+  background: var(--cv-line);
+  content: "";
+}
+
+.cv-accent {
+  color: var(--cv-accent);
+}
+
+/* Entries: a bold title, the time range on the right in the accent color. */
+
+.cv-entry {
+  break-inside: avoid;
+}
+
+.cv-entry + .cv-entry {
+  margin-top: 3mm;
+}
+
+.cv-entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4mm;
+}
+
+.cv-entry-title {
+  font-size: 10pt;
+  font-weight: 700;
+}
+
+.cv-entry-date {
+  flex: none;
+  color: var(--cv-accent);
+  font-size: 8.5pt;
+  font-style: italic;
+}
+
+.cv-entry-subtitle {
+  color: var(--cv-muted);
+  font-size: 8.5pt;
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+}
+
+.cv-description {
+  margin-top: 0.5mm;
+  color: var(--cv-muted);
+  font-style: italic;
+}
+
+.cv-bullets {
+  margin-top: 0.8mm;
+  padding-left: 4mm;
+  list-style: none;
+}
+
+.cv-bullets li {
+  position: relative;
+}
+
+.cv-bullets li::before {
+  position: absolute;
+  top: 0.48em;
+  left: -3mm;
+  width: 1.1mm;
+  height: 1.1mm;
+  border-radius: 50%;
+  background: var(--cv-accent);
+  content: "";
+}
+
+/* The tools of a project as chips. */
+
+.cv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1mm;
+  margin-top: 1.2mm;
+  padding: 0;
+  list-style: none;
+}
+
+.cv-chips li {
+  padding: 0.2mm 1.6mm;
+  border: 0.2mm solid var(--cv-chip-line);
+  border-radius: 1mm;
+  background: var(--cv-chip);
+  color: var(--cv-chip-text);
+  font-size: 7.5pt;
+  line-height: 1.4;
+}
+
+/* Lists (for example languages and certificates): a label on the left, the values on the right. */
+
+.cv-list-row {
+  display: flex;
+  gap: 4mm;
+  break-inside: avoid;
+}
+
+.cv-list-row + .cv-list-row {
+  margin-top: 1.5mm;
+}
+
+.cv-list-label {
+  flex: 0 0 30mm;
+  color: var(--cv-accent);
+  font-size: 9pt;
+  font-weight: 700;
+}
+
+/* One value per line, like a small table. */
+.cv-list-items {
+  padding: 0;
+  list-style: none;
+}
+
+.cv-list-items li + li {
+  margin-top: 0.4mm;
+}
+
+@media print {
+  :root {
+    background: none;
+  }
+
+  /* Without a photo, the PDF keeps the place free but shows no placeholder. */
+  .cv-photo-empty {
+    visibility: hidden;
+  }
+
+  /* The padding repeats at the top and the bottom of each page (box-decoration-break: clone). */
+  .cv {
+    width: auto;
+    min-height: 0;
+    /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; repeats the padding on each page */
+    box-decoration-break: clone;
+  }
+}
