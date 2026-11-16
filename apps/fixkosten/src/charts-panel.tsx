@@ -1,3 +1,4 @@
+import { isOneOf } from "@pocket-apps/core/one-of";
 import { Card, CardContent, CardHeader, CardTitle } from "@pocket-apps/ui/components/card";
 import { Checkbox } from "@pocket-apps/ui/components/checkbox";
 import { Label } from "@pocket-apps/ui/components/label";
@@ -8,7 +9,6 @@ import { CategoryChart } from "./category-chart.tsx";
 import { buildFlow } from "./flow.ts";
 import { FlowChart } from "./flow-chart.tsx";
 import type { Period } from "./money.ts";
-import { isOneOf } from "./one-of.ts";
 import type { Profile } from "./schema.ts";
 import { TilesChart } from "./tiles-chart.tsx";
 import { YearChart } from "./year-chart.tsx";

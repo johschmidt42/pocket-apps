@@ -1,3 +1,4 @@
+import { NameDialog, type NameDialogTexts, type NameRequest } from "@pocket-apps/core/name-dialog";
 import { Button } from "@pocket-apps/ui/components/button";
 import {
   Card,
@@ -16,7 +17,6 @@ import { addButtonId, entryButtonId } from "./dom-ids.ts";
 import { EntryList } from "./entry-list.tsx";
 import type { Period } from "./money.ts";
 import { ProfileBar } from "./profile-bar.tsx";
-import { ProfileNameDialog, type ProfileNameRequest } from "./profile-name-dialog.tsx";
 import {
   activeProfile,
   addProfile,
@@ -32,6 +32,13 @@ import { SAMPLE_COSTS, SAMPLE_INCOMES } from "./sample-data.ts";
 import { useDataFile } from "./schema.ts";
 import { SummaryTiles } from "./summary-tiles.tsx";
 
+const PROFILE_NAME_TEXTS = {
+  newTitle: "Neues Profil",
+  renameTitle: "Profil umbenennen",
+  label: "Name des Profils",
+  placeholder: "z. B. Wohnung Berlin",
+} satisfies NameDialogTexts;
+
 /** The DOM ID of the list "Fixkosten" or "Einkommen". */
 const LIST_IDS = { cost: "costs", income: "incomes" } as const;
 
@@ -40,7 +47,7 @@ export function FixkostenView() {
   const { data, update } = useDataFile();
   const [period, setPeriod] = useState<Period>("month");
   const [draft, setDraft] = useState<EntryDraft | null>(null);
-  const [nameRequest, setNameRequest] = useState<ProfileNameRequest | null>(null);
+  const [nameRequest, setNameRequest] = useState<NameRequest | null>(null);
   const profile = activeProfile(data);
   const isEmpty = profile.costs.length === 0 && profile.incomes.length === 0;
 
@@ -192,8 +199,9 @@ export function FixkostenView() {
           setDraft(null);
         }}
       />
-      <ProfileNameDialog
+      <NameDialog
         request={nameRequest}
+        texts={PROFILE_NAME_TEXTS}
         onSave={(name) => {
           update((current) =>
             nameRequest?.kind === "rename"

@@ -1,3 +1,4 @@
+import { isOneOf } from "@pocket-apps/core/one-of";
 import { Button } from "@pocket-apps/ui/components/button";
 import {
   Dialog,
@@ -15,7 +16,6 @@ import { useState } from "react";
 import { CATEGORY_INFO } from "./categories.ts";
 import { ICONS } from "./icons.ts";
 import { centsToInput, INTERVAL_LABELS, MONTH_LABELS, parseEuro } from "./money.ts";
-import { isOneOf } from "./one-of.ts";
 import { newId } from "./profiles.ts";
 import {
   CATEGORIES,

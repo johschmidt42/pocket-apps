@@ -1,10 +1,10 @@
+import { isOneOf } from "@pocket-apps/core/one-of";
 import { Button } from "@pocket-apps/ui/components/button";
 import { Label } from "@pocket-apps/ui/components/label";
 import { NativeSelect, NativeSelectOption } from "@pocket-apps/ui/components/native-select";
 import { ToggleGroup, ToggleGroupItem } from "@pocket-apps/ui/components/toggle-group";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { PERIODS, type Period } from "./money.ts";
-import { isOneOf } from "./one-of.ts";
 import type { Profile } from "./schema.ts";
 
 export type ProfileBarProps = {

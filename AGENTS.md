@@ -52,6 +52,9 @@ packages/core/             Shared code:
   src/data-file/           Data folder and data file: pick, load, save, migrate, validate.
   src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
   src/fetch-json.ts        fetchJson() for apps with "network": true. It never throws.
+  src/name-dialog.tsx      NameDialog: asks for the name of a new item, or a new name for an item (rename).
+  src/one-of.ts            isOneOf(list, value): true if the string value is in the list. Then TypeScript
+                           knows that value is one of the list items.
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
   src/charts.ts            The Recharts parts for apps (own code, not vendor code).
