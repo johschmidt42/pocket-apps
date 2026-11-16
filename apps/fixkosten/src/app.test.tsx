@@ -49,7 +49,7 @@ const STARTER: FixkostenData = {
 /** Opens the app with a folder. `data` is the content of fixkosten.json, or nothing for a new file. */
 async function openApp(data?: FixkostenData) {
   const folder = createMemoryFolder();
-  if (data) folder.files.set("fixkosten.json", { text: fileText(data), lastModified: 1 });
+  if (data) folder.files.set("fixkosten/fixkosten.json", { text: fileText(data), lastModified: 1 });
   const user = userEvent.setup();
   render(<App folderHost={createMemoryFolderHost({ saved: folder })} />);
   await screen.findByLabelText("Profil");
@@ -57,7 +57,7 @@ async function openApp(data?: FixkostenData) {
 }
 
 function savedData(folder: ReturnType<typeof createMemoryFolder>): FixkostenData {
-  const text = folder.files.get("fixkosten.json")?.text ?? "";
+  const text = folder.files.get("fixkosten/fixkosten.json")?.text ?? "";
   return (JSON.parse(text) as { data: FixkostenData }).data;
 }
 

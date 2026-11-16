@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from "@pocket-apps/ui/components/alert";
 import { Button } from "@pocket-apps/ui/components/button";
 import { createContext, use, useEffect, useReducer, useState, type ReactNode } from "react";
 import { AppHeader } from "../app-shell/app-header.tsx";
+import { extraFiles, type ExtraFiles } from "./extra-files.ts";
 import { browserFolderHost } from "./browser-folder.ts";
 import { DataFileStatus } from "./data-file-status.tsx";
 import { RawDataButton } from "./raw-data-button.tsx";
@@ -23,6 +24,11 @@ export type DataFileApi<T> = {
   update: (updater: (data: T) => T) => void;
   /** It is false only with `folderOptional`, while the app has no folder with access. */
   hasFolder: boolean;
+  /**
+   * The extra files of the app in the data folder (besides the data file), for example images. Their names start with
+   * the app ID and a hyphen. `null` without a folder.
+   */
+  files: ExtraFiles | null;
 };
 
 export type DataFileStoreOptions = {
@@ -63,7 +69,10 @@ function errorMessage(error: unknown): string {
  */
 export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileStoreOptions) {
   const Context = createContext<DataFileApi<T> | null>(null);
-  const fileName = `${schema.app}.json`;
+  // Each app has its own folder in the data folder: `<app>/<app>.json`, its backups and its
+  // extra files. Before, the data file was `<app>.json` in the data folder itself.
+  const fileName = `${schema.app}/${schema.app}.json`;
+  const oldFileName = `${schema.app}.json`;
   const schemaVersion = currentVersion(schema);
   const autosaveDelayMs = options.autosaveDelayMs ?? 500;
   const retryDelayMs = options.retryDelayMs ?? 5000;
@@ -73,6 +82,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     data: schema.initial(),
     hasFolder: false,
     update: () => undefined,
+    files: null,
   };
 
   function serialize(data: T): string {
@@ -84,18 +94,44 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
     });
   }
 
-  /** `<app>.backup-v<N>.json`. If that file exists: `<app>.backup-v<N>-2.json`, and so on. */
+  /**
+   * `<app>/<app>.backup-v<N>.json`. If that file exists: `<app>/<app>.backup-v<N>-2.json`,
+   * and so on.
+   */
   async function freeBackupName(folder: DataFolder, version: number): Promise<string> {
-    const base = `${schema.app}.backup-v${String(version)}`;
+    const base = `${schema.app}/${schema.app}.backup-v${String(version)}`;
     for (let count = 1; ; count += 1) {
       const name = count === 1 ? `${base}.json` : `${base}-${String(count)}.json`;
       if ((await folder.lastModified(name)) === null) return name;
     }
   }
 
+  /**
+   * The data file. A data file at the old place (`<app>.json` in the data folder itself) moves
+   * into the folder of the app first: the app writes the copy, reads it back and then deletes
+   * the old file. An old app version in another tab then sees that its file is gone and shows
+   * a conflict, instead of saving where nobody reads.
+   */
+  async function readDataFile(folder: DataFolder) {
+    const file = await folder.read(fileName);
+    if (file) return file;
+    const oldFile = await folder.read(oldFileName);
+    if (!oldFile) return null;
+    await folder.write(fileName, oldFile.text);
+    const moved = await folder.read(fileName);
+    if (moved?.text !== oldFile.text) {
+      throw new DataFileError(
+        "move-failed",
+        `Die App konnte „${oldFileName}“ nicht in den Ordner „${schema.app}“ verschieben.`,
+      );
+    }
+    await folder.remove(oldFileName);
+    return moved;
+  }
+
   async function loadFile(folder: DataFolder): Promise<DataFileAction<T>> {
     try {
-      const file = await folder.read(fileName);
+      const file = await readDataFile(folder);
       if (!file) {
         return { type: "loaded", data: schema.initial(), needsSave: false, lastModified: null };
       }
@@ -279,6 +315,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
       update: (updater) => {
         dispatch({ type: "updated", updater });
       },
+      files: extraFiles(folder, schema.app),
     };
     return (
       <Context value={api}>

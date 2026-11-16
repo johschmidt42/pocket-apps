@@ -1,3 +1,4 @@
+import { useWidth } from "@pocket-apps/core/use-width";
 import { useId, useRef, useState } from "react";
 import {
   dateChips,
@@ -11,7 +12,6 @@ import { MarkCard, type ChartActions } from "./mark-card.tsx";
 import type { Entry, Scale, TrunkColor } from "./schema.ts";
 import { SIDE_COLORS } from "./side-colors.ts";
 import { BRANCH_ATTRIBUTE, DEFAULT_PLACE, useActiveCard } from "./use-active-card.ts";
-import { useWidth } from "./use-width.ts";
 
 /**
  * The colors of the trunk. They are the chart colors that no side uses. Gray is lighter than the

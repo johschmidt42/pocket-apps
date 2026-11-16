@@ -31,7 +31,7 @@ const DATA: CountdownData = {
 async function openApp(data?: CountdownData, clock = fixedClock) {
   const folder = createMemoryFolder();
   if (data) {
-    folder.files.set("countdown.json", {
+    folder.files.set("countdown/countdown.json", {
       text: JSON.stringify({
         app: "countdown",
         schemaVersion: 1,
@@ -49,8 +49,9 @@ async function openApp(data?: CountdownData, clock = fixedClock) {
 }
 
 function savedData(folder: ReturnType<typeof createMemoryFolder>): CountdownData {
-  return (JSON.parse(folder.files.get("countdown.json")?.text ?? "") as { data: CountdownData })
-    .data;
+  return (
+    JSON.parse(folder.files.get("countdown/countdown.json")?.text ?? "") as { data: CountdownData }
+  ).data;
 }
 
 describe("Countdown", () => {

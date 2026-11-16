@@ -21,7 +21,7 @@ test.describe("countdown in Chrome and Edge", () => {
     const first = await timer.getAttribute("aria-label");
     await expect(timer).not.toHaveAttribute("aria-label", first ?? "");
     await expect(page.getByRole("status")).toHaveText("Gespeichert");
-    const saved = JSON.parse((await readDataFile(page, "countdown.json")) ?? "") as {
+    const saved = JSON.parse((await readDataFile(page, "countdown/countdown.json")) ?? "") as {
       data: { events: { name: string; date: string; time: string | null }[] };
     };
     expect(saved.data.events.at(-1)).toMatchObject({

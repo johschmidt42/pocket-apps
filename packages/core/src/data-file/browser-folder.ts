@@ -119,12 +119,23 @@ export function wrapDirectory(root: FileSystemDirectoryHandle): DataFolder {
       return file ? { text: await file.text(), lastModified: file.lastModified } : null;
     },
     lastModified: async (path) => (await snapshot(path))?.lastModified ?? null,
-    write: async (path, text) => {
+    readBlob: snapshot,
+    write: async (path, content) => {
       const handle = await fileHandle(path, true);
       const writable = await handle.createWritable();
-      await writable.write(text);
+      await writable.write(content);
       await writable.close();
       return (await handle.getFile()).lastModified;
+    },
+    remove: async (path) => {
+      const { folders, file } = splitPath(path);
+      try {
+        let folder = root;
+        for (const name of folders) folder = await folder.getDirectoryHandle(name);
+        await folder.removeEntry(file);
+      } catch (error) {
+        if (!isNotFound(error)) throw error;
+      }
     },
   };
 }

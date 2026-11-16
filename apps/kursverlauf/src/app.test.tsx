@@ -39,7 +39,8 @@ function fileText(data: KursverlaufData): string {
 /** Opens the app with a folder. `data` is the content of kursverlauf.json, or nothing for a new file. */
 async function openApp(rules: readonly Rule[], data?: KursverlaufData) {
   const folder = createMemoryFolder();
-  if (data) folder.files.set("kursverlauf.json", { text: fileText(data), lastModified: 1 });
+  if (data)
+    folder.files.set("kursverlauf/kursverlauf.json", { text: fileText(data), lastModified: 1 });
   const fake = fakeFetch(rules);
   const user = userEvent.setup();
   render(
@@ -54,8 +55,11 @@ async function openApp(rules: readonly Rule[], data?: KursverlaufData) {
 }
 
 function savedData(folder: ReturnType<typeof createMemoryFolder>): KursverlaufData {
-  return (JSON.parse(folder.files.get("kursverlauf.json")?.text ?? "") as { data: KursverlaufData })
-    .data;
+  return (
+    JSON.parse(folder.files.get("kursverlauf/kursverlauf.json")?.text ?? "") as {
+      data: KursverlaufData;
+    }
+  ).data;
 }
 
 const today = new Date().toISOString();
@@ -313,7 +317,7 @@ describe("Old data files", () => {
       etfs: [ETF_A],
       prices: { "VGWL.DEX": { fetchedAt: today, points: [{ date: daysAgo(3), close: 161.68 }] } },
     };
-    folder.files.set("kursverlauf.json", {
+    folder.files.set("kursverlauf/kursverlauf.json", {
       text: JSON.stringify({
         app: "kursverlauf",
         schemaVersion: 1,
@@ -335,7 +339,7 @@ describe("Old data files", () => {
     expect(await screen.findByText(/Schlusskurs/)).toBeInTheDocument();
     expect(fake.urls).toHaveLength(1);
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(folder.files.has("kursverlauf.backup-v1.json")).toBe(true);
+    expect(folder.files.has("kursverlauf/kursverlauf.backup-v1.json")).toBe(true);
     expect(savedData(folder).prices["VGWL.DEX"]?.points[0]?.total).toBe(100);
   });
 });

@@ -8,7 +8,7 @@ import {
   writeDataFile,
 } from "./helpers.ts";
 
-const FILE = "kursverlauf.json";
+const FILE = "kursverlauf/kursverlauf.json";
 const ALPHA_VANTAGE = "https://www.alphavantage.co/**";
 const TWELVE_DATA = "https://api.twelvedata.com/**";
 

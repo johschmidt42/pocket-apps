@@ -14,7 +14,7 @@ import {
 const app = listApps().find((candidate) => candidate.name === "app-ideen");
 if (!app) throw new Error("App app-ideen is missing.");
 const version = app.version;
-const FILE = "app-ideen.json";
+const FILE = "app-ideen/app-ideen.json";
 
 type Idea = { id: string; title: string; description: string };
 type SavedFile = { app: string; schemaVersion: number; savedWith: string; data: { ideas: Idea[] } };
@@ -130,6 +130,18 @@ test.describe("app-ideen in Chrome and Edge", () => {
 
     const saved = await savedFile(page);
     expect(saved.data.ideas.map((idea) => idea.title)).toEqual(["Tee", "Kaffee"]);
+  });
+
+  test("moves a data file from the old place into the folder of the app", async ({ page }) => {
+    await withDataFolder(page);
+    await page.goto(releaseUrl("app-ideen.html"));
+    const oldText = ideasFile([{ id: "a1", title: "Alt", description: "" }]);
+    await writeDataFile(page, "app-ideen.json", oldText);
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+
+    await expect(titles(page)).toHaveText(["Alt"]);
+    expect(await readDataFile(page, FILE)).toBe(oldText);
+    expect(await readDataFile(page, "app-ideen.json")).toBeNull();
   });
 
   test("shows a clear error for the data file of another app", async ({ page }) => {

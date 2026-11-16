@@ -3,7 +3,7 @@ import { listApps, readDataFile, releaseUrl, test, withDataFolder } from "./help
 
 const app = listApps().find((candidate) => candidate.name === "fixkosten");
 if (!app) throw new Error("App fixkosten is missing.");
-const FILE = "fixkosten.json";
+const FILE = "fixkosten/fixkosten.json";
 
 type SavedFile = {
   app: string;

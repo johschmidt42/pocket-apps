@@ -4,7 +4,9 @@ export type DataFileErrorCode =
   | "wrong-app"
   | "too-new"
   | "missing-migration"
-  | "invalid-data";
+  | "invalid-data"
+  | "invalid-file-name"
+  | "move-failed";
 
 /** An error that the user can understand. The message is in German. */
 export class DataFileError extends Error {
