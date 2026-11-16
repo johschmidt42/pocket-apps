@@ -10,13 +10,13 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import type { ComponentProps } from "react";
 import { addEntryId } from "./dom-ids.ts";
-import { DragHandle } from "./drag-handle.tsx";
+import { DragHandle } from "@pocket-apps/ui/drag-handle";
 import type { Section } from "./schema.ts";
 import { SECTION_KIND_INFO } from "./section-kinds.ts";
 import { SectionTitle } from "./section-title.tsx";
 import { entrySummaries } from "./summaries.ts";
-import { useDragSort } from "./use-drag-sort.ts";
-import type { Direction, DropPosition } from "./variants.ts";
+import { useDragSort } from "@pocket-apps/ui/drag-sort";
+import type { Direction, DropPosition } from "@pocket-apps/ui/drag-sort";
 
 export type SectionCardProps = {
   section: Section;

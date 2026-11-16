@@ -13,6 +13,3 @@ export const VARIANT_SELECT_ID = "variant";
 
 /** The ID of the button "Abschnitt hinzufügen". */
 export const ADD_SECTION_ID = "section-add";
-
-/** The ID of the hidden hint for the drag handles (for screen readers). */
-export const SORT_HINT_ID = "sort-hint";

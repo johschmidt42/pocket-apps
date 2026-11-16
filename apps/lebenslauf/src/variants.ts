@@ -1,3 +1,4 @@
+import { moveById, moveTo, type Direction, type DropPosition } from "@pocket-apps/ui/drag-sort";
 import {
   CONTACT_KINDS,
   type Contact,
@@ -10,9 +11,6 @@ import {
 export function newId(): string {
   return crypto.randomUUID();
 }
-
-/** -1 moves an item up (to the front), 1 moves it down (to the end). */
-export type Direction = -1 | 1;
 
 /** The entries of the section kind `K`. */
 export type EntryOf<K extends Section["kind"]> = Extract<Section, { kind: K }>["entries"][number];
@@ -33,44 +31,6 @@ export function upsert<T extends { id: string }>(list: readonly T[], item: T): T
 
 export function removeById<T extends { id: string }>(list: readonly T[], id: string): T[] {
   return list.filter((entry) => entry.id !== id);
-}
-
-/** Swaps the item with its neighbor. Keeps the list if the item is missing or at the edge. */
-export function moveById<T extends { id: string }>(
-  list: readonly T[],
-  id: string,
-  direction: Direction,
-): T[] {
-  const index = list.findIndex((entry) => entry.id === id);
-  const other = index + direction;
-  const item = list[index];
-  const neighbor = list[other];
-  if (!item || !neighbor) return [...list];
-  const result = [...list];
-  result[index] = neighbor;
-  result[other] = item;
-  return result;
-}
-
-/** Where a dragged item goes: before or after the item under the mouse. */
-export type DropPosition = "before" | "after";
-
-/**
- * Moves the item `draggedId` before or after the item `targetId`.
- * Keeps the list if an ID is missing or if both IDs are the same.
- */
-export function moveTo<T extends { id: string }>(
-  list: readonly T[],
-  draggedId: string,
-  targetId: string,
-  position: DropPosition,
-): T[] {
-  const item = list.find((entry) => entry.id === draggedId);
-  const rest = list.filter((entry) => entry.id !== draggedId);
-  const index = rest.findIndex((entry) => entry.id === targetId);
-  if (!item || index < 0) return [...list];
-  rest.splice(position === "before" ? index : index + 1, 0, item);
-  return rest;
 }
 
 // Variants

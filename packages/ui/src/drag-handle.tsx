@@ -1,7 +1,7 @@
-import { Button } from "@pocket-apps/ui/components/button";
+import { Button } from "./components/button.tsx";
 import { GripVertical } from "lucide-react";
 import type { ComponentProps } from "react";
-import { SORT_HINT_ID } from "./dom-ids.ts";
+import { SORT_HINT_ID } from "./drag-sort.ts";
 
 export type DragHandleProps = ComponentProps<typeof Button> & {
   /** The name of the item, for example "„Projects“". */
@@ -12,7 +12,8 @@ export type DragHandleProps = ComponentProps<typeof Button> & {
 
 /**
  * The grip at the left of a row. Drag it to move the row. With the keyboard focus on it,
- * the arrow keys move the row. Give it the props of `useDragSort().handleProps(id)`.
+ * the arrow keys move the row. Give it the props of `useDragSort().handleProps(id)`, and render
+ * `<SortHint />` once on the page.
  */
 export function DragHandle({ name, small = false, ...props }: DragHandleProps) {
   return (

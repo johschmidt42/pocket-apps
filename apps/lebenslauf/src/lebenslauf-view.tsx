@@ -16,7 +16,7 @@ import { ContactCard } from "./contact-card.tsx";
 import { CvFrame } from "./cv-frame.tsx";
 import { CvDocument } from "./designs/cv-document.tsx";
 import { DESIGN_INFO } from "./designs/designs.ts";
-import { ADD_SECTION_ID, addEntryId, SORT_HINT_ID, VARIANT_SELECT_ID } from "./dom-ids.ts";
+import { ADD_SECTION_ID, addEntryId, VARIANT_SELECT_ID } from "./dom-ids.ts";
 import { sameTarget, type HighlightTarget } from "./highlight.ts";
 import { EntryDialog, type EntryDraft } from "./entry-dialog.tsx";
 import { exampleSections } from "./example.ts";
@@ -25,7 +25,8 @@ import { SectionCard } from "./section-card.tsx";
 import { SectionDialog } from "./section-dialog.tsx";
 import { PhotoCard } from "./photo-card.tsx";
 import { PhotoError } from "./photo.ts";
-import { useDragSort } from "./use-drag-sort.ts";
+import { moveById, moveTo, useDragSort } from "@pocket-apps/ui/drag-sort";
+import { SortHint } from "@pocket-apps/ui/sort-hint";
 import { usePhotoUrl } from "./use-photo-url.ts";
 import { VariantBar } from "./variant-bar.tsx";
 import { VariantDialog } from "./variant-dialog.tsx";
@@ -35,9 +36,7 @@ import {
   dropEntry,
   duplicateVariant,
   photoFileName,
-  moveById,
   moveEntry,
-  moveTo,
   newId,
   removeActiveVariant,
   removeById,
@@ -226,9 +225,7 @@ export function LebenslaufView({ preparePhoto }: LebenslaufViewProps) {
 
   return (
     <main className="flex w-full flex-col gap-4 p-4">
-      <p id={SORT_HINT_ID} className="sr-only">
-        Ziehen zum Verschieben. Mit der Tastatur: Pfeiltaste nach oben oder unten.
-      </p>
+      <SortHint />
       <VariantBar
         busy={photoBusy}
         variants={data.variants}

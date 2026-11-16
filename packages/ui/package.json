@@ -7,6 +7,9 @@
     "./globals.css": "./src/styles/globals.css",
     "./charts": "./src/charts.ts",
     "./day-picker": "./src/day-picker.ts",
+    "./drag-sort": "./src/drag-sort.ts",
+    "./drag-handle": "./src/drag-handle.tsx",
+    "./sort-hint": "./src/sort-hint.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"

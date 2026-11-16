@@ -12,9 +12,9 @@ import { Label } from "@pocket-apps/ui/components/label";
 import { NativeSelect, NativeSelectOption } from "@pocket-apps/ui/components/native-select";
 import { Plus, Trash2 } from "lucide-react";
 import { flushSync } from "react-dom";
-import { useDragSort } from "./use-drag-sort.ts";
+import { useDragSort } from "@pocket-apps/ui/drag-sort";
 import { CONTACT_LABELS, CONTACT_PLACEHOLDERS } from "./contact-kinds.ts";
-import { DragHandle } from "./drag-handle.tsx";
+import { DragHandle } from "@pocket-apps/ui/drag-handle";
 import { CONTACT_KINDS, type Person } from "./schema.ts";
 import {
   addContact,

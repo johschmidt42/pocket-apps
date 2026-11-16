@@ -7,9 +7,7 @@ import {
   duplicateVariant,
   dropContact,
   dropEntry,
-  moveById,
   moveContact,
-  moveTo,
   photoFileName,
   moveEntry,
   removeActiveVariant,
@@ -63,33 +61,6 @@ describe("lists", () => {
   it("replaces or adds an item", () => {
     expect(upsert([{ id: "a", n: 1 }], { id: "a", n: 2 })).toEqual([{ id: "a", n: 2 }]);
     expect(upsert([{ id: "a", n: 1 }], { id: "b", n: 2 })).toHaveLength(2);
-  });
-
-  it("moves an item and keeps the list at the edges", () => {
-    const list = [{ id: "a" }, { id: "b" }, { id: "c" }];
-
-    expect(moveById(list, "b", -1).map((item) => item.id)).toEqual(["b", "a", "c"]);
-    expect(moveById(list, "b", 1).map((item) => item.id)).toEqual(["a", "c", "b"]);
-    expect(moveById(list, "a", -1)).toEqual(list);
-    expect(moveById(list, "c", 1)).toEqual(list);
-    expect(moveById(list, "x", 1)).toEqual(list);
-  });
-});
-
-describe("moveTo", () => {
-  const list = [{ id: "a" }, { id: "b" }, { id: "c" }];
-  const ids = (items: { id: string }[]) => items.map((item) => item.id);
-
-  it("puts the dragged item before or after the target", () => {
-    expect(ids(moveTo(list, "c", "a", "before"))).toEqual(["c", "a", "b"]);
-    expect(ids(moveTo(list, "a", "b", "after"))).toEqual(["b", "a", "c"]);
-    expect(ids(moveTo(list, "a", "c", "after"))).toEqual(["b", "c", "a"]);
-  });
-
-  it("keeps the list for a missing or the same ID", () => {
-    expect(moveTo(list, "x", "a", "before")).toEqual(list);
-    expect(moveTo(list, "a", "x", "before")).toEqual(list);
-    expect(moveTo(list, "a", "a", "after")).toEqual(list);
   });
 });
 
