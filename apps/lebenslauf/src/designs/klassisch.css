@@ -78,7 +78,7 @@ h3 {
   background: var(--cv-head);
 }
 
-/* A soft shadow, stronger to the bottom right, like a photo on paper. */
+/* A soft shadow on all sides, a little stronger at the bottom, like in the Word CV. */
 .cv-photo {
   display: flex;
   position: absolute;
@@ -92,8 +92,8 @@ h3 {
   background: #e7e5e4;
   color: #a8a29e;
   box-shadow:
-    0.6mm 0.9mm 2.4mm rgb(0 0 0 / 35%),
-    0 0 0.8mm rgb(0 0 0 / 15%);
+    0 0.4mm 3mm 0.4mm rgb(0 0 0 / 38%),
+    0 0 0.6mm rgb(0 0 0 / 20%);
 }
 
 .cv-photo img {
