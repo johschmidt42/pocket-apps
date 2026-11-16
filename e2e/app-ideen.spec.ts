@@ -71,6 +71,23 @@ test.describe("app-ideen in Chrome and Edge", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("shows the raw data file after a click on the file name", async ({ page, pageErrors }) => {
+    await openWithFolder(page, ideasFile([{ id: "a", title: "Pflanzen", description: "" }]));
+
+    const fileButton = page.getByRole("button", { name: `${FOLDER_NAME} / ${FILE}` });
+    await expect(fileButton).toHaveCSS("cursor", "pointer");
+    await fileButton.hover();
+    await expect(page.getByRole("tooltip")).toHaveText("Rohdaten ansehen", { timeout: 300 });
+    await fileButton.click();
+
+    const dialog = page.getByRole("dialog", { name: FILE });
+    await expect(dialog.getByLabel("Inhalt der Datei")).toContainText('"title": "Pflanzen"');
+    await expect(dialog.getByRole("textbox")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    expect(pageErrors).toEqual([]);
+  });
+
   test("remembers the folder after a reload and from the launcher", async ({ page }) => {
     await openWithFolder(page);
     await addIdeaInUi(page, "Tee", "Sorten");

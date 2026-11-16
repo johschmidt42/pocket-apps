@@ -1,10 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { testAppInfo } from "../testing.ts";
 import { parseEnvelope, serializeEnvelope } from "./envelope.ts";
-import type { FolderHost } from "./folder.ts";
+import type { FileSnapshot, FolderHost } from "./folder.ts";
+import { MAX_COLORED_LENGTH } from "./raw-data-dialog.tsx";
 import { defineDataSchema } from "./schema.ts";
 import { createDataFileStore, type DataFileStoreOptions } from "./store.tsx";
 import { createMemoryFolder, createMemoryFolderHost, type MemoryFolder } from "./testing.ts";
@@ -508,5 +509,151 @@ describe("useDataFile", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     expect(() => render(<Counter />)).toThrow("inside <DataFileProvider>");
+  });
+});
+
+describe("raw data", () => {
+  const FILE_BUTTON = { name: "Pocket Apps Daten / demo.json: Rohdaten ansehen" };
+
+  it("shows the data file with indents and colors, but no field to change it", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    const user = setup(host);
+
+    // The tooltip shows at once.
+    await user.hover(await screen.findByRole("button", FILE_BUTTON));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Rohdaten ansehen");
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+
+    const dialog = await screen.findByRole("dialog", { name: "demo.json" });
+    expect(dialog).toHaveTextContent("Die Rohdaten aus dem Ordner „Pocket Apps Daten“");
+    expect(await screen.findByLabelText("Inhalt der Datei")).toHaveTextContent('"count": 5');
+    // Each key is a colored part. A color has no role, so the test checks the class.
+    expect(screen.getByText('"count"')).toHaveClass("text-chart-7");
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(screen.queryByText(/noch nicht gespeichert/)).not.toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("explains a file that does not exist yet", async () => {
+    const { host } = readyHost();
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", FILE_BUTTON));
+
+    expect(await screen.findByText(/Die Datei gibt es noch nicht/)).toBeInTheDocument();
+  });
+
+  it("shows a file that is not JSON as it is", async () => {
+    const { folder, host } = readyHost();
+    const user = setup(host);
+    await screen.findByRole("button", { name: "Zähler 0" });
+    folder.files.set("demo.json", { text: "kein JSON", lastModified: 1 });
+
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+
+    expect(await screen.findByText(/kein gültiges JSON/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Inhalt der Datei")).toHaveTextContent("kein JSON");
+  });
+
+  it("explains a file that cannot be read", async () => {
+    const { folder, host } = readyHost();
+    const user = setup(host);
+    await screen.findByRole("button", { name: "Zähler 0" });
+    folder.read = () => Promise.reject(new Error("Zugriff verweigert"));
+
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+
+    expect(
+      await screen.findByText(
+        "Die Datei lässt sich nicht lesen: Unerwarteter Fehler: Zugriff verweigert",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("asks for access again when the browser lost it", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    const user = setup(host);
+    await screen.findByRole("button", { name: "Zähler 5" });
+    folder.access = "prompt";
+
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+
+    expect(await screen.findByLabelText("Inhalt der Datei")).toHaveTextContent('"count": 5');
+    expect(folder.access).toBe("granted");
+  });
+
+  it("shows the raw data of a broken file", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: "{ kaputt", lastModified: 1 });
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", { name: "Rohdaten ansehen" }));
+
+    expect(await screen.findByText(/kein gültiges JSON/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Inhalt der Datei")).toHaveTextContent("{ kaputt");
+  });
+
+  it("tells about changes that are not saved yet", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    const { setup: setupSlow } = makeStore({ autosaveDelayMs: 60_000 });
+    const user = setupSlow(host);
+
+    await user.click(await screen.findByRole("button", { name: "Zähler 5" }));
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+
+    expect(await screen.findByText(/noch nicht gespeichert/)).toBeInTheDocument();
+    // The view shows the file, not the changed data.
+    expect(await screen.findByLabelText("Inhalt der Datei")).toHaveTextContent('"count": 5');
+  });
+
+  it("shows a large file without colors", async () => {
+    const { folder, host } = readyHost();
+    const long = "x".repeat(MAX_COLORED_LENGTH);
+    folder.files.set("demo.json", { text: dataFile(2, { count: 1, long }), lastModified: 1 });
+    const user = setup(host);
+
+    await user.click(await screen.findByRole("button", FILE_BUTTON));
+
+    expect(await screen.findByLabelText("Inhalt der Datei")).toHaveTextContent('"count": 1');
+    expect(screen.queryByText('"count"')).not.toBeInTheDocument();
+  });
+
+  it("ignores a read that ends after a close or after a newer click", async () => {
+    const { folder, host } = readyHost();
+    const finish: ((file: FileSnapshot | null) => void)[] = [];
+    const user = setup(host);
+    await screen.findByRole("button", { name: "Zähler 0" });
+    folder.read = () =>
+      new Promise((resolve) => {
+        finish.push(resolve);
+      });
+
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+    await user.keyboard("{Escape}");
+    await act(async () => {
+      finish[0]?.({ text: dataFile(2, { count: 1 }), lastModified: 1 });
+      await Promise.resolve();
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", FILE_BUTTON));
+    await act(async () => {
+      finish[1]?.({ text: dataFile(2, { count: 2 }), lastModified: 1 });
+      await Promise.resolve();
+    });
+    // The first of the two reads ended late: the dialog still waits for the newer read.
+    expect(screen.getByText("Lädt …")).toBeInTheDocument();
+    await act(async () => {
+      finish[2]?.({ text: dataFile(2, { count: 3 }), lastModified: 1 });
+      await Promise.resolve();
+    });
+    expect(await screen.findByLabelText("Inhalt der Datei")).toHaveTextContent('"count": 3');
   });
 });

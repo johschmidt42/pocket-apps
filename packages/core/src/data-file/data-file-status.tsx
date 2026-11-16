@@ -1,5 +1,7 @@
 import { Alert, AlertDescription } from "@pocket-apps/ui/components/alert";
 import { Button } from "@pocket-apps/ui/components/button";
+import { RawDataButton } from "./raw-data-button.tsx";
+import type { RawFile } from "./raw-data-dialog.tsx";
 import type { SaveStatus } from "./reducer.ts";
 
 const STATUS_TEXT: Record<SaveStatus, string> = {
@@ -19,18 +21,34 @@ export type DataFileStatusProps = {
   onReload: () => void;
   onKeepMine: () => void;
   onChangeFolder: () => void;
+  /** Reads the data file for the raw view. */
+  readRaw: () => Promise<RawFile>;
 };
 
-/** The line under the header: where the data is, whether it is saved, and what to do on a problem. */
+/**
+ * The line under the header: where the data is, whether it is saved, and what to do on a problem.
+ * A click on the file name shows the raw data of the file.
+ */
 export function DataFileStatus(props: DataFileStatusProps) {
+  const place = `${props.folderName} / ${props.fileName}`;
   return (
     <div className="border-b">
       <div className="mx-auto flex max-w-3xl flex-col gap-2 p-2">
         <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
           <p>
-            <span className="font-medium text-foreground">
-              {props.folderName} / {props.fileName}
-            </span>
+            <RawDataButton
+              size="xs"
+              variant="link"
+              className="h-auto px-0 font-medium text-foreground"
+              label={`${place}: Rohdaten ansehen`}
+              hint="Rohdaten ansehen"
+              fileName={props.fileName}
+              folderName={props.folderName}
+              unsaved={props.save !== "saved"}
+              readRaw={props.readRaw}
+            >
+              {place}
+            </RawDataButton>
             {" · "}
             <span role="status">{STATUS_TEXT[props.save]}</span>
           </p>

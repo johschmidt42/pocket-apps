@@ -218,6 +218,7 @@ When the app is open, the store does these things:
 - Before each save, it compares the time of the last change of the file with the time when the app read or wrote it. If the file changed elsewhere (for example on another computer through Google Drive), it does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
 - After a failed save, it shows an error and tries again after 5 seconds.
 - While a change is not saved, it warns before the tab closes.
+- A click on the folder and file name in the status line (for example "Pocket Apps Daten / app-ideen.json") shows the raw data. The store reads the file again from the data folder. A dialog shows the JSON text with indents and colors. The user can only read it, not change it. If the file does not exist yet, is not JSON or cannot be read, the dialog says so. If a change was not saved at the time of the click, the dialog says that the change is not in the file yet. A broken file (for example not JSON) has the button "Rohdaten ansehen" in its error message. If the browser lost the access to the folder, the click asks for it again.
 - The status line has the button "Ordner wechseln". It lets the user pick another folder. The button works only when all changes are saved. After the change, the app loads the file of the new folder. The new folder is then the folder of all apps. Other open tabs keep the old folder until they load again.
 
 #### Optional folder (only for the launcher)

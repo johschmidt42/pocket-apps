@@ -5,6 +5,8 @@ import { createContext, use, useEffect, useReducer, useState, type ReactNode } f
 import { AppHeader } from "../app-shell/app-header.tsx";
 import { browserFolderHost } from "./browser-folder.ts";
 import { DataFileStatus } from "./data-file-status.tsx";
+import { RawDataButton } from "./raw-data-button.tsx";
+import type { RawFile } from "./raw-data-dialog.tsx";
 import { DataFolderGate } from "./data-folder-gate.tsx";
 import { LoadingStatus } from "./loading-status.tsx";
 import { serializeEnvelope } from "./envelope.ts";
@@ -205,6 +207,17 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
       dispatch({ type: "retry" });
     }
 
+    /** Reads the data file for the raw view. A click on the button can give the access again. */
+    async function readRaw(): Promise<RawFile> {
+      await regainAccess();
+      try {
+        const file = await folder.read(fileName);
+        return file ? { kind: "file", text: file.text } : { kind: "missing" };
+      } catch (error) {
+        return { kind: "error", message: errorMessage(error) };
+      }
+    }
+
     async function keepMine() {
       try {
         dispatch({ type: "overwrite", lastModified: await folder.lastModified(fileName) });
@@ -231,6 +244,18 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
               <Button size="sm" variant="outline" onClick={changeFolder}>
                 Anderen Ordner wählen …
               </Button>
+              {/* A broken file is the case where the raw data helps most. */}
+              <RawDataButton
+                size="sm"
+                variant="outline"
+                label="Rohdaten ansehen"
+                fileName={fileName}
+                folderName={folder.name}
+                unsaved={false}
+                readRaw={readRaw}
+              >
+                Rohdaten ansehen
+              </RawDataButton>
             </span>
           </AlertDescription>
         </Alert>
@@ -266,6 +291,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
           onReload={() => void reload()}
           onKeepMine={() => void keepMine()}
           onChangeFolder={changeFolder}
+          readRaw={readRaw}
         />
         {children}
       </Context>
