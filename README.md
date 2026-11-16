@@ -32,7 +32,9 @@ Some apps keep data, for example a list of ideas. All these apps use one data fo
 2. On the start page or in an app that keeps data, find "Datenordner wählen". Click the button "Ordner wählen …" and select your folder. All apps use this folder.
 3. A Chrome window asks if the page can edit the folder. Allow it.
 
-Each app keeps its data in its own file in this folder, for example `app-ideen.json`. The start page keeps the order of the apps and your favorite apps in `launcher.json`.
+Each app has its own folder in this folder, for example `app-ideen/`. It keeps its data in a file there, for example `app-ideen/app-ideen.json`. The start page keeps the order of the apps and your favorite apps in `launcher/launcher.json`. Some apps also keep images in their folder, for example `lebenslauf/foto-….jpg` for the photo of a CV. Do not rename or delete these files. If an image is missing, the app shows no image, and you can pick it again.
+
+Earlier versions kept all files directly in the data folder, for example `app-ideen.json`. When you open an app, it moves its file into its folder. Old backup files (for example `kursverlauf.backup-v1.json`) stay where they are. You can delete them when the app shows all your data.
 
 The bar under the header shows the folder, the file and the status:
 
@@ -43,19 +45,19 @@ The bar under the header shows the folder, the file and the status:
 
 More tips:
 
-- To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only when the start page has your data folder. Move the apps with the arrow buttons. Click "Fertig". The start page keeps the order in `launcher.json` in your data folder.
-- To mark an app as a favorite, click the star on its card. The star is there only when the start page has your data folder. A filled star shows a favorite. The start page shows your favorite apps first, under "Favoriten". The other apps come under "Weitere Apps". Both sections use your order of the apps. To remove a favorite, click the star again. The start page keeps the favorites in `launcher.json` in your data folder.
+- To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only when the start page has your data folder. Move the apps with the arrow buttons. Click "Fertig". The start page keeps the order in `launcher/launcher.json` in your data folder.
+- To mark an app as a favorite, click the star on its card. The star is there only when the start page has your data folder. A filled star shows a favorite. The start page shows your favorite apps first, under "Favoriten". The other apps come under "Weitere Apps". Both sections use your order of the apps. To remove a favorite, click the star again. The start page keeps the favorites in `launcher/launcher.json` in your data folder.
 - To use another folder, click "Ordner wechseln" in the bar under the header.
 - When you open an app later, the app can show "Zugriff auf deinen Datenordner". Click "Zugriff erlauben" in the app. Then a Chrome window opens. Select "Bei jedem Besuch erlauben" in it. Then Chrome does not ask again.
 - On a second computer, select the same synced folder. Then both computers use the same data. Use the apps on one computer at a time.
-- Do you have a data file from an earlier version of Pocket Apps (before the data folder), for example `app-ideen.json`? Put it into the data folder before you open the app. Do not replace a newer file with the same name. The app then opens the file.
+- Do you have a data file from an earlier version of Pocket Apps (before the data folder), for example `app-ideen.json`? Put it into the data folder before you open the app, but only if the app has no folder there yet (for example `app-ideen/`). The app then moves the file into its folder and opens it.
 
 Apps with data work only in Chrome and Edge on a computer. Other browsers show a notice. Apps without data, for example the Zinsrechner, also work in other browsers.
 
 ### Updates
 
 - A new app version is online about 10 minutes after the developer publishes it. Reload the page to get it. You do not have to do anything else.
-- A new app version can change the data format. Then the app keeps a copy of your old data file in the data folder before it changes anything. The copy has a name like `app-ideen.backup-v1.json`. The number is the old data format, not the app version. Keep the copy until you are sure that the app shows all your data. Then you can delete it.
+- A new app version can change the data format. Then the app keeps a copy of your old data file in the data folder before it changes anything. The copy has a name like `app-ideen/app-ideen.backup-v1.json`. The number is the old data format, not the app version. Keep the copy until you are sure that the app shows all your data. Then you can delete it.
 - An app in an old browser tab cannot open data from a newer app version (for example from another computer). It shows an error. Reload the page to get the newest version.
 
 ## For developers
@@ -78,13 +80,14 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 
 ## Apps
 
-| App         | Data file | Internet | Description                                                      |
-| ----------- | --------- | -------- | ---------------------------------------------------------------- |
-| zinsrechner | no        | no       | Compound interest for a capital.                                 |
-| app-ideen   | yes       | no       | Collects ideas for new apps.                                     |
-| fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles.  |
-| kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.             |
-| countdown   | yes       | no       | Days, hours, minutes and seconds until your events.              |
-| attraktor   | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.   |
-| schuljahr   | yes       | yes      | Holidays, public holidays and school days of a school year.      |
-| zeitstrahl  | yes       | no       | Moments and time ranges on vertical timelines, for example a CV. |
+| App         | Data file | Internet | Description                                                        |
+| ----------- | --------- | -------- | ------------------------------------------------------------------ |
+| zinsrechner | no        | no       | Compound interest for a capital.                                   |
+| app-ideen   | yes       | no       | Collects ideas for new apps.                                       |
+| fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles.    |
+| kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.               |
+| countdown   | yes       | no       | Days, hours, minutes and seconds until your events.                |
+| attraktor   | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.     |
+| schuljahr   | yes       | yes      | Holidays, public holidays and school days of a school year.        |
+| zeitstrahl  | yes       | no       | Moments and time ranges on vertical timelines, for example a CV.   |
+| lebenslauf  | yes       | no       | CV as an A4 page with variants per job ad. Print it or save a PDF. |

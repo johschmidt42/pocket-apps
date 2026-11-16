@@ -35,16 +35,27 @@ const NETWORK_GLOBALS = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource"].
   message: OFFLINE_MESSAGE,
 }));
 
+// Apps style only with Tailwind. The one exception: a CV design (or a similar document) shows in
+// an iframe with its own CSS. Files in src/designs/ may import that CSS as text ("./x.css?inline").
+// See "CV designs with own CSS in an iframe" in docs/decisions.md.
+const OWN_CSS_PATTERN = {
+  // "?" is a wildcard here. Thus "*.css?*" also matches "x.css?inline" and "x.css?raw".
+  group: ["*.css", "*.css?*", "!@pocket-apps/ui/globals.css"],
+  message: "No own CSS. Use Tailwind classes.",
+};
+const DESIGN_CSS_PATTERN = {
+  group: ["*.css", "*.css?*", "!./*.css?inline"],
+  message: 'A design imports only its own CSS as text: "./name.css?inline".',
+};
+const DESIGN_FILES = "apps/*/src/designs/**/*.{ts,tsx}";
+
 // Import boundaries of apps and the launcher.
 const APP_IMPORT_PATTERNS = [
   {
     group: ["**/apps/**", "../../*"],
     message: "Apps import only from packages/*, never from other apps.",
   },
-  {
-    group: ["*.css", "!@pocket-apps/ui/globals.css"],
-    message: "No own CSS. Use Tailwind classes.",
-  },
+  OWN_CSS_PATTERN,
   {
     group: ["radix-ui", "@radix-ui/*", "recharts", "react-day-picker", "react-day-picker/*"],
     message: "Use the components from @pocket-apps/ui.",
@@ -223,6 +234,24 @@ export default defineConfig([
               group: ["@pocket-apps/core/fetch-json"],
               message: OFFLINE_MESSAGE,
             },
+          ],
+        },
+      ],
+    },
+  },
+
+  // CV designs: their own CSS as text for the iframe. A design never uses the network.
+  {
+    files: [DESIGN_FILES],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            ...APP_IMPORT_PATTERNS.map((pattern) =>
+              pattern === OWN_CSS_PATTERN ? DESIGN_CSS_PATTERN : pattern,
+            ),
+            { group: ["@pocket-apps/core/fetch-json"], message: OFFLINE_MESSAGE },
           ],
         },
       ],

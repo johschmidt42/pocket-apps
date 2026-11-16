@@ -10,10 +10,12 @@ Most apps use no online services. An app that needs an external API declares thi
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`. The launcher is also the place to pick the data folder. With a folder, the user can change the order of the apps ("Reihenfolge ändern") and mark apps as favorites (star button on the card). If there are favorites, the launcher shows them first, under "Favoriten", and the other apps under "Weitere Apps". Both sections use the one order of all apps. The launcher keeps the order and the favorites in `launcher.json` in the data folder. Without a folder, it shows the apps in the build order, with no star buttons and no sections.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`. The launcher is also the place to pick the data folder. With a folder, the user can change the order of the apps ("Reihenfolge ändern") and mark apps as favorites (star button on the card). If there are favorites, the launcher shows them first, under "Favoriten", and the other apps under "Weitere Apps". Both sections use the one order of all apps. The launcher keeps the order and the favorites in `launcher/launcher.json` in the data folder. Without a folder, it shows the apps in the build order, with no star buttons and no sections.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data folder:** the folder that the user picks once, for example "Pocket Apps Daten". It can be in a OneDrive or Google Drive folder. The apps use the File System Access API. Thus only Chrome and Edge on a computer can use it.
-- **Data file:** the JSON file of one app in the data folder: `<app>.json`, for example `app-ideen.json`.
+- **App folder:** the folder of one app in the data folder: `<app>/`, for example `app-ideen/`. It holds the data file, its backups and the extra files of the app. The store creates it.
+- **Data file:** the JSON file of one app in its app folder: `<app>/<app>.json`, for example `app-ideen/app-ideen.json`.
+- **Extra file:** another file of an app in its app folder, besides the data file and its backups, for example an image: `lebenslauf/foto-<id>.jpg`.
 - **Stateful app:** an app with a data file. A stateless app keeps nothing after the tab closes.
 - **Envelope:** the outer JSON object of a data file: `{ app, schemaVersion, savedWith, savedAt, data }`. `savedWith` is the app version that wrote the file. `savedAt` is an ISO time. The code calls it `Envelope` (`envelope.ts`).
 - **Vendor code:** code that a tool generated and that we do not edit. Here: the components in `packages/ui/src/components/`.
@@ -53,8 +55,12 @@ packages/core/             Shared code:
   src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
   src/fetch-json.ts        fetchJson() for apps with "network": true. It never throws.
   src/name-dialog.tsx      NameDialog: asks for the name of a new item, or a new name for an item (rename).
+  src/file-button.tsx      FileButton: a button that opens the file dialog of the system and gives the
+                           picked file to the app (for example a photo). Apps use no own
+                           `<input type="file">`.
   src/one-of.ts            isOneOf(list, value): true if the string value is in the list. Then TypeScript
                            knows that value is one of the list items.
+  src/use-width.ts         useWidth(ref): the width of an element in pixels. 0 in jsdom.
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
   src/charts.ts            The Recharts parts for apps (own code, not vendor code).
@@ -141,9 +147,11 @@ Each app declares its info in its `package.json`:
 - You can split a screen into several files. Each file holds one component that combines components from `packages/ui`.
 - When two or more apps need the same combination, move it to `packages/ui` or `packages/core`.
 - Style only with Tailwind classes. Do not add CSS files to apps. Do not use inline `style`, CSS-in-JS or `@apply`.
+- Exception to "Do not add CSS files to apps": a document that an app shows in an `<iframe>`, for example a CV design in `lebenslauf`. Any app can use this pattern. Put the CSS file in the folder `src/designs/` (ESLint allows the import only there) and import it there as text with the Vite suffix `?inline` (`./<name>.css?inline`). The frame can also write CSS rules with computed values (for example the zoom and the page breaks of the preview) as text into a `<style>` element of the frame document. Only the frame document gets this CSS. For the UI of the app, "no inline `style`, no CSS-in-JS" still applies, and the UI around the frame uses Tailwind. See `apps/lebenslauf/src/cv-frame.tsx` and the decision "CV designs with own CSS in an iframe".
 - Use theme colors (`bg-background`, `text-muted-foreground`). Do not use raw colors like `text-gray-500`. Then dark mode works without extra classes.
 - Write full class names. Never build class names from strings (`` `text-${size}` ``).
 - Use icons only from `lucide-react`.
+- Show the hand cursor on everything that the user can click. `globals.css` gives it to each `button`, `select` and `[role="button"]` that is not disabled. Give other clickable elements the class `cursor-pointer`, for example a `<label>` that switches a checkbox. A drag handle gets `cursor-grab active:cursor-grabbing`.
 - Make layouts work in narrow windows (320 px). Write classes for small screens first. Add `sm:` and `md:` classes only for larger screens.
 
 ### HTML and accessibility
@@ -200,7 +208,8 @@ The app file name has no version (`app-ideen.html`). A new file replaces the old
 ## Data files and migrations
 
 A stateful app defines its data in `src/schema.ts` with `defineDataSchema({ app, validate, initial, migrations })`. `app` is the app ID, `validate` the zod schema, `initial()` the data of a new file and `migrations` the list of migrations. See `apps/app-ideen/src/schema.ts`.
-`createDataFileStore(schema, { app: __POCKET_APP__ })` returns `{ DataFileProvider, useDataFile }`. `App` wraps its screen in `<DataFileProvider>`. Components inside call `useDataFile()`. It returns `{ data, update }`. `update((data) => newData)` changes the data. Then the store saves it.
+`createDataFileStore(schema, { app: __POCKET_APP__ })` returns `{ DataFileProvider, useDataFile }`. `App` wraps its screen in `<DataFileProvider>`. Components inside call `useDataFile()`. It returns `{ data, update, files }`. `update((data) => newData)` changes the data. Then the store saves it.
+`files` reads, writes and removes the extra files of the app in its app folder, for example images (`files.read(name)`, `files.write(name, blob)`, `files.remove(name)`). The name is only the file name, without the folder: lowercase letters, digits and hyphens, then one extension, for example `foto-1a2b.jpg`. Any extension is allowed. The names of the data file and its backups (`<app>.…`) are not allowed. A wrong name gives a rejected promise (a `DataFileError` with a German message). Keep the name of the file in the data file. `files` is `null` only with `folderOptional` (the launcher) while there is no folder. The store does not save these files with the data file and does not check them for conflicts. The app writes such a file when the user acts, for example after the user picks a photo. The promise of `files.write()` fails if the write fails. The status line does not show it, so the app shows its own message.
 Data files are JSON. Use SQLite (sql.js) only when an app needs queries that are hard with JSON. See `docs/decisions.md`.
 
 ### How the store works
@@ -210,7 +219,8 @@ Data files are JSON. Use SQLite (sql.js) only when an app needs queries that are
 1. In a browser without the File System Access API: "Bitte Chrome oder Edge verwenden".
 2. On the first visit: "Datenordner wählen". The user picks the data folder. The browser keeps the folder in IndexedDB. All apps of the same web address use it. The dev server, `pnpm serve` and GitHub Pages are different addresses. Thus each needs its own folder pick.
 3. When the browser has no access to the folder: "Zugriff auf deinen Datenordner". One click gives access again. If the user selects "Bei jedem Besuch erlauben", Chrome does not ask again.
-4. Else the app. The file name is `<app>.json`. `<app>` is the `app` field in `schema.ts`. If the file does not exist, the app starts with `initial()`. It writes the file at the first change.
+4. Else the app. The file is `<app>/<app>.json`. `<app>` is the `app` field in `schema.ts`. If the file does not exist, the app starts with `initial()`. It writes the file at the first change.
+   Earlier versions kept the data file as `<app>.json` in the data folder itself. If the store finds only this old file, it moves it into the app folder first: it writes the copy, reads it back and deletes the old file. Old backups (`<app>.backup-v<N>.json`) stay where they are.
 
 When the app is open, the store does these things:
 
@@ -218,7 +228,7 @@ When the app is open, the store does these things:
 - Before each save, it compares the time of the last change of the file with the time when the app read or wrote it. If the file changed elsewhere (for example on another computer through Google Drive), it does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
 - After a failed save, it shows an error and tries again after 5 seconds.
 - While a change is not saved, it warns before the tab closes.
-- A click on the folder and file name in the status line (for example "Pocket Apps Daten / app-ideen.json") shows the raw data. The store reads the file again from the data folder. A dialog shows the JSON text with indents and colors. The user can only read it, not change it. If the file does not exist yet, is not JSON or cannot be read, the dialog says so. If a change was not saved at the time of the click, the dialog says that the change is not in the file yet. A broken file (for example not JSON) has the button "Rohdaten ansehen" in its error message. If the browser lost the access to the folder, the click asks for it again.
+- A click on the folder and file name in the status line (for example "Pocket Apps Daten / app-ideen/app-ideen.json") shows the raw data. The store reads the file again from the data folder. A dialog shows the JSON text with indents and colors. The user can only read it, not change it. If the file does not exist yet, is not JSON or cannot be read, the dialog says so. If a change was not saved at the time of the click, the dialog says that the change is not in the file yet. A broken file (for example not JSON) has the button "Rohdaten ansehen" in its error message. If the browser lost the access to the folder, the click asks for it again.
 - The status line has the button "Ordner wechseln". It lets the user pick another folder. The button works only when all changes are saved. After the change, the app loads the file of the new folder. The new folder is then the folder of all apps. Other open tabs keep the old folder until they load again.
 
 #### Optional folder (only for the launcher)
@@ -243,7 +253,7 @@ When the app reads its data file, `loadData()` in `packages/core` does these ste
 5. It validates the result with the zod schema. It stops with an error if the data does not match.
 
 On an error, the app shows the message and does not change the file.
-If step 4 ran a migration, the store first writes the unchanged old file into the data folder as `<app>.backup-v<old schema version>.json`. Then it saves the data in the new shape. If this file exists, it uses `<app>.backup-v<N>-2.json` and so on. If the backup fails, it shows an error and does not change the data file.
+If step 4 ran a migration, the store first writes the unchanged old file into the app folder as `<app>/<app>.backup-v<old schema version>.json`. Then it saves the data in the new shape. If this file exists, it uses `<app>/<app>.backup-v<N>-2.json` and so on. If the backup fails, it shows an error and does not change the data file.
 
 ### Change the data shape
 
@@ -269,7 +279,7 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - Do not mock internals. For data files, use `createMemoryFolder()` and `createMemoryFolderHost()` from `@pocket-apps/core/data-file/testing`. Pass the host as `folderHost` to `DataFileProvider`.
 - `createMemoryFolderHost()` is the first visit (no folder). Set `host.nextPick` to the folder that "Ordner wählen …" returns.
 - `createMemoryFolderHost({ saved: folder })` is a folder from an earlier visit with access. Set `folder.access = "prompt"` to test the screen "Zugriff auf deinen Datenordner".
-- To start with data, put a file into `folder.files`: `folder.files.set("<app>.json", { text, lastModified: 1 })`. `text` is the full envelope as JSON.
+- To start with data, put a file into `folder.files`: `folder.files.set("<app>/<app>.json", { text, lastModified: 1 })`. Extra files with bytes are in `folder.blobs`, for example `folder.blobs.get("lebenslauf/foto-1.jpg")`. `text` is the full envelope as JSON.
 - `folder.writeError` makes saves fail. `folder.changeElsewhere(path, text)` simulates a change on another computer (conflict).
 - Saves come 500 ms after a change. Do not use fake timers. Wait with `findBy…` queries.
 - For app info in unit tests, use `testAppInfo()` from `@pocket-apps/core/testing`.
@@ -279,7 +289,7 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.
 - `e2e/launcher.spec.ts` tests the launcher.
 - Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. See `e2e/app-ideen.spec.ts`.
-- In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile(page, fileName, text)` and `readDataFile(page, fileName)` for the files in it. Write files after `page.goto()`. `readDataFile()` returns the text or `null`.
+- In these tests, call `withDataFolder(page)` from `e2e/helpers.ts` before `page.goto()`. Then the folder dialog returns a folder in the private file system of the browser (OPFS). Use `writeDataFile(page, fileName, text)` and `readDataFile(page, fileName)` for the files in it. Write files after `page.goto()`. `readDataFile()` returns the text or `null`. The path of a data file is `dataFilePath(app)`, for example `app-ideen/app-ideen.json`. Paths can contain folders.
 - The browser tests run only in Chromium. Edge uses the same engine. We do not support other browsers.
 - To test a browser without folder access (like Firefox or Safari), call `withoutFolderAccess(page)` before `page.goto()`. A stateful app then shows only the notice "Bitte Chrome oder Edge verwenden". The launcher shows the apps and a short notice.
 
