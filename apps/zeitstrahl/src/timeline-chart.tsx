@@ -1,4 +1,4 @@
-import { useId, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import {
   dateChips,
   GEOMETRY,
@@ -74,6 +74,9 @@ export function TimelineChart({
   const columns: Columns = width > 0 && width < ONE_COLUMN_BELOW ? "one" : "two";
   const layout = layoutTimeline(entries, scale, today, columns, showHidden);
   const card = useActiveCard();
+  // The height of the mouse on the trunk, or null. There, a chip tells that a click changes the
+  // color. A tooltip of Radix would show at the middle of the long trunk, far from the mouse.
+  const [trunkHover, setTrunkHover] = useState<number | null>(null);
   // A card that the user just hid is still the active card. Only a card on the timeline counts.
   const hasActive = layout.marks.some((mark) => mark.entry.id === card.active.id);
   const isActive = (mark: Mark) => card.active.id === mark.entry.id;
@@ -137,9 +140,15 @@ export function TimelineChart({
             <button
               type="button"
               aria-label={`Farbe des Stamms ändern, jetzt ${TRUNKS[trunk].label}`}
-              title="Klicke, um die Farbe des Stamms zu ändern."
               className="block h-full w-full cursor-pointer rounded-full outline-none hover:bg-foreground/10 focus-visible:ring-[3px] focus-visible:ring-ring/50"
               onClick={onTrunkClick}
+              onPointerMove={(event) => {
+                // The button starts at the top of the picture: its offset is the height in it.
+                setTrunkHover(event.nativeEvent.offsetY);
+              }}
+              onPointerLeave={() => {
+                setTrunkHover(null);
+              }}
             />
           </foreignObject>
           {/* The rings of the points are on top of the trunk and its button: the mouse on a ring is on the entry. */}
@@ -148,6 +157,11 @@ export function TimelineChart({
               <PointRing key={mark.entry.id} mark={mark} dimmed={isDimmed(mark)} />
             ))}
           </g>
+          {trunkHover !== null && (
+            <g aria-hidden="true" className="pointer-events-none">
+              <Chip y={trunkHover} label="Klicken: Farbe ändern" kind="hint" />
+            </g>
+          )}
         </svg>
         {layout.marks.map((mark) => (
           <MarkCard
@@ -170,14 +184,15 @@ export function TimelineChart({
 type ChipProps = {
   y: number;
   label: string;
-  kind: "tick" | "today" | "gap" | "date";
+  kind: "tick" | "today" | "gap" | "date" | "hint";
   /** The border color of a date chip: the color of the branch. */
   color?: string;
 };
 
 /**
  * A rounded chip on the trunk, for example "2015", "Heute" or "6 Jahre". A date chip shows a date
- * of the active entry, with a border in the color of its branch.
+ * of the active entry, with a border in the color of its branch. A hint chip follows the mouse on
+ * the trunk and tells what a click on the trunk does.
  */
 function Chip({ y, label, kind, color }: ChipProps) {
   const width = label.length * 6 + 14;
@@ -206,6 +221,7 @@ const CHIP_RECTS: Record<ChipProps["kind"], string> = {
   gap: "fill-background stroke-border",
   today: "fill-primary stroke-primary",
   date: "fill-card",
+  hint: "fill-foreground stroke-foreground",
 };
 
 const CHIP_TEXTS: Record<ChipProps["kind"], string> = {
@@ -213,6 +229,7 @@ const CHIP_TEXTS: Record<ChipProps["kind"], string> = {
   gap: "fill-muted-foreground text-[10px] font-medium",
   today: "fill-primary-foreground text-[10px] font-semibold",
   date: "fill-foreground text-[10px] font-semibold",
+  hint: "fill-background text-[10px] font-medium",
 };
 
 type AxisProps = {

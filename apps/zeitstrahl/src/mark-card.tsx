@@ -3,6 +3,7 @@ import { Eye, EyeOff, MessageSquareText } from "lucide-react";
 import type { BubblePlace } from "./bubble-place.ts";
 import { durationText, formatWhen } from "./dates.ts";
 import { GEOMETRY, type Columns, type Mark } from "./layout.ts";
+import { HintTooltip } from "./hint-tooltip.tsx";
 import { LeafTooltip } from "./leaf-tooltip.tsx";
 import type { Entry } from "./schema.ts";
 import { hasDescription } from "./timelines.ts";
@@ -182,22 +183,24 @@ export function MarkCard({
             main
           )}
           {actions.kind === "edit" && (
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              title={hidden ? "Einblenden" : "Ausblenden"}
-              className={
-                hidden
-                  ? "absolute top-1.5 right-2 cursor-pointer text-muted-foreground"
-                  : "absolute top-1.5 right-2 cursor-pointer text-muted-foreground transition-opacity group-focus-within/card:opacity-100 group-hover/card:opacity-100 pointer-fine:opacity-0"
-              }
-              aria-label={hidden ? `„${entry.title}“ einblenden` : `„${entry.title}“ ausblenden`}
-              onClick={() => {
-                actions.onToggle(entry);
-              }}
-            >
-              {hidden ? <Eye /> : <EyeOff />}
-            </Button>
+            // Below the button: above it, the hint would cover the description bubble.
+            <HintTooltip hint={hidden ? "Einblenden" : "Ausblenden"} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className={
+                  hidden
+                    ? "absolute top-1.5 right-2 cursor-pointer text-muted-foreground"
+                    : "absolute top-1.5 right-2 cursor-pointer text-muted-foreground transition-opacity group-focus-within/card:opacity-100 group-hover/card:opacity-100 pointer-fine:opacity-0"
+                }
+                aria-label={hidden ? `„${entry.title}“ einblenden` : `„${entry.title}“ ausblenden`}
+                onClick={() => {
+                  actions.onToggle(entry);
+                }}
+              >
+                {hidden ? <Eye /> : <EyeOff />}
+              </Button>
+            </HintTooltip>
           )}
         </div>
       </div>

@@ -89,7 +89,10 @@ export function LeafTooltip({
 }: LeafTooltipProps) {
   const color = SIDE_COLORS[colorSide];
   return (
-    <Tooltip open={open}>
+    // `disableHoverableContent`: Radix must not track the way of the mouse to the bubble. That
+    // tracking sets a flag in the shared provider. When the app closes the bubble on the way, the
+    // flag stays, and no other tooltip of the page opens any more.
+    <Tooltip open={open} disableHoverableContent>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent
         side={place.side}

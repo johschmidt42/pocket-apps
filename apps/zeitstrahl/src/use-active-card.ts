@@ -9,7 +9,7 @@ export const CARD_ATTRIBUTE = "data-entry-id";
 export const OUTWARD_ATTRIBUTE = "data-outward";
 /** The attribute of a branch (and of the ring of a point). Its value is the ID of the entry. */
 export const BRANCH_ATTRIBUTE = "data-branch-of";
-/** The attribute that marks a description bubble. */
+/** The attribute that marks a tooltip that lets the mouse through: a description bubble or a hint. */
 export const BUBBLE_ATTRIBUTE = "data-leaf-bubble";
 
 export type ActiveCard = {

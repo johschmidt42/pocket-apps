@@ -200,10 +200,12 @@ describe("Zeitstrahl", () => {
       chartLabel("Studium").focus();
     });
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Informatik in Köln");
-    // The eye button is in the same card: the description stays.
+    // The eye button is in the same card: the description stays, and the hint of the button shows.
     await user.tab();
     expect(screen.getByRole("button", { name: "„Studium“ ausblenden" })).toHaveFocus();
-    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    expect((await screen.findAllByRole("tooltip")).map((tooltip) => tooltip.textContent)).toEqual(
+      expect.arrayContaining(["Informatik in Köln", "Ausblenden"]),
+    );
     // The next card has no description.
     await user.tab();
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
@@ -365,6 +367,13 @@ describe("Zeitstrahl", () => {
 
   it("gives the trunk the next color on a click", async () => {
     const { folder, user } = await openApp(DATA);
+
+    // A chip at the mouse on the trunk tells what a click does.
+    const trunkButton = screen.getByRole("button", { name: /^Farbe des Stamms ändern/ });
+    await user.hover(trunkButton);
+    expect(screen.getByText("Klicken: Farbe ändern")).toBeInTheDocument();
+    await user.unhover(trunkButton);
+    expect(screen.queryByText("Klicken: Farbe ändern")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Farbe des Stamms ändern, jetzt Grau" }));
     await user.click(screen.getByRole("button", { name: "Farbe des Stamms ändern, jetzt Grün" }));
