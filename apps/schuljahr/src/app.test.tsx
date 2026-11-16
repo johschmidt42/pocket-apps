@@ -35,7 +35,7 @@ async function openApp({
   today?: string;
 } = {}) {
   const folder = createMemoryFolder();
-  if (data) folder.files.set("schuljahr.json", { text: fileText(data), lastModified: 1 });
+  if (data) folder.files.set("schuljahr/schuljahr.json", { text: fileText(data), lastModified: 1 });
   const fake = fakeFetch(rules);
   const user = userEvent.setup();
   render(
@@ -50,8 +50,9 @@ async function openApp({
 }
 
 function savedData(folder: ReturnType<typeof createMemoryFolder>): SchuljahrData {
-  return (JSON.parse(folder.files.get("schuljahr.json")?.text ?? "") as { data: SchuljahrData })
-    .data;
+  return (
+    JSON.parse(folder.files.get("schuljahr/schuljahr.json")?.text ?? "") as { data: SchuljahrData }
+  ).data;
 }
 
 describe("schuljahr app", () => {

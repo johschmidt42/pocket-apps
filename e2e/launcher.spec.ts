@@ -114,7 +114,7 @@ test.describe("launcher with the data folder", () => {
     const cards = page.getByRole("main").getByRole("list").getByRole("link");
     await expect(cards.first()).toHaveAccessibleName(last.title);
     await expect(page.getByRole("status")).toHaveText("Gespeichert");
-    const saved = JSON.parse((await readDataFile(page, "launcher.json")) ?? "") as {
+    const saved = JSON.parse((await readDataFile(page, "launcher/launcher.json")) ?? "") as {
       data: { order: string[] };
     };
     expect(saved.data.order[0]).toBe(last.name);
@@ -127,7 +127,7 @@ test.describe("launcher with the data folder", () => {
     const stateful = apps.find((app) => app.stateful);
     if (stateful) {
       await page.getByRole("link", { name: stateful.title }).click();
-      await expect(page.getByText(`/ ${stateful.name}.json`)).toBeVisible();
+      await expect(page.getByText(`/ ${stateful.name}/${stateful.name}.json`)).toBeVisible();
     }
     expect(pageErrors).toEqual([]);
   });
@@ -146,7 +146,7 @@ test.describe("launcher with favorites", () => {
     const favorites = page.getByRole("region", { name: "Favoriten" });
     await expect(favorites.getByRole("link")).toHaveAccessibleName(last.title);
     await expect(page.getByRole("status")).toHaveText("Gespeichert");
-    const saved = JSON.parse((await readDataFile(page, "launcher.json")) ?? "") as {
+    const saved = JSON.parse((await readDataFile(page, "launcher/launcher.json")) ?? "") as {
       data: { favorites: string[] };
     };
     expect(saved.data.favorites).toEqual([last.name]);

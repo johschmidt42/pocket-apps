@@ -61,15 +61,19 @@ export async function withoutFolderAccess(page: Page): Promise<void> {
 }
 
 /**
- * Writes a file into the fake data folder, like a change on another computer.
+ * Writes a file into the fake data folder, like a change on another computer. `path` can
+ * contain folders, for example "app-ideen/app-ideen.json".
  * The file times have a resolution of 1 ms. Thus the function writes again until the time is newer.
  */
-export async function writeDataFile(page: Page, fileName: string, text: string): Promise<void> {
+export async function writeDataFile(page: Page, path: string, text: string): Promise<void> {
   await page.evaluate(
-    async ({ name, file, content }) => {
-      const folder = await (
+    async ({ name, filePath, content }) => {
+      let folder = await (
         await navigator.storage.getDirectory()
       ).getDirectoryHandle(name, { create: true });
+      const parts = filePath.split("/");
+      const file = parts.pop() ?? "";
+      for (const part of parts) folder = await folder.getDirectoryHandle(part, { create: true });
       const handle = await folder.getFileHandle(file, { create: true });
       const before = (await handle.getFile()).lastModified;
       do {
@@ -78,23 +82,31 @@ export async function writeDataFile(page: Page, fileName: string, text: string):
         await writable.close();
       } while ((await handle.getFile()).lastModified <= before);
     },
-    { name: FOLDER_NAME, file: fileName, content: text },
+    { name: FOLDER_NAME, filePath: path, content: text },
   );
 }
 
-/** Reads a file of the fake data folder. Returns `null` if it does not exist. */
-export async function readDataFile(page: Page, fileName: string): Promise<string | null> {
+/** Reads a file of the fake data folder (`path` as for `writeDataFile`). `null` if it does not exist. */
+export async function readDataFile(page: Page, path: string): Promise<string | null> {
   return page.evaluate(
-    async ({ name, file }) => {
+    async ({ name, filePath }) => {
       try {
-        const folder = await (await navigator.storage.getDirectory()).getDirectoryHandle(name);
+        let folder = await (await navigator.storage.getDirectory()).getDirectoryHandle(name);
+        const parts = filePath.split("/");
+        const file = parts.pop() ?? "";
+        for (const part of parts) folder = await folder.getDirectoryHandle(part);
         return await (await (await folder.getFileHandle(file)).getFile()).text();
       } catch {
         return null;
       }
     },
-    { name: FOLDER_NAME, file: fileName },
+    { name: FOLDER_NAME, filePath: path },
   );
+}
+
+/** The path of the data file of an app in the data folder: `<app>/<app>.json`. */
+export function dataFilePath(app: string): string {
+  return `${app}/${app}.json`;
 }
 
 /** Builds the text of a data file (envelope with data). */

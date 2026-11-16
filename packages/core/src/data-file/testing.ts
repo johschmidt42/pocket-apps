@@ -1,13 +1,15 @@
 import type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
 
 export type MemoryFolder = DataFolder & {
-  /** All files by path. */
+  /** All text files by path. */
   files: Map<string, FileSnapshot>;
+  /** All files with bytes (`write` with a `Blob`) by path. */
+  blobs: Map<string, Blob>;
   /** The access state that `queryAccess` returns. */
   access: PermissionState;
   /** The access state that `requestAccess` sets and returns. */
   accessAfterRequest: PermissionState;
-  /** If set, `write` fails with this error. */
+  /** If set, `write` and `remove` fail with this error. */
   writeError: Error | null;
   /** Simulates a change on another device: a new text and a newer time. */
   changeElsewhere: (path: string, text: string) => void;
@@ -28,6 +30,7 @@ export function createMemoryFolder(name = "Pocket Apps Daten"): MemoryFolder {
   const folder: MemoryFolder = {
     name,
     files: new Map(),
+    blobs: new Map(),
     access: "granted",
     accessAfterRequest: "granted",
     writeError: null,
@@ -38,11 +41,25 @@ export function createMemoryFolder(name = "Pocket Apps Daten"): MemoryFolder {
     },
     read: (path) => Promise.resolve(folder.files.get(path) ?? null),
     lastModified: (path) => Promise.resolve(folder.files.get(path)?.lastModified ?? null),
-    write: (path, text) => {
+    readBlob: (path) => {
+      const text = folder.files.get(path)?.text;
+      return Promise.resolve(
+        folder.blobs.get(path) ?? (text === undefined ? null : new Blob([text])),
+      );
+    },
+    write: (path, content) => {
       if (folder.writeError) return Promise.reject(folder.writeError);
       clock += 1;
-      folder.files.set(path, { text, lastModified: clock });
+      if (typeof content === "string")
+        folder.files.set(path, { text: content, lastModified: clock });
+      else folder.blobs.set(path, content);
       return Promise.resolve(clock);
+    },
+    remove: (path) => {
+      if (folder.writeError) return Promise.reject(folder.writeError);
+      folder.files.delete(path);
+      folder.blobs.delete(path);
+      return Promise.resolve();
     },
     changeElsewhere: (path, text) => {
       clock += 1;

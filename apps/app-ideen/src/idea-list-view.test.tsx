@@ -21,7 +21,7 @@ const fileText = JSON.stringify({
 
 async function openIdeas() {
   const folder = createMemoryFolder();
-  folder.files.set("app-ideen.json", { text: fileText, lastModified: 1 });
+  folder.files.set("app-ideen/app-ideen.json", { text: fileText, lastModified: 1 });
   const user = userEvent.setup();
   render(
     <DataFileProvider folderHost={createMemoryFolderHost({ saved: folder })}>

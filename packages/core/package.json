@@ -8,10 +8,12 @@
     "./data-file": "./src/data-file/index.ts",
     "./data-file/testing": "./src/data-file/testing.ts",
     "./fetch-json": "./src/fetch-json.ts",
+    "./file-button": "./src/file-button.tsx",
     "./name-dialog": "./src/name-dialog.tsx",
     "./numbers": "./src/numbers.ts",
     "./one-of": "./src/one-of.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./use-width": "./src/use-width.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

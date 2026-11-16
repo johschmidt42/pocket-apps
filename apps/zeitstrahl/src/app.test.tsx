@@ -33,7 +33,7 @@ const DATA: ZeitstrahlData = {
 async function openApp(data?: ZeitstrahlData) {
   const folder = createMemoryFolder();
   if (data) {
-    folder.files.set("zeitstrahl.json", {
+    folder.files.set("zeitstrahl/zeitstrahl.json", {
       text: JSON.stringify({
         app: "zeitstrahl",
         schemaVersion: 1,
@@ -51,8 +51,11 @@ async function openApp(data?: ZeitstrahlData) {
 }
 
 function savedData(folder: ReturnType<typeof createMemoryFolder>): ZeitstrahlData {
-  return (JSON.parse(folder.files.get("zeitstrahl.json")?.text ?? "") as { data: ZeitstrahlData })
-    .data;
+  return (
+    JSON.parse(folder.files.get("zeitstrahl/zeitstrahl.json")?.text ?? "") as {
+      data: ZeitstrahlData;
+    }
+  ).data;
 }
 
 /** The label of an entry in the timeline picture. */

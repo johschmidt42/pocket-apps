@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { readDataFile, releaseUrl, test, withDataFolder } from "./helpers.ts";
 
-const FILE = "schuljahr.json";
+const FILE = "schuljahr/schuljahr.json";
 const OPEN_HOLIDAYS = "https://openholidaysapi.org/**";
 
 const holiday = (id: string, startDate: string, endDate: string, text: string) => ({

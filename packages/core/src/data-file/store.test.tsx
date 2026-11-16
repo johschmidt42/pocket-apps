@@ -61,7 +61,7 @@ function dataFile(schemaVersion: number, data: unknown): string {
   return serializeEnvelope({ app: "demo", schemaVersion, appVersion: "1.0", data });
 }
 
-function fileData(folder: MemoryFolder, path = "demo.json"): unknown {
+function fileData(folder: MemoryFolder, path = "demo/demo.json"): unknown {
   return parseEnvelope(folder.files.get(path)?.text ?? "").data;
 }
 
@@ -79,7 +79,7 @@ describe("data folder", () => {
     await user.click(await screen.findByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-    expect(screen.getByText("Pocket Apps Daten / demo.json")).toBeInTheDocument();
+    expect(screen.getByText("Pocket Apps Daten / demo/demo.json")).toBeInTheDocument();
   });
 
   it("uses the folder of the browser by default", () => {
@@ -104,23 +104,58 @@ describe("load", () => {
 
   it("shows the data of the file", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
     setup(host);
 
     expect(await screen.findByRole("button", { name: "Zähler 5" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
   });
 
+  it("moves a data file from the old place into the folder of the app", async () => {
+    const { folder, host } = readyHost();
+    const text = dataFile(2, { count: 4 });
+    folder.files.set("demo.json", { text, lastModified: 1 });
+    setup(host);
+
+    expect(await screen.findByRole("button", { name: "Zähler 4" })).toBeInTheDocument();
+    expect(folder.files.get("demo/demo.json")?.text).toBe(text);
+    expect(folder.files.has("demo.json")).toBe(false);
+    expect(screen.getByRole("status")).toHaveTextContent("Gespeichert");
+  });
+
+  it("keeps the old file when the move fails", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 4 }), lastModified: 1 });
+    folder.writeError = new Error("Kein Platz");
+    setup(host);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Kein Platz");
+    expect(folder.files.has("demo.json")).toBe(true);
+  });
+
+  it("keeps the old file when the copy is not the same", async () => {
+    const { folder, host } = readyHost();
+    folder.files.set("demo.json", { text: dataFile(2, { count: 4 }), lastModified: 1 });
+    const write = folder.write;
+    folder.write = (path, content) => write(path, typeof content === "string" ? "anders" : content);
+    setup(host);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Die App konnte „demo.json“ nicht in den Ordner „demo“ verschieben.",
+    );
+    expect(folder.files.has("demo.json")).toBe(true);
+  });
+
   it("migrates old data, keeps a backup of the old file and saves the new shape", async () => {
     const { folder, host } = readyHost();
     const oldText = dataFile(1, { n: 3 });
-    folder.files.set("demo.json", { text: oldText, lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: oldText, lastModified: 1 });
     setup(host);
 
     expect(await screen.findByRole("button", { name: "Zähler 3" })).toBeInTheDocument();
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(folder.files.get("demo.backup-v1.json")?.text).toBe(oldText);
-    expect(parseEnvelope(folder.files.get("demo.json")?.text ?? "")).toMatchObject({
+    expect(folder.files.get("demo/demo.backup-v1.json")?.text).toBe(oldText);
+    expect(parseEnvelope(folder.files.get("demo/demo.json")?.text ?? "")).toMatchObject({
       schemaVersion: 2,
       data: { count: 3 },
     });
@@ -128,15 +163,15 @@ describe("load", () => {
 
   it("shows a clear error for an invalid file and loads again on request", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: "not json", lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: "not json", lastModified: 1 });
     const user = setup(host);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("keine gültige JSON-Datei");
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Die App kann die Datei „demo.json“ im Ordner „Pocket Apps Daten“ nicht öffnen.",
+      "Die App kann die Datei „demo/demo.json“ im Ordner „Pocket Apps Daten“ nicht öffnen.",
     );
 
-    folder.files.set("demo.json", { text: dataFile(2, { count: 7 }), lastModified: 2 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 7 }), lastModified: 2 });
     await user.click(screen.getByRole("button", { name: "Erneut laden" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 7" })).toBeInTheDocument();
@@ -145,15 +180,15 @@ describe("load", () => {
   it("keeps an older backup and writes the new backup next to it", async () => {
     const { folder, host } = readyHost();
     const oldText = dataFile(1, { n: 3 });
-    folder.files.set("demo.json", { text: oldText, lastModified: 1 });
-    folder.files.set("demo.backup-v1.json", { text: "older", lastModified: 1 });
-    folder.files.set("demo.backup-v1-2.json", { text: "older 2", lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: oldText, lastModified: 1 });
+    folder.files.set("demo/demo.backup-v1.json", { text: "older", lastModified: 1 });
+    folder.files.set("demo/demo.backup-v1-2.json", { text: "older 2", lastModified: 1 });
     setup(host);
 
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(folder.files.get("demo.backup-v1.json")?.text).toBe("older");
-    expect(folder.files.get("demo.backup-v1-2.json")?.text).toBe("older 2");
-    expect(folder.files.get("demo.backup-v1-3.json")?.text).toBe(oldText);
+    expect(folder.files.get("demo/demo.backup-v1.json")?.text).toBe("older");
+    expect(folder.files.get("demo/demo.backup-v1-2.json")?.text).toBe("older 2");
+    expect(folder.files.get("demo/demo.backup-v1-3.json")?.text).toBe(oldText);
   });
 
   it("asks for access again when the browser lost it, then loads", async () => {
@@ -186,7 +221,7 @@ describe("load", () => {
 
   it("does not write the new shape when the backup fails", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: dataFile(1, { n: 3 }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(1, { n: 3 }), lastModified: 1 });
     folder.writeError = new Error("read-only");
     setup(host);
 
@@ -213,7 +248,7 @@ describe("save", () => {
 
     expect(screen.getByRole("button", { name: "Zähler 1" })).toBeInTheDocument();
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(parseEnvelope(folder.files.get("demo.json")?.text ?? "")).toMatchObject({
+    expect(parseEnvelope(folder.files.get("demo/demo.json")?.text ?? "")).toMatchObject({
       app: "demo",
       schemaVersion: 2,
       savedWith: "1.0",
@@ -333,10 +368,10 @@ describe("save", () => {
 describe("conflict", () => {
   async function conflict() {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
     const user = setup(host);
     await screen.findByRole("button", { name: "Zähler 5" });
-    folder.changeElsewhere("demo.json", dataFile(2, { count: 50 }));
+    folder.changeElsewhere("demo/demo.json", dataFile(2, { count: 50 }));
 
     await user.click(screen.getByRole("button", { name: "Zähler 5" }));
     await screen.findByText("Nicht gespeichert: Konflikt");
@@ -392,7 +427,7 @@ describe("change folder", () => {
   it("loads the file of the new folder", async () => {
     const { folder, host } = readyHost();
     const other = createMemoryFolder("Andere Daten");
-    other.files.set("demo.json", { text: dataFile(2, { count: 9 }), lastModified: 1 });
+    other.files.set("demo/demo.json", { text: dataFile(2, { count: 9 }), lastModified: 1 });
     host.nextPick = other;
     const user = setup(host);
     await screen.findByRole("button", { name: "Zähler 0" });
@@ -400,7 +435,7 @@ describe("change folder", () => {
     await user.click(screen.getByRole("button", { name: "Ordner wechseln" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 9" })).toBeInTheDocument();
-    expect(screen.getByText("Andere Daten / demo.json")).toBeInTheDocument();
+    expect(screen.getByText("Andere Daten / demo/demo.json")).toBeInTheDocument();
     expect(folder.files.size).toBe(0);
   });
 
@@ -449,20 +484,20 @@ describe("optional folder", () => {
 describe("broken file", () => {
   it("lets the user pick another folder", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: "not json", lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: "not json", lastModified: 1 });
     host.nextPick = createMemoryFolder("Neu");
     const user = setup(host);
 
     await user.click(await screen.findByRole("button", { name: "Anderen Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-    expect(screen.getByText("Neu / demo.json")).toBeInTheDocument();
+    expect(screen.getByText("Neu / demo/demo.json")).toBeInTheDocument();
   });
 
   it("keeps an app with an optional folder usable", async () => {
     const optional = createDataFileStore(schema, { app, folderOptional: true });
     const folder = createMemoryFolder();
-    folder.files.set("demo.json", { text: "not json", lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: "not json", lastModified: 1 });
     render(
       <optional.DataFileProvider folderHost={createMemoryFolderHost({ saved: folder })}>
         <p>Inhalt</p>
@@ -480,13 +515,17 @@ describe("options", () => {
   it("uses the default delays and ignores a late load after it closed", async () => {
     const defaults = createDataFileStore(schema, { app });
     const { folder, host } = readyHost();
+    // The first read waits until the test lets it finish. Later reads (the old place of the
+    // file) finish at once.
     const blocked: { finish?: () => void } = {};
     folder.read = () =>
-      new Promise((resolve) => {
-        blocked.finish = () => {
-          resolve(null);
-        };
-      });
+      blocked.finish
+        ? Promise.resolve(null)
+        : new Promise((resolve) => {
+            blocked.finish = () => {
+              resolve(null);
+            };
+          });
     const view = render(
       <defaults.DataFileProvider folderHost={host}>
         <p>App</p>
@@ -513,11 +552,11 @@ describe("useDataFile", () => {
 });
 
 describe("raw data", () => {
-  const FILE_BUTTON = { name: "Pocket Apps Daten / demo.json: Rohdaten ansehen" };
+  const FILE_BUTTON = { name: "Pocket Apps Daten / demo/demo.json: Rohdaten ansehen" };
 
   it("shows the data file with indents and colors, but no field to change it", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
     const user = setup(host);
 
     // The tooltip shows at once.
@@ -525,7 +564,7 @@ describe("raw data", () => {
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Rohdaten ansehen");
     await user.click(screen.getByRole("button", FILE_BUTTON));
 
-    const dialog = await screen.findByRole("dialog", { name: "demo.json" });
+    const dialog = await screen.findByRole("dialog", { name: "demo/demo.json" });
     expect(dialog).toHaveTextContent("Die Rohdaten aus dem Ordner „Pocket Apps Daten“");
     expect(await screen.findByLabelText("Inhalt der Datei")).toHaveTextContent('"count": 5');
     // Each key is a colored part. A color has no role, so the test checks the class.
@@ -550,7 +589,7 @@ describe("raw data", () => {
     const { folder, host } = readyHost();
     const user = setup(host);
     await screen.findByRole("button", { name: "Zähler 0" });
-    folder.files.set("demo.json", { text: "kein JSON", lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: "kein JSON", lastModified: 1 });
 
     await user.click(screen.getByRole("button", FILE_BUTTON));
 
@@ -575,7 +614,7 @@ describe("raw data", () => {
 
   it("asks for access again when the browser lost it", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
     const user = setup(host);
     await screen.findByRole("button", { name: "Zähler 5" });
     folder.access = "prompt";
@@ -588,7 +627,7 @@ describe("raw data", () => {
 
   it("shows the raw data of a broken file", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: "{ kaputt", lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: "{ kaputt", lastModified: 1 });
     const user = setup(host);
 
     await user.click(await screen.findByRole("button", { name: "Rohdaten ansehen" }));
@@ -599,7 +638,7 @@ describe("raw data", () => {
 
   it("tells about changes that are not saved yet", async () => {
     const { folder, host } = readyHost();
-    folder.files.set("demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 5 }), lastModified: 1 });
     const { setup: setupSlow } = makeStore({ autosaveDelayMs: 60_000 });
     const user = setupSlow(host);
 
@@ -614,7 +653,7 @@ describe("raw data", () => {
   it("shows a large file without colors", async () => {
     const { folder, host } = readyHost();
     const long = "x".repeat(MAX_COLORED_LENGTH);
-    folder.files.set("demo.json", { text: dataFile(2, { count: 1, long }), lastModified: 1 });
+    folder.files.set("demo/demo.json", { text: dataFile(2, { count: 1, long }), lastModified: 1 });
     const user = setup(host);
 
     await user.click(await screen.findByRole("button", FILE_BUTTON));

@@ -58,7 +58,7 @@ test.describe("zeitstrahl in Chrome and Edge", () => {
 
     await page.getByRole("radio", { name: "Lücken kürzen" }).click();
     await expect(page.getByRole("status")).toHaveText("Gespeichert");
-    const saved = JSON.parse((await readDataFile(page, "zeitstrahl.json")) ?? "") as {
+    const saved = JSON.parse((await readDataFile(page, "zeitstrahl/zeitstrahl.json")) ?? "") as {
       data: {
         timelines: {
           scale: string;
@@ -100,7 +100,7 @@ test.describe("zeitstrahl in Chrome and Edge", () => {
     });
     await writeDataFile(
       page,
-      "zeitstrahl.json",
+      "zeitstrahl/zeitstrahl.json",
       dataFileText("zeitstrahl", 1, {
         activeTimelineId: "a",
         timelines: [
@@ -137,7 +137,7 @@ test.describe("zeitstrahl in Chrome and Edge", () => {
     await page.goto(releaseUrl("zeitstrahl.html"));
     await writeDataFile(
       page,
-      "zeitstrahl.json",
+      "zeitstrahl/zeitstrahl.json",
       dataFileText("zeitstrahl", 1, {
         activeTimelineId: "a",
         timelines: [
@@ -194,7 +194,7 @@ test.describe("zeitstrahl in Chrome and Edge", () => {
     await page.goto(releaseUrl("zeitstrahl.html"));
     await writeDataFile(
       page,
-      "zeitstrahl.json",
+      "zeitstrahl/zeitstrahl.json",
       dataFileText("zeitstrahl", 1, {
         activeTimelineId: "a",
         timelines: [

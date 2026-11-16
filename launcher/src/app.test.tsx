@@ -95,7 +95,7 @@ describe("Launcher with a data folder", () => {
 
   it("shows the apps in the saved order", async () => {
     const folder = createMemoryFolder();
-    folder.files.set("launcher.json", {
+    folder.files.set("launcher/launcher.json", {
       text: JSON.stringify({
         app: "launcher",
         schemaVersion: 1,
@@ -112,8 +112,8 @@ describe("Launcher with a data folder", () => {
     expect(linkNames()).toEqual(["App-Ideen", "Zinsrechner"]);
     // The file has schema version 1. The store keeps a backup before it saves version 2.
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(folder.files.has("launcher.backup-v1.json")).toBe(true);
-    expect(JSON.parse(folder.files.get("launcher.json")?.text ?? "")).toMatchObject({
+    expect(folder.files.has("launcher/launcher.backup-v1.json")).toBe(true);
+    expect(JSON.parse(folder.files.get("launcher/launcher.json")?.text ?? "")).toMatchObject({
       schemaVersion: 2,
       data: { order: ["app-ideen"], favorites: [] },
     });
@@ -134,7 +134,7 @@ describe("Launcher with a data folder", () => {
     expect(within(others).getByRole("heading", { level: 3 })).toHaveTextContent("Zinsrechner");
     expect(screen.getByRole("button", { name: "App-Ideen aus Favoriten entfernen" })).toHaveFocus();
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(JSON.parse(folder.files.get("launcher.json")?.text ?? "")).toMatchObject({
+    expect(JSON.parse(folder.files.get("launcher/launcher.json")?.text ?? "")).toMatchObject({
       data: { favorites: ["app-ideen"] },
     });
 
@@ -157,7 +157,7 @@ describe("Launcher with a data folder", () => {
 
   it("keeps the sections while the search hides all favorites", async () => {
     const folder = createMemoryFolder();
-    folder.files.set("launcher.json", {
+    folder.files.set("launcher/launcher.json", {
       text: JSON.stringify({
         app: "launcher",
         schemaVersion: 2,
@@ -204,7 +204,7 @@ describe("Launcher with a data folder", () => {
     expect(screen.getByLabelText("Apps durchsuchen")).toHaveValue("");
     expect(linkNames()).toEqual(["App-Ideen", "Zinsrechner"]);
     expect(await screen.findByText("Gespeichert")).toBeInTheDocument();
-    expect(JSON.parse(folder.files.get("launcher.json")?.text ?? "")).toMatchObject({
+    expect(JSON.parse(folder.files.get("launcher/launcher.json")?.text ?? "")).toMatchObject({
       data: { order: ["app-ideen", "zinsrechner"] },
     });
   });

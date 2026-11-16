@@ -28,15 +28,15 @@ function fakeDirectory(name: string, permission?: PermissionState): FakeDirector
         return file ? Promise.resolve(file) : Promise.reject(notFound());
       },
       createWritable: () => {
-        let text = "";
+        const parts: (string | Blob)[] = [];
         return Promise.resolve({
-          write: (chunk: string) => {
-            text += chunk;
+          write: (chunk: string | Blob) => {
+            parts.push(chunk);
             return Promise.resolve();
           },
           close: () => {
             clock += 1;
-            files.set(fileName, new File([text], fileName, { lastModified: clock }));
+            files.set(fileName, new File(parts, fileName, { lastModified: clock }));
             return Promise.resolve();
           },
         });
@@ -55,6 +55,12 @@ function fakeDirectory(name: string, permission?: PermissionState): FakeDirector
         folders.set(folderName, folder);
       }
       return folder ? Promise.resolve(folder) : Promise.reject(notFound());
+    },
+    removeEntry: (fileName: string) => {
+      if (fileName === "gesperrt.txt") {
+        return Promise.reject(new DOMException("No access", "NotAllowedError"));
+      }
+      return files.delete(fileName) ? Promise.resolve() : Promise.reject(notFound());
     },
     getFileHandle: (fileName: string, options?: { create?: boolean }) =>
       files.has(fileName) || options?.create
@@ -81,6 +87,27 @@ function memoryStore(): KeyValueStore & { values: Map<string, unknown> } {
 }
 
 describe("wrapDirectory", () => {
+  it("writes, reads and removes files with bytes", async () => {
+    const folder = wrapDirectory(fakeDirectory("Daten"));
+    const photo = new Blob(["jpeg"], { type: "image/jpeg" });
+
+    expect(await folder.readBlob("bilder/foto.jpg")).toBeNull();
+    await folder.write("bilder/foto.jpg", photo);
+    expect(await (await folder.readBlob("bilder/foto.jpg"))?.text()).toBe("jpeg");
+
+    await folder.remove("bilder/foto.jpg");
+    expect(await folder.readBlob("bilder/foto.jpg")).toBeNull();
+    // A missing file or folder is no error.
+    await folder.remove("bilder/foto.jpg");
+    await folder.remove("fehlt/foto.jpg");
+  });
+
+  it("passes on other errors of a remove", async () => {
+    const folder = wrapDirectory(fakeDirectory("Daten"));
+
+    await expect(folder.remove("gesperrt.txt")).rejects.toThrow("No access");
+  });
+
   it("writes and reads files, also in sub-folders", async () => {
     const folder = wrapDirectory(fakeDirectory("Daten"));
 
