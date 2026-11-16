@@ -47,7 +47,7 @@ async function openWithFolder(page: Page, fileText?: string) {
 }
 
 test.describe("app-ideen in Chrome and Edge", () => {
-  test("adds, sorts and removes ideas and saves them in the data folder", async ({
+  test("adds, sorts by drag and drop and removes ideas and saves them in the data folder", async ({
     page,
     pageErrors,
   }) => {
@@ -57,7 +57,12 @@ test.describe("app-ideen in Chrome and Edge", () => {
     await addIdeaInUi(page, "Pflanzen", "Gießplan");
     await addIdeaInUi(page, "Rezepte", "Wochenplan");
     await addIdeaInUi(page, "Wetter", "");
-    await page.getByRole("button", { name: "Wetter nach oben" }).click();
+    // Drag "Wetter" by its grip onto the upper half of "Rezepte": it goes before it.
+    const grip = page.getByRole("button", { name: "Wetter verschieben" });
+    await expect(grip).toHaveCSS("cursor", "grab");
+    await grip.dragTo(page.getByRole("heading", { level: 3, name: "Rezepte" }), {
+      targetPosition: { x: 5, y: 2 },
+    });
     page.once("dialog", (dialog) => void dialog.accept());
     await page.getByRole("button", { name: "Pflanzen löschen" }).click();
     await expect(titles(page)).toHaveText(["Wetter", "Rezepte"]);

@@ -65,6 +65,14 @@ packages/core/             Shared code:
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
   src/charts.ts            The Recharts parts for apps (own code, not vendor code).
   src/day-picker.ts        The calendar DayPicker (react-day-picker) for apps (own code, not vendor code).
+  src/drag-sort.ts         useDragSort(): drag and drop to change the order of a list. The arrow keys
+                           up and down on the focused grip move a row one place. Two list functions
+                           for its callbacks: moveTo(list, id, targetId, "before" | "after") for a
+                           drop, moveById(list, id, -1 | 1) for an arrow key (own code).
+  src/drag-handle.tsx      DragHandle: the grip at the left of a row (own code).
+  src/sort-hint.tsx        SortHint: a text that only screen readers read: how to move a row. Each
+                           grip points to it by its ID. Render it once per page: two copies would
+                           have the same ID (own code).
 packages/vite-config/      Shared Vite config. Reads app info and pocket-apps.config.json.
 pocket-apps.config.json    Settings for all apps, for example the back link.
 scripts/build-release.mjs  Copies the built files to release/.
@@ -152,6 +160,7 @@ Each app declares its info in its `package.json`:
 - Write full class names. Never build class names from strings (`` `text-${size}` ``).
 - Use icons only from `lucide-react`.
 - Show the hand cursor on everything that the user can click. `globals.css` gives it to each `button`, `select` and `[role="button"]` that is not disabled. Give other clickable elements the class `cursor-pointer`, for example a `<label>` that switches a checkbox. A drag handle gets `cursor-grab active:cursor-grabbing`.
+- To let the user change the order of a list, use drag and drop with a grip at the left of each row: `useDragSort()`, `DragHandle` and `SortHint` from `packages/ui`. Do not use up/down buttons. See `apps/app-ideen/src/idea-list-view.tsx`. The launcher still has up/down buttons. Change it only when the user asks.
 - Make layouts work in narrow windows (320 px). Write classes for small screens first. Add `sm:` and `md:` classes only for larger screens.
 
 ### HTML and accessibility

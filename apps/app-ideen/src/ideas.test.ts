@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addIdea, moveIdea, newId, removeIdea } from "./ideas.ts";
+import { addIdea, newId, removeIdea } from "./ideas.ts";
 import type { IdeaList } from "./schema.ts";
 
 const list: IdeaList = {
@@ -47,24 +47,5 @@ describe("addIdea", () => {
 describe("removeIdea", () => {
   it("removes the given idea", () => {
     expect(order(removeIdea(list, "b"))).toEqual(["a", "c"]);
-  });
-});
-
-describe("moveIdea", () => {
-  it("moves an idea up", () => {
-    expect(order(moveIdea(list, "c", "up"))).toEqual(["a", "c", "b"]);
-  });
-
-  it("moves an idea down", () => {
-    expect(order(moveIdea(list, "a", "down"))).toEqual(["b", "a", "c"]);
-  });
-
-  it("does nothing at the start or the end of the list", () => {
-    expect(moveIdea(list, "a", "up")).toBe(list);
-    expect(moveIdea(list, "c", "down")).toBe(list);
-  });
-
-  it("does nothing for an unknown ID", () => {
-    expect(moveIdea(list, "x", "up")).toBe(list);
   });
 });

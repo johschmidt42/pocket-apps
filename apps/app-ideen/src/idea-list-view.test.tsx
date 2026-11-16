@@ -99,36 +99,21 @@ describe("IdeaListView", () => {
     expect(screen.getByLabelText("Titel")).toHaveFocus();
   });
 
-  it("changes the order with the arrow buttons and keeps the focus on the moved idea", async () => {
+  it("changes the order with the arrow keys on the grip and keeps the focus on it", async () => {
     const user = await openIdeas();
+    const grip = () => screen.getByRole("button", { name: "Fahrtenbuch verschieben" });
 
-    await user.click(screen.getByRole("button", { name: "Fahrtenbuch nach oben" }));
+    await user.click(grip());
+    await user.keyboard("{ArrowUp}");
     expect(ideaTitles()).toEqual(["Pflanzen", "Fahrtenbuch", "Rezepte"]);
-    expect(screen.getByRole("button", { name: "Fahrtenbuch nach oben" })).toHaveFocus();
+    expect(grip()).toHaveFocus();
 
-    await user.click(screen.getByRole("button", { name: "Fahrtenbuch nach unten" }));
-    expect(ideaTitles()).toEqual(["Pflanzen", "Rezepte", "Fahrtenbuch"]);
-    expect(screen.getByRole("button", { name: "Fahrtenbuch nach unten" })).toBeDisabled();
-  });
+    await user.keyboard("{ArrowUp}{ArrowUp}");
+    expect(ideaTitles()).toEqual(["Fahrtenbuch", "Pflanzen", "Rezepte"]);
 
-  it("moves the focus to the other arrow when an idea reaches the start or the end", async () => {
-    const user = await openIdeas();
-
-    await user.click(screen.getByRole("button", { name: "Rezepte nach oben" }));
-    expect(ideaTitles()).toEqual(["Rezepte", "Pflanzen", "Fahrtenbuch"]);
-    expect(screen.getByRole("button", { name: "Rezepte nach unten" })).toHaveFocus();
-
-    await user.click(screen.getByRole("button", { name: "Pflanzen nach unten" }));
-    expect(ideaTitles()).toEqual(["Rezepte", "Fahrtenbuch", "Pflanzen"]);
-    expect(screen.getByRole("button", { name: "Pflanzen nach oben" })).toHaveFocus();
-  });
-
-  it("disables 'up' for the first and 'down' for the last idea", async () => {
-    await openIdeas();
-
-    expect(screen.getByRole("button", { name: "Pflanzen nach oben" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Fahrtenbuch nach unten" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Pflanzen nach unten" })).toBeEnabled();
+    await user.keyboard("{ArrowDown}");
+    expect(ideaTitles()).toEqual(["Pflanzen", "Fahrtenbuch", "Rezepte"]);
+    expect(grip()).toHaveAccessibleDescription(/Pfeiltaste/);
   });
 
   it("shows a hint when there are no ideas", async () => {
