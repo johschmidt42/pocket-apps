@@ -78,12 +78,13 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 
 ## Apps
 
-| App         | Data file | Internet | Description                                                     |
-| ----------- | --------- | -------- | --------------------------------------------------------------- |
-| zinsrechner | no        | no       | Compound interest for a capital.                                |
-| app-ideen   | yes       | no       | Collects ideas for new apps.                                    |
-| fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles. |
-| kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.            |
-| countdown   | yes       | no       | Days, hours, minutes and seconds until your events.             |
-| attraktor   | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.  |
-| schuljahr   | yes       | yes      | Holidays, public holidays and school days of a school year.     |
+| App         | Data file | Internet | Description                                                      |
+| ----------- | --------- | -------- | ---------------------------------------------------------------- |
+| zinsrechner | no        | no       | Compound interest for a capital.                                 |
+| app-ideen   | yes       | no       | Collects ideas for new apps.                                     |
+| fixkosten   | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles.  |
+| kursverlauf | yes       | yes      | Price history of ETFs from Xetra, with a comparison.             |
+| countdown   | yes       | no       | Days, hours, minutes and seconds until your events.              |
+| attraktor   | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.   |
+| schuljahr   | yes       | yes      | Holidays, public holidays and school days of a school year.      |
+| zeitstrahl  | yes       | no       | Moments and time ranges on vertical timelines, for example a CV. |
