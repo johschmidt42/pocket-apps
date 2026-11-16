@@ -77,11 +77,17 @@ function frameCss(zoom: number, pages: readonly PageSlice[] | null, pageMargin: 
   const base = `@media screen { :root { zoom: ${zoom.toFixed(4)}; overflow: hidden; } }`;
   if (pages === null) return base;
   const pageRules = pages
-    .map(
-      (page, index) =>
-        `.cv-sheet[data-page="${String(index)}"] .cv-clip { height: ${mm(page.height)}; }\n` +
-        `.cv-sheet[data-page="${String(index)}"] .cv-shift { margin-top: ${mm(-page.start)}; }`,
-    )
+    .map((page, index) => {
+      // Above the first page, there is no content to hide. There, the box starts at the top of
+      // the sheet. Else it would cut what sticks out into the top margin, for example the
+      // shadow of the photo.
+      const top = index === 0 ? 0 : pageMargin;
+      const sheet = `.cv-sheet[data-page="${String(index)}"]`;
+      return (
+        `${sheet} .cv-clip { top: ${mm(top)}; height: ${mm(page.height + pageMargin - top)}; }\n` +
+        `${sheet} .cv-shift { margin-top: ${mm(pageMargin - top - page.start)}; }`
+      );
+    })
     .join("\n");
   return `${base}
 @media screen {
@@ -94,7 +100,7 @@ function frameCss(zoom: number, pages: readonly PageSlice[] | null, pageMargin: 
   /* The gray space at the top shows where the first page starts. */
   .cv-sheets { padding: ${String(PAGE_GAP)}mm; }
   /* "clip", not "hidden": the box must not scroll, also not by scrollIntoView(). */
-  .cv-clip { position: absolute; top: ${String(pageMargin)}mm; right: 0; left: 0; overflow: clip; }
+  .cv-clip { position: absolute; right: 0; left: 0; overflow: clip; }
 ${pageRules}
 }
 @media print { .cv-sheets { display: none; } }`;
