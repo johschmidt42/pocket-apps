@@ -76,6 +76,8 @@ export default defineConfig([
     "playwright-report/",
     "test-results/",
     "pnpm-lock.yaml",
+    // Git worktrees of other Claude sessions: other checkouts of this repo, not our files.
+    ".claude/",
     // shadcn components are vendor code. We use them without changes.
     "packages/ui/src/components/",
   ]),
