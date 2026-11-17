@@ -91,3 +91,4 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 | schuljahr   | yes       | yes      | Holidays, public holidays and school days of a school year.        |
 | zeitstrahl  | yes       | no       | Moments and time ranges on vertical timelines, for example a CV.   |
 | lebenslauf  | yes       | no       | CV as an A4 page with variants per job ad. Print it or save a PDF. |
+| galerie     | no        | no       | The images of a folder, with thumbnails and a large preview.       |
