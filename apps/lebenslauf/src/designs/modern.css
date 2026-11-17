@@ -1,7 +1,7 @@
 /*
  * The design "modern". This CSS applies only inside the CV frame (an iframe), never to the app.
- * A sans-serif font, one accent color (petrol), a round photo, section titles with colored
- * first letters and a thin line, and the tools of a project as chips.
+ * A sans-serif font, one accent color (petrol), a round photo, section titles in the accent
+ * color with a thin line, and the tools of a project as chips.
  *
  * As in "klassisch": the page has no margin, so that Chrome prints no headers and footers.
  * The padding of `.cv` (12 mm, `pageMargin` in designs.ts) makes the space at the top and the
@@ -141,7 +141,7 @@ h3 {
   stroke-width: 2;
 }
 
-/* Sections: a title with colored first letters and a thin line to the right. */
+/* Sections: a title in the accent color and a thin line to the right. */
 
 .cv-section + .cv-section {
   margin-top: 4.5mm;
@@ -151,6 +151,7 @@ h3 {
   display: flex;
   align-items: center;
   margin-bottom: 2.5mm;
+  color: var(--cv-accent);
   font-size: 12.5pt;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -164,10 +165,6 @@ h3 {
   margin-left: 3mm;
   background: var(--cv-line);
   content: "";
-}
-
-.cv-accent {
-  color: var(--cv-accent);
 }
 
 /* Entries: a bold title, the time range on the right in the accent color. */

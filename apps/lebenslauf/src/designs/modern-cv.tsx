@@ -20,7 +20,7 @@ function splitName(name: string): [string, string] {
 
 /**
  * The design "modern": a sans-serif font, one accent color, a round photo, section titles
- * with colored first letters, and the tools of a project as small chips. A clean look for
+ * in the accent color with a thin line, and the tools of a project as small chips. A clean look for
  * freelance project profiles. The classes belong to `modern.css`. The marks for the pages
  * and the highlight (`data-page-unit`, `data-section-id`, `data-entry-id`) work as in
  * `klassisch-cv.tsx`.
@@ -72,8 +72,7 @@ export function ModernCv({ person, variant, photoUrl }: ModernCvProps) {
       {variant.sections.map((section) => (
         <section key={section.id} className="cv-section" data-section-id={section.id}>
           <h2 className="cv-section-title" data-page-unit="keep-with-next">
-            <span className="cv-accent">{section.title.slice(0, 3)}</span>
-            {section.title.slice(3)}
+            {section.title}
           </h2>
           <SectionEntries section={section} labels={labels} />
         </section>
