@@ -6,7 +6,7 @@ import { ArrowUpDown, Search } from "lucide-react";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { AppGrid } from "./app-grid.tsx";
-import { moveApp, orderApps } from "./app-order.ts";
+import { dropApp, moveApp, orderApps } from "./app-order.ts";
 import { favoriteButtonId, splitFavorites, toggleFavorite } from "./favorites.ts";
 import { filterApps } from "./filter-apps.ts";
 import { DONE_BUTTON_ID, OrderEditor } from "./order-editor.tsx";
@@ -54,8 +54,14 @@ export function LauncherView({ apps }: { apps: readonly AppInfo[] }) {
         <OrderEditor
           apps={ordered}
           favorites={data.favorites}
-          onMove={(name, direction) => {
+          onStep={(name, direction) => {
             update((current) => ({ ...current, order: moveApp(ordered, name, direction) }));
+          }}
+          onDrop={(name, targetName, position) => {
+            update((current) => ({
+              ...current,
+              order: dropApp(ordered, name, targetName, position),
+            }));
           }}
           onDone={() => {
             switchView(false, SORT_BUTTON_ID);

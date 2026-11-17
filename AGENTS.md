@@ -160,7 +160,7 @@ Each app declares its info in its `package.json`:
 - Write full class names. Never build class names from strings (`` `text-${size}` ``).
 - Use icons only from `lucide-react`.
 - Show the hand cursor on everything that the user can click. `globals.css` gives it to each `button`, `select` and `[role="button"]` that is not disabled. Give other clickable elements the class `cursor-pointer`, for example a `<label>` that switches a checkbox. A drag handle gets `cursor-grab active:cursor-grabbing`.
-- To let the user change the order of a list, use drag and drop with a grip at the left of each row: `useDragSort()`, `DragHandle` and `SortHint` from `packages/ui`. Do not use up/down buttons. See `apps/app-ideen/src/idea-list-view.tsx`. The launcher still has up/down buttons. Change it only when the user asks.
+- To let the user change the order of a list, use drag and drop with a grip at the left of each row: `useDragSort()`, `DragHandle` and `SortHint` from `packages/ui`. Do not use up/down buttons. See `apps/app-ideen/src/idea-list-view.tsx` and `launcher/src/order-editor.tsx`.
 - Make layouts work in narrow windows (320 px). Write classes for small screens first. Add `sm:` and `md:` classes only for larger screens.
 
 ### HTML and accessibility

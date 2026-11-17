@@ -187,11 +187,12 @@ describe("Launcher with a data folder", () => {
     await user.click(screen.getByRole("button", { name: "Reihenfolge ändern" }));
 
     expect(screen.getByRole("button", { name: "Fertig" })).toHaveFocus();
-    expect(screen.getByRole("button", { name: "Zinsrechner nach oben" })).toBeDisabled();
 
-    await user.click(screen.getByRole("button", { name: "Zinsrechner nach unten" }));
+    // The arrow keys on the grip move the app. The grip keeps the focus.
+    await user.click(screen.getByRole("button", { name: "Zinsrechner verschieben" }));
+    await user.keyboard("{ArrowDown}");
 
-    expect(screen.getByRole("button", { name: "Zinsrechner nach oben" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Zinsrechner verschieben" })).toHaveFocus();
     expect(
       within(screen.getByRole("list"))
         .getAllByRole("heading", { level: 3 })

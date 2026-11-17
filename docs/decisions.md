@@ -3,6 +3,11 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-17: ESLint and Prettier ignore `.claude/`
+
+- **Context:** Claude Code can create git worktrees under `.claude/worktrees/` for parallel sessions. They are full checkouts of this repository, without `node_modules`. `eslint .` and `prettier --check .` read them, and `pnpm check:all` failed locally, although our own files were correct.
+- **Decision:** `eslint.config.js` (`globalIgnores`) and `.prettierignore` ignore `.claude/`. This does not weaken a rule for our code: `.claude/` holds no source files of this repository, only copies of it and local settings. `.gitignore` ignores `.claude/worktrees/`, so that a worktree never gets into a commit. Thus the CI checkout has no worktrees, and the ignore changes nothing there.
+
 ## 2026-11-16: Second CV design "modern" (lebenslauf)
 
 - **Context:** The user wanted a second, visually appealing design for CVs in freelance project bids. The content of the first design must fit on 2 A4 pages.
@@ -47,7 +52,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** The keyboard also works: with the focus on a handle, the arrow keys up and down move the row one step. A hint with the class `sr-only` (not visible, but screen readers read it) tells this. Each handle points to it with `aria-describedby`. In `lebenslauf`, the arrow buttons are gone.
 - **Why not a library:** dnd-kit and similar libraries move the rows with an inline `style` (`transform`). `AGENTS.md` forbids inline `style`. The drag API of the browser needs no dependency. It does not work on touch screens. The apps support only Chrome and Edge on a computer (see "App and data in separate files"), so this is acceptable.
 - **Tests:** `userEvent` cannot drag with the drag API of the browser, and `AGENTS.md` wants `userEvent`, not `fireEvent`. Thus the unit tests check the keyboard and the pure functions (`moveTo`, `dropPosition`). `e2e/lebenslauf.spec.ts` drags with Playwright in Chromium.
-- **Update (app-ideen):** `app-ideen` uses drag and drop now, like `lebenslauf`. Two apps use the same code, so the hook (`drag-sort.ts`), the grip (`drag-handle.tsx`) and the hint for screen readers (`sort-hint.tsx`) moved from `lebenslauf` into `packages/ui`, as own code next to `charts.ts`. They are in `packages/ui` and not in `packages/core`, because they are UI behavior, not data or app logic. The launcher still has up/down buttons. It changes only when the user asks.
+- **Update (app-ideen):** `app-ideen` uses drag and drop now, like `lebenslauf`. Two apps use the same code, so the hook (`drag-sort.ts`), the grip (`drag-handle.tsx`) and the hint for screen readers (`sort-hint.tsx`) moved from `lebenslauf` into `packages/ui`, as own code next to `charts.ts`. They are in `packages/ui` and not in `packages/core`, because they are UI behavior, not data or app logic. Later, the launcher got drag and drop too, in its view "Reihenfolge ändern" (`order-editor.tsx`). Now no list has up/down buttons.
 
 ## 2026-11-16: CV designs with own CSS in an iframe (lebenslauf)
 
@@ -189,7 +194,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 ## 2026-11-10: Favorite apps in the launcher
 
 - **Decision:** The user marks an app as a favorite with a star button on its card. A filled star shows a favorite. The launcher shows the favorites first, in the section "Favoriten". The other apps come after them, in the section "Weitere Apps".
-- **Decision:** There is one order for all apps. "Reihenfolge ändern" shows one list without sections. The launcher splits this order into the two sections. Thus an arrow button cannot move an app into the other section.
+- **Decision:** There is one order for all apps. "Reihenfolge ändern" shows one list without sections. The launcher splits this order into the two sections. Thus moving an app (first with up/down buttons, now with drag and drop) cannot move it into the other section.
 - **Decision:** Without favorites, the launcher shows one grid without sections, as before. It hides a section that has no apps.
 - **Decision:** `launcher.json` keeps the favorite apps in the field `favorites`, as a list of app names (the `name` in `package.json`). The order of this list has no effect. Names of removed apps have no effect. A new app is not a favorite. This is schema version 2. The migration `to-v2` gives old files an empty list.
 - **Decision:** The star button is not inside the link of the card. It is a separate element, positioned over the top right corner of the card. A button inside a link is not valid HTML.

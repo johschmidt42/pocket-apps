@@ -45,7 +45,7 @@ The bar under the header shows the folder, the file and the status:
 
 More tips:
 
-- To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only when the start page has your data folder. Move the apps with the arrow buttons. Click "Fertig". The start page keeps the order in `launcher/launcher.json` in your data folder.
+- To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only after you picked your data folder on the start page. Drag each app by the grip at its left side (⋮⋮) to a new place. With the keyboard: move the focus to a grip and press the arrow key up or down. The app moves at once, without another key. The start page saves the new order at once in the file `launcher/launcher.json` (the folder `launcher` in your data folder). "Fertig" only closes the view.
 - To mark an app as a favorite, click the star on its card. The star is there only when the start page has your data folder. A filled star shows a favorite. The start page shows your favorite apps first, under "Favoriten". The other apps come under "Weitere Apps". Both sections use your order of the apps. To remove a favorite, click the star again. The start page keeps the favorites in `launcher/launcher.json` in your data folder.
 - To use another folder, click "Ordner wechseln" in the bar under the header.
 - When you open an app later, the app can show "Zugriff auf deinen Datenordner". Click "Zugriff erlauben" in the app. Then a Chrome window opens. Select "Bei jedem Besuch erlauben" in it. Then Chrome does not ask again.

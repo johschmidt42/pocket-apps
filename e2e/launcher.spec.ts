@@ -106,9 +106,14 @@ test.describe("launcher with the data folder", () => {
 
     await page.getByRole("button", { name: "Ordner wählen …" }).click();
     await page.getByRole("button", { name: "Reihenfolge ändern" }).click();
-    for (let step = 1; step < apps.length; step += 1) {
-      await page.getByRole("button", { name: `${last.title} nach oben` }).click();
-    }
+    // Drag the last app by its grip onto the upper half of the first app.
+    const grip = page.getByRole("button", { name: `${last.title} verschieben` });
+    await expect(grip).toHaveCSS("cursor", "grab");
+    const first = apps[0];
+    if (!first) throw new Error("This test needs two apps.");
+    await grip.dragTo(page.getByRole("heading", { level: 3, name: first.title }), {
+      targetPosition: { x: 5, y: 2 },
+    });
     await page.getByRole("button", { name: "Fertig" }).click();
 
     const cards = page.getByRole("main").getByRole("list").getByRole("link");
