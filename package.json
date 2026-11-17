@@ -9,7 +9,7 @@
   "scripts": {
     "build": "pnpm --recursive --filter \"./apps/*\" --filter ./launcher build && node scripts/build-release.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p e2e/tsconfig.json && pnpm --recursive typecheck",
-    "lint": "eslint .",
+    "lint": "NODE_OPTIONS=--max-old-space-size=8192 eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",

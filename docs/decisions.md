@@ -3,6 +3,12 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-17: More memory for ESLint
+
+- **Context:** With the 12th app (`trainingsbuch`), `pnpm lint` stopped with "JavaScript heap out of memory". The JavaScript heap of Node.js has a default limit. On the computer of the project owner (Node.js 24, 36 GB RAM), this limit is 4.2 GB. The type-aware rules use `projectService`. It makes one TypeScript program for each `tsconfig.json`, and each app program loads `packages/core`, `packages/ui` and the Recharts types again. Thus the memory grows with each app. Without the new app, `eslint .` already used 4.7 GB of process memory (the heap and other memory together, measured with `/usr/bin/time -l`). With the app, the heap reached its limit.
+- **Decision:** The script `lint` in `package.json` sets `NODE_OPTIONS=--max-old-space-size=8192`. This sets the heap limit to 8 GB. It does not change a rule or the files that ESLint checks. `CI - Lint` runs the same script. The GitHub runners have 16 GB of memory. The script needs a POSIX shell (macOS, Linux, the CI). We do not use Windows.
+- **Limit:** The memory still grows with each app. If `pnpm lint` stops with "heap out of memory" again, do not only raise the limit. Find a way to make ESLint load the shared packages fewer times.
+
 ## 2026-11-17: Image folder with `<input webkitdirectory>` and EXIF thumbnails (core, galerie)
 
 - **Context:** The project owner wanted an app that shows the images of any folder on the computer: a list with thumbnails and a large preview of the selected image. The folders are on a local disk or in Google Drive. A folder can have 2000 photos or more. Before the app, a throwaway prototype measured the options in Chrome 157: with 2901 real photos (9.1 GB, phone photos of about 3 MB each) on a local disk, and with 11 images in Google Drive for desktop in the mode "stream files". All numbers below come from these measurements.
