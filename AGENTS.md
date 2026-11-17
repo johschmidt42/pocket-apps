@@ -58,6 +58,10 @@ packages/core/             Shared code:
   src/file-button.tsx      FileButton: a button that opens the file dialog of the system and gives the
                            picked file to the app (for example a photo). Apps use no own
                            `<input type="file">`.
+  src/folder-button.tsx    FolderButton: a button that opens the folder dialog of the system and gives
+                           all files of the picked folder and its subfolders to the app. The app can
+                           only read these files. The browser does not remember the folder. This
+                           folder has no relation to the data folder.
   src/one-of.ts            isOneOf(list, value): true if the string value is in the list. Then TypeScript
                            knows that value is one of the list items.
   src/use-width.ts         useWidth(ref): the width of an element in pixels. 0 in jsdom.

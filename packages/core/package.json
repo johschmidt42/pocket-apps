@@ -9,6 +9,7 @@
     "./data-file/testing": "./src/data-file/testing.ts",
     "./fetch-json": "./src/fetch-json.ts",
     "./file-button": "./src/file-button.tsx",
+    "./folder-button": "./src/folder-button.tsx",
     "./name-dialog": "./src/name-dialog.tsx",
     "./numbers": "./src/numbers.ts",
     "./one-of": "./src/one-of.ts",
