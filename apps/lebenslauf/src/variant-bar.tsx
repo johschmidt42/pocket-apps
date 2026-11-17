@@ -42,7 +42,7 @@ export function VariantBar(props: VariantBarProps) {
           >
             {props.variants.map((variant) => (
               <NativeSelectOption key={variant.id} value={variant.id}>
-                {variant.name} · {DESIGN_INFO[variant.design].label}
+                {variant.name}
               </NativeSelectOption>
             ))}
           </NativeSelect>
@@ -76,37 +76,52 @@ export function VariantBar(props: VariantBarProps) {
         </Button>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="variant-design-switch">Design</Label>
-        <NativeSelect
-          id="variant-design-switch"
+        {/* A group of buttons has no field for a <label>. The text names the group. */}
+        <span id="variant-design-label" className="text-sm leading-none font-medium">
+          Design
+        </span>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          spacing={0}
+          aria-labelledby="variant-design-label"
           value={active.design}
-          onChange={(event) => {
-            if (isOneOf(DESIGNS, event.target.value)) props.onDesign(event.target.value);
+          onValueChange={(value) => {
+            if (isOneOf(DESIGNS, value)) props.onDesign(value);
           }}
         >
           {DESIGNS.map((design) => (
-            <NativeSelectOption key={design} value={design}>
+            <ToggleGroupItem key={design} value={design}>
               {DESIGN_INFO[design].label}
-            </NativeSelectOption>
+            </ToggleGroupItem>
           ))}
-        </NativeSelect>
+        </ToggleGroup>
       </div>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        spacing={0}
-        aria-label="Sprache der festen Wörter im Lebenslauf"
-        value={active.language}
-        onValueChange={(value) => {
-          if (isOneOf(LANGUAGES, value)) props.onLanguage(value);
-        }}
-      >
-        {LANGUAGES.map((language) => (
-          <ToggleGroupItem key={language} value={language} aria-label={LANGUAGE_LABELS[language]}>
-            {language.toUpperCase()}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <div className="flex flex-col gap-2">
+        <span id="variant-language-label" className="text-sm leading-none font-medium">
+          Sprache
+        </span>
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          spacing={0}
+          aria-labelledby="variant-language-label"
+          aria-describedby="variant-language-hint"
+          value={active.language}
+          onValueChange={(value) => {
+            if (isOneOf(LANGUAGES, value)) props.onLanguage(value);
+          }}
+        >
+          {LANGUAGES.map((language) => (
+            <ToggleGroupItem key={language} value={language} aria-label={LANGUAGE_LABELS[language]}>
+              {language.toUpperCase()}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <span id="variant-language-hint" className="sr-only">
+          Die Sprache der festen Wörter im Lebenslauf, zum Beispiel „Seit“ oder „Since“.
+        </span>
+      </div>
       <Button onClick={props.onPrint}>
         <Printer data-icon="inline-start" />
         Drucken / PDF

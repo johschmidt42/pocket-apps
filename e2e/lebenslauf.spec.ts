@@ -363,7 +363,7 @@ test.describe("lebenslauf in Chrome and Edge", () => {
     await openWithFolder(page);
     await page.getByRole("button", { name: "Beispiel laden" }).click();
 
-    await page.getByLabel("Design", { exact: true }).selectOption("modern");
+    await page.getByRole("radio", { name: "Modern" }).click();
 
     await expect(cv(page).locator("article")).toHaveCSS("font-family", /Helvetica Neue/);
     const firstTool = cv(page)

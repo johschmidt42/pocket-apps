@@ -456,7 +456,7 @@ describe("Lebenslauf", () => {
     const { user } = await openApp();
     await user.click(screen.getByRole("button", { name: "Beispiel laden" }));
 
-    await user.selectOptions(screen.getByLabelText("Design"), "modern");
+    await user.click(screen.getByRole("radio", { name: "Modern" }));
 
     expect(cv().getByRole("heading", { level: 3, name: "Order Analytics Platform" })).toBeTruthy();
     expect(
@@ -471,9 +471,9 @@ describe("Lebenslauf", () => {
   it("switches the design of a variant and keeps its content", async () => {
     const { folder, user } = await openApp(DATA);
 
-    await user.selectOptions(screen.getByLabelText("Design"), "modern");
+    await user.click(screen.getByRole("radio", { name: "Modern" }));
 
-    expect(screen.getByLabelText("Variante")).toHaveDisplayValue("Standard · Modern");
+    expect(screen.getByRole("radio", { name: "Modern" })).toBeChecked();
     // The design splits the name and the section titles into parts (for their colors).
     expect(
       cv()
@@ -522,7 +522,7 @@ describe("Lebenslauf", () => {
 
     await user.click(screen.getByRole("button", { name: "Neue Variante" }));
     await user.type(screen.getByLabelText("Name der Variante"), "Leer");
-    await user.selectOptions(screen.getByLabelText("Sprache"), "en");
+    await user.selectOptions(within(screen.getByRole("dialog")).getByLabelText("Sprache"), "en");
     await user.selectOptions(
       within(screen.getByRole("dialog")).getByLabelText("Design"),
       "klassisch",
