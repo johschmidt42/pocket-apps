@@ -101,6 +101,9 @@ test.describe("launcher with the data folder", () => {
     const apps = listApps();
     const last = apps.at(-1);
     if (!last || apps.length < 2) throw new Error("This test needs two apps.");
+    // The drag goes from the last row to the first row. Both rows must be in the window:
+    // the drag of the browser does not scroll.
+    await page.setViewportSize({ width: 1280, height: 400 + apps.length * 80 });
     await withDataFolder(page);
     await page.goto(releaseUrl("index.html"));
 

@@ -3,6 +3,15 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-17: Workout texts and exercise names in English, no trademark (trainingsbuch)
+
+- **Context:** AGENTS.md says: UI text is German. The app `trainingsbuch` has 136 built-in workouts, for example "Fran" or "Open 24.1". Their texts are in English in the sources: the benchmark pages of crossfit.com and the Open data of games.crossfit.com. An example is "21-15-9 reps for time of:". People in German gyms also use the English names of the exercises, for example "Thruster" or "Pull-up". The project owner knows the workouts in English.
+- **Decision:** The texts of the built-in workouts stay in English. They contain only facts: reps, rounds, exercises, loads and distances. We did not copy the explanations of the sources.
+- **Decision:** The exercise names are English on all screens: in the texts of the workouts, in the exercise list of a workout, in the search and in the form for own workouts. In this form, the user picks each exercise from a list. Thus an own workout also shows English names, for example "400 m Run" or "15 cal Row".
+- **Decision:** All other text of the app is German: buttons, labels, messages and units ("Runden", "Wiederholungen"). The short scoring labels on the cards use the terms of the sport. Some are English ("For Time", "AMRAP"), and some are German ("Max. Wiederholungen", "Max. Gewicht").
+- **Decision:** "CrossFit" is a registered trademark. The project owner does not want it in the app. Thus no built-in text and no label uses the word. A unit test checks the built-in workouts for it. The app uses general names for the groups: "The Girls", "Hero" and "Open".
+- **Rejected:** A German translation of all workout texts. It is much work, and a translation can change the meaning of a prescription.
+
 ## 2026-11-17: More memory for ESLint
 
 - **Context:** With the 12th app (`trainingsbuch`), `pnpm lint` stopped with "JavaScript heap out of memory". The JavaScript heap of Node.js has a default limit. On the computer of the project owner (Node.js 24, 36 GB RAM), this limit is 4.2 GB. The type-aware rules use `projectService`. It makes one TypeScript program for each `tsconfig.json`, and each app program loads `packages/core`, `packages/ui` and the Recharts types again. Thus the memory grows with each app. Without the new app, `eslint .` already used 4.7 GB of process memory (the heap and other memory together, measured with `/usr/bin/time -l`). With the app, the heap reached its limit.
