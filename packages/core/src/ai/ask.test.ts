@@ -4,7 +4,11 @@ import { aiMessage, askAi, type AiFailure } from "./ask.ts";
 import type { AiAccess } from "./settings.ts";
 
 const schema = z.object({ answer: z.number() });
-const REQUEST = { instructions: "Rechne.", prompt: "1+1", schema };
+const REQUEST = {
+  instructions: "Rechne.",
+  messages: [{ role: "user" as const, text: "1+1" }],
+  schema,
+};
 
 const CLAUDE: AiAccess = { provider: "anthropic", apiKey: "sk-ant-1", model: "claude-opus-5-5" };
 const OPENAI: AiAccess = { provider: "openai", apiKey: "sk-2", model: "gpt-x" };
@@ -19,7 +23,12 @@ function json(body: unknown, status = 200): () => Response {
     });
 }
 
-function claudeMessage(content: unknown[], stopReason = "end_turn", model = "claude-opus-5-5") {
+function claudeMessage(
+  content: unknown[],
+  stopReason = "end_turn",
+  model = "claude-opus-5-5",
+  cache = { cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+) {
   return {
     id: "msg_1",
     type: "message",
@@ -28,13 +37,18 @@ function claudeMessage(content: unknown[], stopReason = "end_turn", model = "cla
     content,
     stop_reason: stopReason,
     stop_sequence: null,
-    usage: { input_tokens: 2000, output_tokens: 500 },
+    usage: { input_tokens: 2000, output_tokens: 500, ...cache },
   };
 }
 
 function openAiResponse(
   content: unknown[],
-  usage: unknown = { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+  usage: unknown = {
+    input_tokens: 10,
+    input_tokens_details: { cached_tokens: 4 },
+    output_tokens: 5,
+    total_tokens: 15,
+  },
 ) {
   return {
     id: "resp_1",
@@ -69,18 +83,24 @@ describe("askAi with Claude", () => {
     );
     const image = { mediaType: "image/png" as const, base64: "aGk=" };
 
-    const result = await askAi(CLAUDE, { ...REQUEST, images: [image] }, fetch);
+    const result = await askAi(
+      CLAUDE,
+      { ...REQUEST, messages: [{ role: "user", text: "1+1", images: [image] }] },
+      fetch,
+    );
 
     expect(result).toEqual({
       kind: "ok",
       data: { answer: 2 },
-      usage: { inputTokens: 2000, outputTokens: 500, costUsd: 0.018 },
+      reply: { role: "assistant", text: '{"answer":2}' },
+      usage: { inputTokens: 2000, cachedTokens: 0, outputTokens: 500, costUsd: 0.018 },
     });
     const sent = body(fetch);
     expect(sent).toMatchObject({
       model: "claude-opus-5-5",
       system: "Rechne.",
       fallbacks: "default",
+      cache_control: { type: "ephemeral" },
       messages: [
         {
           role: "user",
@@ -144,12 +164,17 @@ describe("askAi with OpenAI", () => {
     );
     const image = { mediaType: "image/jpeg" as const, base64: "aGk=" };
 
-    const result = await askAi(OPENAI, { ...REQUEST, images: [image] }, fetch);
+    const result = await askAi(
+      OPENAI,
+      { ...REQUEST, messages: [{ role: "user", text: "1+1", images: [image] }] },
+      fetch,
+    );
 
     expect(result).toEqual({
       kind: "ok",
       data: { answer: 2 },
-      usage: { inputTokens: 10, outputTokens: 5, costUsd: null },
+      reply: { role: "assistant", text: '{"answer":2}' },
+      usage: { inputTokens: 10, cachedTokens: 4, outputTokens: 5, costUsd: null },
     });
     expect(body(fetch)).toMatchObject({
       model: "gpt-x",
@@ -190,7 +215,7 @@ describe("askAi with OpenAI", () => {
           ),
         ),
       ),
-    ).toMatchObject({ kind: "ok", usage: { inputTokens: 0, outputTokens: 0 } });
+    ).toMatchObject({ kind: "ok", usage: { inputTokens: 0, cachedTokens: 0, outputTokens: 0 } });
   });
 
   it("knows an empty quota", async () => {
@@ -199,6 +224,55 @@ describe("askAi with OpenAI", () => {
       429,
     );
     expect(await askAi(OPENAI, REQUEST, answer(quota))).toEqual({ kind: "no-credit" });
+  });
+});
+
+describe("askAi with a conversation", () => {
+  const image = { mediaType: "image/png" as const, base64: "aGk=" };
+  const CONVERSATION = {
+    ...REQUEST,
+    messages: [
+      { role: "user" as const, text: "Rechne das Bild.", images: [image] },
+      { role: "assistant" as const, text: '{"answer":0}' },
+      { role: "user" as const, text: "Nimm 1+1." },
+    ],
+  };
+
+  it("sends all messages to Claude and counts the cache", async () => {
+    const cache = { cache_creation_input_tokens: 300, cache_read_input_tokens: 1500 };
+    const fetch = answer(
+      json(claudeMessage([{ type: "text", text: '{"answer":2}' }], "end_turn", undefined, cache)),
+    );
+
+    const result = await askAi(CLAUDE, CONVERSATION, fetch);
+
+    expect(body(fetch)).toMatchObject({
+      messages: [
+        { role: "user", content: [{ type: "image" }, { type: "text", text: "Rechne das Bild." }] },
+        { role: "assistant", content: [{ type: "text", text: '{"answer":0}' }] },
+        { role: "user", content: [{ type: "text", text: "Nimm 1+1." }] },
+      ],
+    });
+    // 2000 new × 4 $ + 300 written × 5 $ + 1500 read × 0.20 $ + 500 output × 20 $, per million.
+    expect(result).toMatchObject({
+      usage: { inputTokens: 3800, cachedTokens: 1500, outputTokens: 500, costUsd: 0.0198 },
+    });
+  });
+
+  it("sends all messages to OpenAI", async () => {
+    const fetch = answer(
+      json(openAiResponse([{ type: "output_text", text: '{"answer":2}', annotations: [] }])),
+    );
+
+    await askAi(OPENAI, CONVERSATION, fetch);
+
+    expect(body(fetch)).toMatchObject({
+      input: [
+        { role: "user", content: [{ type: "input_image" }, { type: "input_text" }] },
+        { role: "assistant", content: '{"answer":0}' },
+        { role: "user", content: [{ type: "input_text", text: "Nimm 1+1." }] },
+      ],
+    });
   });
 });
 

@@ -80,7 +80,7 @@ describe("useAi", () => {
 
     const answer = await state.ask({
       instructions: "x",
-      prompt: "y",
+      messages: [{ role: "user", text: "y" }],
       schema: z.object({ ok: z.boolean() }),
     });
     expect(answer).toMatchObject({ kind: "ok", data: { ok: true } });

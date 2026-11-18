@@ -4,7 +4,14 @@
 export { AiDataNotice, type AiDataNoticeProps } from "./ai-data-notice.tsx";
 export { AiSettingsDialog, type AiSettingsDialogProps } from "./ai-settings-dialog.tsx";
 export { AiSetupNotice, type AiSetupNoticeProps } from "./ai-setup-notice.tsx";
-export { aiMessage, type AiFailure, type AiRequest, type AiResult, type AskAi } from "./ask.ts";
+export {
+  aiMessage,
+  type AiFailure,
+  type AiMessage,
+  type AiRequest,
+  type AiResult,
+  type AskAi,
+} from "./ask.ts";
 export { checkKey, type AiModel, type KeyCheck } from "./check-key.ts";
 export { imageForAi, imageMessage, type AiImage, type ImageCheck } from "./images.ts";
 export { formatUsage, type AiUsage } from "./pricing.ts";

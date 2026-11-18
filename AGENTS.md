@@ -156,7 +156,7 @@ Each app declares its info in its `package.json`:
 - Set `"ai": true` in `pocketApp`. The app also needs `"stateful": true` and `"network": true`. The build stops if one is missing. The build adds the AI providers (`https://api.anthropic.com`, `https://api.openai.com`) to the Content Security Policy. An app that calls only these providers needs no `connect` list. The launcher card shows the sparkles icon "Nutzt KI mit deinem API-Key".
 - The user sets up the AI once, in the launcher ("KI einrichten") or in an AI app: the provider (Claude or OpenAI), the API key and the model for this provider. "Verbindung prüfen" asks the provider for its list of models. This shows if the key works and fills the model choice. All apps use this setup.
 - The provider and the model of each provider are in `ai/ai.json` in the data folder. They sync with the folder. The API key stays in the browser (IndexedDB): the user types it once per browser and per web address. Never write an API key into a data file.
-- In the app, call `useAi()` from `@pocket-apps/core/ai`. Use it only inside `DataFileProvider`. Its `state` has one of these statuses:
+- All names in this section come from `@pocket-apps/core/ai`. In the app, call `useAi()`. Use it only inside `DataFileProvider`. Its `state` has one of these statuses:
   - `loading`: the app reads the AI settings. Show nothing or a short German text such as "Lädt …".
   - `not-set-up`: the user set up no AI, or this browser has no key. Show `<AiSetupNotice feature="liest deine Notizen" onClose={reload} />`. `feature` is the German verb phrase after "Die KI …": the notice shows "Die KI liest deine Notizen. Dafür brauchst du einen eigenen API-Key …" and the button "KI einrichten". `onClose` runs when the dialog closes. `reload` then reads the settings again.
   - `error`: the app cannot read the AI settings, for example because `ai/ai.json` is broken. Show `state.message`.
@@ -167,8 +167,7 @@ Each app declares its info in its `package.json`:
   if (state.status !== "ready") return; // show the notice for the other statuses
   const result = await state.ask({
     instructions: "…", // the task and the rules for the AI
-    prompt: notes, // the data of the user
-    images: [image], // optional, see imageForAi() below
+    messages: [{ role: "user", text: notes, images: [image] }], // images: optional, see imageForAi()
     schema: resultSchema, // a zod schema: the shape of the answer
     signal: controller.signal, // optional: cancels the request
   });
@@ -177,24 +176,31 @@ Each app declares its info in its `package.json`:
   else if (result.kind !== "canceled") show(aiMessage(result)); // a German message
   ```
 
-- Make the root of the schema a `z.object()`. Use `.nullable()`, not `.optional()`, for a field that can be empty: OpenAI needs every field in the answer.
+- For a conversation (for example a question of the AI back to the user), keep the messages in state, with the type `AiMessage[]`. After an answer, add `result.reply` and then the next message of the user, and send all messages again. `result.reply` is the answer as a message of the AI: its `text` is the JSON text of the answer. Do not write messages of the AI yourself. Keep `instructions` and `schema` the same in all rounds.
+- An image stays in its message, so it goes to the provider again in each round. The model reads the full conversation in each round. Thus each round costs more than the round before. The provider keeps the start of the conversation in its cache for 5 minutes, if it has enough tokens (Claude Opus 5.5: 512, OpenAI: 1,024). An image has about 300 to 2,500 tokens. In the next round, this part costs only a part of the price. Put an image only into the message where the user added it, so that the start stays the same.
+- `result.usage` is the usage of one round. To show the cost of the full conversation, add up the usage of all rounds.
+- If a round fails (for example `bad-answer` or `offline`), the messages stay as they were: the failed answer is not in them. Show `aiMessage(result)`, and let the user send the message again.
+- Make the root of the schema a `z.object()`. Use `.nullable()`, not `.optional()`, for a field that can be empty: OpenAI needs every field in the answer. For an answer of different kinds, use a `status` field and nullable fields, for example `{ status: z.enum(["question", "draft"]), question: z.string().nullable(), draft: draftSchema.nullable() }`. Do not use `z.union()` or `z.discriminatedUnion()`: not all forms of a JSON schema union work with both providers. The app then checks the fields itself, for example that `draft` is not `null` when `status` is `"draft"`.
 - A request can take some seconds. While it runs, show a spinner and a button "Abbrechen" that calls `controller.abort()`. Then `ask()` returns `canceled`. The user started the cancel, so the app shows no message for it.
-- `ask()` never throws. It returns `{ kind: "ok", data, usage }` or a failure: `invalid-key`, `no-permission`, `no-credit`, `rate-limit`, `overloaded`, `offline`, `canceled`, `refused` (the AI declined the request), `bad-answer` (the answer is not JSON or does not match the schema) or `error` (with `message`). `aiMessage(result)` gives the German message for each failure.
-- For an image, call `await imageForAi(file)`. It accepts JPEG, PNG, GIF and WebP up to 3.75 MiB (Claude accepts 5 MiB as base64 text). It returns `{ kind: "ok", image }`, `{ kind: "wrong-type" }` or `{ kind: "too-large" }`. Put `image` into `images`. For the other kinds, `imageMessage(check)` gives the German message.
+- `ask()` never throws. It returns `{ kind: "ok", data, reply, usage }` or a failure: `invalid-key`, `no-permission`, `no-credit`, `rate-limit`, `overloaded`, `offline`, `canceled`, `refused` (the AI declined the request), `bad-answer` (the answer is not JSON or does not match the schema) or `error` (with `message`). `aiMessage(result)` gives the German message for each failure.
+- For an image, call `await imageForAi(file)`. It accepts JPEG, PNG, GIF and WebP up to 3.75 MiB per image (Claude accepts 5 MiB as base64 text). It returns `{ kind: "ok", image }`, `{ kind: "wrong-type" }` or `{ kind: "too-large" }`. Put `image` into `images` of the message of the user. For the other kinds, `imageMessage(check)` gives the German message.
 - Send to the AI only the data that the feature needs. Show `<AiDataNotice provider={state.provider} data="deine Notizen" />` next to the button that starts the request. `data` is a German noun phrase. The notice shows "Diese Daten gehen an Claude (Anthropic): deine Notizen. Sonst nichts."
-- After the request, show the tokens and the cost: `formatUsage(result.usage)`, for example "2.500 Token · ca. 1,8 Cent". The cost is known only for Claude models. For OpenAI, the text shows only the tokens.
+- After the request, show the tokens and the cost: `formatUsage(result.usage)`, for example "2.500 Token · ca. 1,8 Cent" or "2.500 Token, davon 1.800 aus dem Cache · ca. 0,4 Cent". The cost is known only for Claude models. For OpenAI, the text shows only the tokens.
 - The AI module calls the providers with their official SDKs (`@anthropic-ai/sdk`, `openai`), not with `fetchJson`. See "AI settings for all apps" and "Own AI interface on the official SDKs" in `docs/decisions.md`.
-- Give `App` the optional prop `ask` (type `AskAi`) and pass it to `useAi(ask)`. `AskAi` is the type of `state.ask`: `(request) => Promise<AiResult>`. With a fake, `useAi()` is `ready` at once, with `provider: "anthropic"` and `model: "claude-test"` (`TEST_AI`, exported from `@pocket-apps/core/ai`). Then unit tests of the app need no key and no network. The fake gets the request, so a test can check the prompt. `AskAi` is generic, so a fake with fixed data needs a type assertion (allowed in tests):
+- Give `App` the optional prop `ask` (type `AskAi`) and pass it to `useAi(ask)`. `AskAi` is the type of `state.ask`: `(request) => Promise<AiResult>`. With a fake, `useAi()` is `ready` at once, with `provider: "anthropic"` and `model: "claude-test"` (`TEST_AI`, exported from `@pocket-apps/core/ai`). Then unit tests of the app need no key and no network. The fake gets the request, so a test can check the messages. `AskAi` is generic, so a fake with fixed data needs a type assertion (allowed in tests):
 
   ```ts
   const ask = vi.fn(() =>
     Promise.resolve({
       kind: "ok",
       data: { results: [] },
-      usage: { inputTokens: 1, outputTokens: 1, costUsd: null },
+      reply: { role: "assistant", text: "{}" },
+      usage: { inputTokens: 1, cachedTokens: 0, outputTokens: 1, costUsd: null },
     }),
   ) as unknown as AskAi;
   ```
+
+  For a conversation, give one answer per round: `vi.fn().mockResolvedValueOnce(first).mockResolvedValueOnce(second)`. `TEST_AI` needs no action. Tests can compare it with the provider and the model that the app shows.
 
 - To test the AI module itself, replace the browser APIs: `vi.stubGlobal("indexedDB", new IDBFactory())` (from `fake-indexeddb`) and `vi.stubGlobal("fetch", ...)`. A fake `fetch` must return a new `Response` for each call, because the SDKs retry some errors. See `packages/core/src/ai/ask.test.ts`. In browser tests, answer the provider requests with `page.route()`, because the tests have no internet. See `e2e/launcher.spec.ts`.
 

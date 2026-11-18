@@ -9,13 +9,24 @@ import type { AiImage } from "./images.ts";
 import { requestCost, type AiUsage } from "./pricing.ts";
 import type { AiAccess, AiProvider } from "./settings.ts";
 
-/** One request to the AI: an instruction, a text, optional images and the shape of the answer. */
+/**
+ * One message of a conversation with the AI. A message of the user can have images, for
+ * example a photo of a whiteboard. A message of the AI is an earlier answer (`reply`).
+ */
+export type AiMessage =
+  { role: "user"; text: string; images?: readonly AiImage[] } | { role: "assistant"; text: string };
+
+/** One request to the AI: an instruction, the conversation and the shape of the answer. */
 export type AiRequest<T> = {
-  /** The task and the rules for the AI (system prompt). */
+  /** The task and the rules for the AI (system prompt). Keep it the same in a conversation. */
   instructions: string;
-  /** The data of the user, for example notes. */
-  prompt: string;
-  images?: readonly AiImage[];
+  /**
+   * The conversation so far. It starts with a message of the user, and the roles alternate.
+   * For one question, this is one message. For a follow-up, add the `reply` of the last
+   * result and the next message of the user. Put an image only into the message where the
+   * user added it: the provider keeps the start of the conversation in its cache.
+   */
+  messages: readonly AiMessage[];
   /** The answer must match this schema. The app gets the parsed data. */
   schema: z.ZodType<T>;
   /** Cancels the request. */
@@ -34,8 +45,11 @@ export type AiFailure =
   | { kind: "bad-answer" }
   | { kind: "error"; message: string };
 
-/** The result of a request. It never throws. */
-export type AiResult<T> = { kind: "ok"; data: T; usage: AiUsage } | AiFailure;
+/**
+ * The result of a request. It never throws. `reply` is the answer as a message: add it to the
+ * conversation before the next message of the user.
+ */
+export type AiResult<T> = { kind: "ok"; data: T; reply: AiMessage; usage: AiUsage } | AiFailure;
 
 /** A function that sends one request. Apps get it from `useAi()`. Tests give a fake. */
 export type AskAi = <T>(request: AiRequest<T>) => Promise<AiResult<T>>;
@@ -58,8 +72,28 @@ const FALLBACK_MODELS: ReadonlySet<string> = new Set([
 /** The browser calls the API directly. The key stays in the browser (see ai-keys.ts). */
 const BROWSER_OPTIONS = { dangerouslyAllowBrowser: true, maxRetries: 2 } as const;
 
-function usage(model: string, inputTokens: number, outputTokens: number): AiUsage {
-  return { inputTokens, outputTokens, costUsd: requestCost(model, inputTokens, outputTokens) };
+/**
+ * The usage of a Claude request. Claude counts the input in three groups: new input, input that
+ * goes into the cache and input from the cache.
+ */
+function claudeUsage(model: string, usage: Anthropic.Messages.Usage): AiUsage {
+  const tokens = {
+    input: usage.input_tokens,
+    cacheWrite: usage.cache_creation_input_tokens ?? 0,
+    cacheRead: usage.cache_read_input_tokens ?? 0,
+    output: usage.output_tokens,
+  };
+  return {
+    inputTokens: tokens.input + tokens.cacheWrite + tokens.cacheRead,
+    cachedTokens: tokens.cacheRead,
+    outputTokens: tokens.output,
+    costUsd: requestCost(model, tokens),
+  };
+}
+
+/** The answer as a message for the next request. */
+function reply(text: string): AiMessage {
+  return { role: "assistant", text };
 }
 
 /**
@@ -84,18 +118,24 @@ function parseAnswer<T>(
 /** Sends the request to Claude. Models with fallbacks use the beta API. */
 function sendToClaude<T>(access: AiAccess, request: AiRequest<T>, fetch: typeof globalThis.fetch) {
   const client = new Anthropic({ apiKey: access.apiKey, fetch, ...BROWSER_OPTIONS });
-  const content = [
-    ...(request.images ?? []).map((image) => ({
-      type: "image" as const,
-      source: { type: "base64" as const, media_type: image.mediaType, data: image.base64 },
-    })),
-    { type: "text" as const, text: request.prompt },
-  ];
+  const messages = request.messages.map((message) => ({
+    role: message.role,
+    content: [
+      ...(message.role === "user" ? (message.images ?? []) : []).map((image) => ({
+        type: "image" as const,
+        source: { type: "base64" as const, media_type: image.mediaType, data: image.base64 },
+      })),
+      { type: "text" as const, text: message.text },
+    ],
+  }));
   const base = {
     model: access.model,
     max_tokens: MAX_TOKENS,
     system: request.instructions,
-    messages: [{ role: "user" as const, content }],
+    messages,
+    // Automatic caching: the API keeps the conversation up to the last message for 5 minutes.
+    // In the next round, this part costs only a part of the input price.
+    cache_control: { type: "ephemeral" as const },
   };
   const options = { signal: request.signal };
   return FALLBACK_MODELS.has(access.model)
@@ -129,8 +169,9 @@ async function askClaude<T>(
   return {
     kind: "ok",
     data: answer.data,
+    reply: reply(text),
     // After a fallback, another model answered. Its price counts.
-    usage: usage(response.model, response.usage.input_tokens, response.usage.output_tokens),
+    usage: claudeUsage(response.model, response.usage),
   };
 }
 
@@ -144,19 +185,22 @@ async function askOpenAi<T>(
     {
       model: access.model,
       instructions: request.instructions,
-      input: [
-        {
-          role: "user",
-          content: [
-            ...(request.images ?? []).map((image) => ({
-              type: "input_image" as const,
-              image_url: `data:${image.mediaType};base64,${image.base64}`,
-              detail: "auto" as const,
-            })),
-            { type: "input_text" as const, text: request.prompt },
-          ],
-        },
-      ],
+      // OpenAI keeps the start of the conversation in its cache without an extra field.
+      input: request.messages.map((message) =>
+        message.role === "user"
+          ? {
+              role: "user" as const,
+              content: [
+                ...(message.images ?? []).map((image) => ({
+                  type: "input_image" as const,
+                  image_url: `data:${image.mediaType};base64,${image.base64}`,
+                  detail: "auto" as const,
+                })),
+                { type: "input_text" as const, text: message.text },
+              ],
+            }
+          : { role: "assistant" as const, content: message.text },
+      ),
       text: { format: zodTextFormat(request.schema, "answer") },
     },
     { signal: request.signal },
@@ -170,11 +214,14 @@ async function askOpenAi<T>(
   return {
     kind: "ok",
     data: answer.data,
-    usage: usage(
-      access.model,
-      response.usage?.input_tokens ?? 0,
-      response.usage?.output_tokens ?? 0,
-    ),
+    reply: reply(response.output_text),
+    // The input tokens of OpenAI include the tokens from the cache. The price is not known.
+    usage: {
+      inputTokens: response.usage?.input_tokens ?? 0,
+      cachedTokens: response.usage?.input_tokens_details.cached_tokens ?? 0,
+      outputTokens: response.usage?.output_tokens ?? 0,
+      costUsd: null,
+    },
   };
 }
 
