@@ -169,7 +169,7 @@ describe("Mit KI eintragen", () => {
   it("sends a photo and starts from an open workout", async () => {
     const ask = fakeAsk(ok(DRAFT));
     const { user } = await openApp(ask);
-    await user.click(screen.getByRole("button", { name: /Fran/ }));
+    await user.click(screen.getByRole("button", { name: /^Fran/ }));
     await user.click(screen.getByRole("button", { name: "Mit KI" }));
     const dialog = screen.getByRole("dialog", { name: "Mit KI eintragen" });
     expect(within(dialog).getByText(/kg oder lb und das Workout „Fran“/)).toBeVisible();

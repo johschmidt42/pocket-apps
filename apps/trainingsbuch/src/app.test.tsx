@@ -85,7 +85,7 @@ describe("Trainingsbuch", () => {
     ).toBeInTheDocument();
   });
 
-  it("lists the built-in workouts as cards in sections and filters them", async () => {
+  it("lists the built-in workouts as cards in sections and finds them by search", async () => {
     const { user } = await openApp();
 
     const girls = screen.getByRole("region", { name: "The Girls" });
@@ -96,12 +96,17 @@ describe("Trainingsbuch", () => {
     expect(screen.getByRole("region", { name: "Hero" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Open 2026" })).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Suchen"), "thruster pull");
+    // The list has more than 350 cards: a query by label checks each element and is slow here.
+    // A query by role finds the search field fast.
+    await user.type(screen.getByRole("searchbox", { name: "Suchen" }), "thruster pull");
     expect(screen.getByRole("button", { name: "Fran Noch nicht gemacht" })).toBeInTheDocument();
-    await user.type(screen.getByLabelText("Suchen"), " zzz");
+    await user.type(screen.getByRole("searchbox", { name: "Suchen" }), " zzz");
     expect(screen.getByText("Kein Workout passt zu „thruster pull zzz“.")).toBeInTheDocument();
+  });
 
-    await user.clear(screen.getByLabelText("Suchen"));
+  it("filters the workouts by category", async () => {
+    const { user } = await openApp();
+
     await user.click(chip("Kategorie", "Eigene"));
     expect(screen.queryByRole("region", { name: /The Girls/ })).not.toBeInTheDocument();
     expect(
@@ -113,6 +118,27 @@ describe("Trainingsbuch", () => {
     expect(chip("Kategorie", "Eigene")).toBeChecked();
     await user.click(chip("Kategorie", "Alle"));
     expect(screen.getByRole("region", { name: "The Girls" })).toBeInTheDocument();
+  });
+
+  it("shows the loads in lb and keeps the choice in the data file", async () => {
+    const { folder, user } = await openApp();
+    await user.click(card("Fran"));
+    const plan = screen.getByRole("region", { name: "Ablauf" });
+
+    await user.click(
+      within(screen.getByRole("radiogroup", { name: "Einheiten" })).getByRole("radio", {
+        name: "lb",
+      }),
+    );
+    expect(within(plan).getByText("Thruster, 95/65 lb")).toBeInTheDocument();
+    await waitForSave();
+    expect(savedData(folder).units).toBe("imperial");
+    await user.click(
+      within(screen.getByRole("radiogroup", { name: "Einheiten" })).getByRole("radio", {
+        name: "kg",
+      }),
+    );
+    expect(within(plan).getByText("Thruster, 43/29 kg")).toBeInTheDocument();
   });
 
   it("logs a time for Fran, saves it and shows it in the list and the history", async () => {
@@ -130,20 +156,6 @@ describe("Trainingsbuch", () => {
         .map((item) => item.textContent),
     ).toEqual(["Thruster, 43/29 kg", "Pull-up"]);
 
-    // The toggle shows the loads in lb. The app keeps the choice in the data file.
-    await user.click(
-      within(screen.getByRole("radiogroup", { name: "Einheiten" })).getByRole("radio", {
-        name: "lb",
-      }),
-    );
-    expect(within(plan).getByText("Thruster, 95/65 lb")).toBeInTheDocument();
-    await waitForSave();
-    expect(savedData(folder).units).toBe("imperial");
-    await user.click(
-      within(screen.getByRole("radiogroup", { name: "Einheiten" })).getByRole("radio", {
-        name: "kg",
-      }),
-    );
     expect(screen.getByText("Noch kein Ergebnis")).toBeInTheDocument();
     expect(screen.getByText("Noch kein Ergebnis. Trage dein erstes Ergebnis ein.")).toBeVisible();
 
@@ -186,6 +198,13 @@ describe("Trainingsbuch", () => {
 
     await user.click(screen.getByRole("button", { name: "Alle Workouts" }));
     expect(card("Fran", true)).toHaveTextContent("6:05Scaled1 Ergebnis");
+  });
+
+  it("counts the done workouts, filters them by status and opens one from the history", async () => {
+    const { user } = await openApp({
+      workouts: [],
+      results: [fran("r1", 365, { division: "scaled" })],
+    });
 
     // Each section shows how many of its workouts the user did.
     const girls = () => screen.getByRole("region", { name: "The Girls" });
