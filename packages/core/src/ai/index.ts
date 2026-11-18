@@ -4,6 +4,7 @@
 export { AiDataNotice, type AiDataNoticeProps } from "./ai-data-notice.tsx";
 export { AiSettingsDialog, type AiSettingsDialogProps } from "./ai-settings-dialog.tsx";
 export { AiSetupNotice, type AiSetupNoticeProps } from "./ai-setup-notice.tsx";
+export { AiUsageSummary, type AiUsageSummaryProps } from "./ai-usage-summary.tsx";
 export {
   aiMessage,
   type AiFailure,
@@ -14,7 +15,7 @@ export {
 } from "./ask.ts";
 export { checkKey, type AiModel, type KeyCheck } from "./check-key.ts";
 export { imageForAi, imageMessage, type AiImage, type ImageCheck } from "./images.ts";
-export { formatUsage, type AiUsage } from "./pricing.ts";
+export { addUsage, formatUsage, type AiUsage } from "./pricing.ts";
 export {
   activeAccess,
   AI_PROVIDER_LABELS,

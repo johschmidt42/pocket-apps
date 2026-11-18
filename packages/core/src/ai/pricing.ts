@@ -53,7 +53,22 @@ export function requestCost(model: string, tokens: ClaudeTokens): number | null 
 }
 
 /**
- * "2.500 Token · ca. 0,4 Cent", with "davon 1.800 aus dem Cache" if the cache gave a part.
+ * The usage of all rounds of a conversation. Start with `null`. If one round has no known price,
+ * the sum has no price either.
+ */
+export function addUsage(total: AiUsage | null, round: AiUsage): AiUsage {
+  if (total === null) return round;
+  return {
+    inputTokens: total.inputTokens + round.inputTokens,
+    cachedTokens: total.cachedTokens + round.cachedTokens,
+    outputTokens: total.outputTokens + round.outputTokens,
+    costUsd:
+      total.costUsd === null || round.costUsd === null ? null : total.costUsd + round.costUsd,
+  };
+}
+
+/**
+ * "2.500 Token · ca. 0,4 US-Cent", with "davon 1.800 aus dem Cache" if the cache gave a part.
  * Without a known price, only the tokens.
  */
 export function formatUsage(usage: AiUsage): string {
@@ -66,11 +81,11 @@ export function formatUsage(usage: AiUsage): string {
   return usage.costUsd === null ? tokens : `${tokens} · ${formatCost(usage.costUsd)}`;
 }
 
-/** "ca. 0,4 Cent" or "ca. 1,25 $". */
+/** "ca. 0,4 US-Cent" or "ca. 1,25 $". The prices are in US dollars. The app does not convert them. */
 export function formatCost(dollars: number): string {
   if (dollars < 1) {
     const cents = dollars * 100;
-    return `ca. ${cents.toLocaleString("de-DE", { maximumFractionDigits: cents < 1 ? 2 : 1 })} Cent`;
+    return `ca. ${cents.toLocaleString("de-DE", { maximumFractionDigits: cents < 1 ? 2 : 1 })} US-Cent`;
   }
   return `ca. ${dollars.toLocaleString("de-DE", { maximumFractionDigits: 2 })} $`;
 }
