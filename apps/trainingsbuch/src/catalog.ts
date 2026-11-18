@@ -1,5 +1,6 @@
 // The built-in workouts. Sources: the benchmark pages of crossfit.com and the Open data of
-// games.crossfit.com, checked in November 2026. Loads in kg are rounded to whole kg.
+// games.crossfit.com, checked in November 2026. Loads in kg are rounded to whole kg. Exception:
+// a 50 lb dumbbell is 22.5 kg, the official metric load (there are no 23 kg dumbbells).
 // The IDs are stable: data files keep them in results.
 import type { Workout } from "./workouts.ts";
 
@@ -372,8 +373,8 @@ export const CATALOG: readonly Workout[] = [
     lines: [
       "3 rounds for time of:",
       "20 burpees",
-      "21 dumbbell snatches, 23/16 kg (50/35 lb) (1 dumbbell)",
-      "12 dumbbell thrusters, 23/16 kg (50/35 lb) (2 dumbbells)",
+      "21 dumbbell snatches, 22.5/16 kg (50/35 lb) (1 dumbbell)",
+      "12 dumbbell thrusters, 22.5/16 kg (50/35 lb) (2 dumbbells)",
     ],
     exercises: ["burpee", "dumbbell-snatch", "dumbbell-thruster"],
   },
@@ -1386,7 +1387,7 @@ export const CATALOG: readonly Workout[] = [
       "15 burpee box jump-overs",
       "50 dumbbell snatches",
       "15 burpee box jump-overs",
-      "Dumbbell: 23/16 kg (50/35 lb)",
+      "Dumbbell: 22.5/16 kg (50/35 lb)",
       "Box: 61/51 cm (24/20 in)",
     ],
     exercises: ["dumbbell-snatch", "burpee-box-jump-over"],
@@ -1408,7 +1409,7 @@ export const CATALOG: readonly Workout[] = [
       "16 bar muscle-ups",
       "8 power cleans",
       "Etc., change between toes-to-bars and bar muscle-ups every 2 rounds",
-      "Dumbbells: 23/16 kg (50/35 lb)",
+      "Dumbbells: 22.5/16 kg (50/35 lb)",
     ],
     exercises: ["walking-lunge", "toes-to-bar", "dumbbell-clean", "bar-muscle-up"],
   },
@@ -1463,7 +1464,7 @@ export const CATALOG: readonly Workout[] = [
     lines: [
       "As many rounds and reps as possible in 20 minutes of:",
       "8 toes-to-bars",
-      "10 dumbbell hang clean and jerks, 23/16 kg (50/35 lb) (5 with each arm)",
+      "10 dumbbell hang clean and jerks, 22.5/16 kg (50/35 lb) (5 with each arm)",
       "14/12-calorie row",
     ],
     exercises: ["toes-to-bar", "dumbbell-clean-and-jerk", "row"],
@@ -1476,7 +1477,7 @@ export const CATALOG: readonly Workout[] = [
     timeCapMinutes: 12,
     lines: [
       "1-2-3-4-5-6-7-8-9-10 reps for time of:",
-      "Dumbbell squat, 23/16 kg (50/35 lb) (2 dumbbells)",
+      "Dumbbell squat, 22.5/16 kg (50/35 lb) (2 dumbbells)",
       "Bar-facing burpee",
       "Time cap: 12 minutes for 18.2 and 18.2a together",
     ],
@@ -1504,7 +1505,7 @@ export const CATALOG: readonly Workout[] = [
       "100 double-unders",
       "12 ring muscle-ups",
       "100 double-unders",
-      "20 dumbbell snatches, 23/16 kg (50/35 lb)",
+      "20 dumbbell snatches, 22.5/16 kg (50/35 lb)",
       "100 double-unders",
       "12 bar muscle-ups",
     ],
@@ -1601,7 +1602,7 @@ export const CATALOG: readonly Workout[] = [
       "50 dumbbell box step-ups",
       "50 strict handstand push-ups",
       "61 m (200 ft) handstand walk",
-      "Dumbbell: 23/16 kg (50/35 lb)",
+      "Dumbbell: 22.5/16 kg (50/35 lb)",
       "Box: 61/51 cm (24/20 in)",
     ],
     exercises: ["overhead-lunge", "step-up", "strict-handstand-push-up", "handstand-walk"],
@@ -1657,7 +1658,7 @@ export const CATALOG: readonly Workout[] = [
     timeCapMinutes: 20,
     lines: [
       "As many rounds and reps as possible in 20 minutes of:",
-      "4 dumbbell thrusters, 23/16 kg (50/35 lb) (2 dumbbells)",
+      "4 dumbbell thrusters, 22.5/16 kg (50/35 lb) (2 dumbbells)",
       "6 toes-to-bars",
       "24 double-unders",
     ],
@@ -1764,7 +1765,7 @@ export const CATALOG: readonly Workout[] = [
       "15 burpee box jump-overs",
       "50 dumbbell snatches",
       "15 burpee box jump-overs",
-      "Dumbbell: 23/16 kg (50/35 lb)",
+      "Dumbbell: 22.5/16 kg (50/35 lb)",
       "Box: 61/51 cm (24/20 in)",
     ],
     exercises: ["dumbbell-snatch", "burpee-box-jump-over"],
@@ -1818,7 +1819,7 @@ export const CATALOG: readonly Workout[] = [
     lines: [
       "As many rounds and reps as possible in 15 minutes of:",
       "3 wall walks",
-      "12 dumbbell snatches, 23/16 kg (50/35 lb)",
+      "12 dumbbell snatches, 22.5/16 kg (50/35 lb)",
       "15 box jump-overs, 61/51 cm (24/20 in)",
     ],
     exercises: ["wall-walk", "dumbbell-snatch", "box-jump-over"],
@@ -1938,7 +1939,7 @@ export const CATALOG: readonly Workout[] = [
       "9 lateral burpees over the dumbbell",
       "9 dumbbell snatches, arm 2",
       "9 lateral burpees over the dumbbell",
-      "Dumbbell: 23/16 kg (50/35 lb)",
+      "Dumbbell: 22.5/16 kg (50/35 lb)",
     ],
     exercises: ["dumbbell-snatch", "burpee-over-dumbbell"],
   },
@@ -1986,7 +1987,7 @@ export const CATALOG: readonly Workout[] = [
       "3 dumbbell hang clean-to-overheads",
       "9.1 m (30 ft) walking lunge (2 × 4.6 m (15 ft))",
       "Add 3 reps to the burpees and the hang clean-to-overheads after each round",
-      "Dumbbell: 23/16 kg (50/35 lb)",
+      "Dumbbell: 22.5/16 kg (50/35 lb)",
     ],
     exercises: ["burpee-over-dumbbell", "dumbbell-clean-and-jerk", "walking-lunge"],
   },
@@ -2074,7 +2075,7 @@ export const CATALOG: readonly Workout[] = [
       "24 m (80 ft) dumbbell overhead walking lunge",
       "20 alternating dumbbell snatches",
       "20 muscle-ups",
-      "Dumbbell: 23/16 kg (50/35 lb)",
+      "Dumbbell: 22.5/16 kg (50/35 lb)",
     ],
     exercises: ["overhead-lunge", "dumbbell-snatch", "pull-up", "chest-to-bar", "ring-muscle-up"],
   },
