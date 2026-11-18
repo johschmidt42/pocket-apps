@@ -53,6 +53,23 @@ describe("useAiSettings", () => {
     expect(await readAiKeys()).toEqual(SETUP.keys);
   });
 
+  it("reads the file again on reload", async () => {
+    const folder = createMemoryFolder();
+    const { result } = renderHook(() => useAiSettings(), { wrapper: inFolder(folder) });
+    await waitFor(() => {
+      expect(result.current.state.status).toBe("ready");
+    });
+    folder.files.set(AI_FILE, { text: "{nope", lastModified: 2 });
+
+    act(() => {
+      result.current.reload();
+    });
+
+    await waitFor(() => {
+      expect(result.current.state.status).toBe("error");
+    });
+  });
+
   it("writes the file also when it saves before the load ends", async () => {
     const folder = createMemoryFolder();
     const slow: DataFolder = { ...folder, read: () => new Promise(() => undefined) };

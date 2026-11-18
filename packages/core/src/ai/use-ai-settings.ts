@@ -25,9 +25,12 @@ function message(error: unknown): string {
 export function useAiSettings(): {
   state: AiSettingsState;
   save: (setup: AiSetup) => Promise<void>;
+  /** Reads the settings and the keys again, for example after the dialog saved them. */
+  reload: () => void;
 } {
   const open = useOpenFolder();
   const folder = open?.folder ?? null;
+  const [loadCount, setLoadCount] = useState(0);
   const [state, setState] = useState<AiSettingsState>(
     open ? { status: "loading" } : { status: "no-folder" },
   );
@@ -47,7 +50,7 @@ export function useAiSettings(): {
     return () => {
       active = false;
     };
-  }, [folder]);
+  }, [folder, loadCount]);
 
   async function save(setup: AiSetup): Promise<void> {
     if (!open) throw new Error("Es gibt keinen Datenordner.");
@@ -62,5 +65,9 @@ export function useAiSettings(): {
     setState({ status: "ready", setup });
   }
 
-  return { state: open ? state : { status: "no-folder" }, save };
+  function reload() {
+    setLoadCount((count) => count + 1);
+  }
+
+  return { state: open ? state : { status: "no-folder" }, save, reload };
 }

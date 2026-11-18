@@ -54,7 +54,8 @@ packages/core/             Shared code:
   src/app-shell/           AppHeader (back link, title, version, theme switch) and the theme logic.
   src/data-file/           Data folder and data file: pick, load, save, migrate, validate.
   src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
-  src/ai/                  AI settings for all apps: AiSettingsDialog, useAiSettings(), activeAccess().
+  src/ai/                  AI for all apps: useAi() sends requests, AiSettingsDialog, AiSetupNotice,
+                           AiDataNotice.
   src/fetch-json.ts        fetchJson() for apps with "network": true. It never throws.
   src/error-text.ts        errorText(error): the message of an error, as text.
   src/name-dialog.tsx      NameDialog: asks for the name of a new item, or a new name for an item (rename).
@@ -155,19 +156,47 @@ Each app declares its info in its `package.json`:
 - Set `"ai": true` in `pocketApp`. The app also needs `"stateful": true` and `"network": true`. The build stops if one is missing. The build adds the AI providers (`https://api.anthropic.com`, `https://api.openai.com`) to the Content Security Policy. An app that calls only these providers needs no `connect` list. The launcher card shows the sparkles icon "Nutzt KI mit deinem API-Key".
 - The user sets up the AI once, in the launcher ("KI einrichten") or in an AI app: the provider (Claude or OpenAI), the API key and the model for this provider. "Verbindung prüfen" asks the provider for its list of models. This shows if the key works and fills the model choice. All apps use this setup.
 - The provider and the model of each provider are in `ai/ai.json` in the data folder. They sync with the folder. The API key stays in the browser (IndexedDB): the user types it once per browser and per web address. Never write an API key into a data file.
-- In the app, get the access like this. Use the hook and `AiSettingsDialog` only inside `DataFileProvider`.
+- In the app, call `useAi()` from `@pocket-apps/core/ai`. Use it only inside `DataFileProvider`. Its `state` has one of these statuses:
+  - `loading`: the app reads the AI settings. Show nothing or a short German text such as "Lädt …".
+  - `not-set-up`: the user set up no AI, or this browser has no key. Show `<AiSetupNotice feature="liest deine Notizen" onClose={reload} />`. `feature` is the German verb phrase after "Die KI …": the notice shows "Die KI liest deine Notizen. Dafür brauchst du einen eigenen API-Key …" and the button "KI einrichten". `onClose` runs when the dialog closes. `reload` then reads the settings again.
+  - `error`: the app cannot read the AI settings, for example because `ai/ai.json` is broken. Show `state.message`.
+  - `ready`: `state.ask(request)` sends a request. `state.provider` and `state.model` are the choice of the user. To let the user change the provider or the model, the app can show its own button that opens `AiSettingsDialog`. The launcher has the same dialog.
 
   ```tsx
-  const { state } = useAiSettings(); // from @pocket-apps/core/ai
-  const access = state.status === "ready" ? activeAccess(state.setup) : null;
-  // access: { provider, apiKey, model }
+  const { state, reload } = useAi(ask); // ask: the optional fake of the tests
+  if (state.status !== "ready") return; // show the notice for the other statuses
+  const result = await state.ask({
+    instructions: "…", // the task and the rules for the AI
+    prompt: notes, // the data of the user
+    images: [image], // optional, see imageForAi() below
+    schema: resultSchema, // a zod schema: the shape of the answer
+    signal: controller.signal, // optional: cancels the request
+  });
+  if (result.kind === "ok")
+    use(result.data); // result.data has the type of the schema
+  else if (result.kind !== "canceled") show(aiMessage(result)); // a German message
   ```
 
-  `access` is `null` if the user set up no AI, or if this browser has no key. In that case, show a German hint and a button that opens `AiSettingsDialog`.
+- Make the root of the schema a `z.object()`. Use `.nullable()`, not `.optional()`, for a field that can be empty: OpenAI needs every field in the answer.
+- A request can take some seconds. While it runs, show a spinner and a button "Abbrechen" that calls `controller.abort()`. Then `ask()` returns `canceled`. The user started the cancel, so the app shows no message for it.
+- `ask()` never throws. It returns `{ kind: "ok", data, usage }` or a failure: `invalid-key`, `no-permission`, `no-credit`, `rate-limit`, `overloaded`, `offline`, `canceled`, `refused` (the AI declined the request), `bad-answer` (the answer is not JSON or does not match the schema) or `error` (with `message`). `aiMessage(result)` gives the German message for each failure.
+- For an image, call `await imageForAi(file)`. It accepts JPEG, PNG, GIF and WebP up to 3.75 MiB (Claude accepts 5 MiB as base64 text). It returns `{ kind: "ok", image }`, `{ kind: "wrong-type" }` or `{ kind: "too-large" }`. Put `image` into `images`. For the other kinds, `imageMessage(check)` gives the German message.
+- Send to the AI only the data that the feature needs. Show `<AiDataNotice provider={state.provider} data="deine Notizen" />` next to the button that starts the request. `data` is a German noun phrase. The notice shows "Diese Daten gehen an Claude (Anthropic): deine Notizen. Sonst nichts."
+- After the request, show the tokens and the cost: `formatUsage(result.usage)`, for example "2.500 Token · ca. 1,8 Cent". The cost is known only for Claude models. For OpenAI, the text shows only the tokens.
+- The AI module calls the providers with their official SDKs (`@anthropic-ai/sdk`, `openai`), not with `fetchJson`. See "AI settings for all apps" and "Own AI interface on the official SDKs" in `docs/decisions.md`.
+- Give `App` the optional prop `ask` (type `AskAi`) and pass it to `useAi(ask)`. `AskAi` is the type of `state.ask`: `(request) => Promise<AiResult>`. With a fake, `useAi()` is `ready` at once, with `provider: "anthropic"` and `model: "claude-test"` (`TEST_AI`, exported from `@pocket-apps/core/ai`). Then unit tests of the app need no key and no network. The fake gets the request, so a test can check the prompt. `AskAi` is generic, so a fake with fixed data needs a type assertion (allowed in tests):
 
-- Send to the AI only the data that the feature needs. Tell the user which data goes to the provider.
-- The AI module calls the providers with their official SDKs (`@anthropic-ai/sdk`, `openai`), not with `fetchJson`. The SDKs know the errors of the providers. See "AI settings for all apps" in `docs/decisions.md`.
-- In unit tests, replace the browser APIs: `vi.stubGlobal("indexedDB", new IDBFactory())` (from `fake-indexeddb`) and `vi.stubGlobal("fetch", ...)`. See `packages/core/src/ai/ai-settings-dialog.test.tsx`. In browser tests, answer the provider requests with `page.route()`, because the tests have no internet. See `e2e/launcher.spec.ts`.
+  ```ts
+  const ask = vi.fn(() =>
+    Promise.resolve({
+      kind: "ok",
+      data: { results: [] },
+      usage: { inputTokens: 1, outputTokens: 1, costUsd: null },
+    }),
+  ) as unknown as AskAi;
+  ```
+
+- To test the AI module itself, replace the browser APIs: `vi.stubGlobal("indexedDB", new IDBFactory())` (from `fake-indexeddb`) and `vi.stubGlobal("fetch", ...)`. A fake `fetch` must return a new `Response` for each call, because the SDKs retry some errors. See `packages/core/src/ai/ask.test.ts`. In browser tests, answer the provider requests with `page.route()`, because the tests have no internet. See `e2e/launcher.spec.ts`.
 
 ### UI
 
