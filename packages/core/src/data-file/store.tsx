@@ -2,12 +2,14 @@ import type { AppInfo } from "@pocket-apps/vite-config";
 import { Alert, AlertDescription } from "@pocket-apps/ui/components/alert";
 import { Button } from "@pocket-apps/ui/components/button";
 import { createContext, use, useEffect, useReducer, useState, type ReactNode } from "react";
+import { errorText } from "../error-text.ts";
 import { AppHeader } from "../app-shell/app-header.tsx";
 import { extraFiles, type ExtraFiles } from "./extra-files.ts";
 import { browserFolderHost } from "./browser-folder.ts";
 import { DataFileStatus } from "./data-file-status.tsx";
 import { RawDataButton } from "./raw-data-button.tsx";
 import type { RawFile } from "./raw-data-dialog.tsx";
+import { DataFolderContext } from "./data-folder-context.ts";
 import { DataFolderGate } from "./data-folder-gate.tsx";
 import { LoadingStatus } from "./loading-status.tsx";
 import { serializeEnvelope } from "./envelope.ts";
@@ -59,7 +61,7 @@ function errorMessage(error: unknown): string {
   if (error instanceof DOMException && error.name === "NotFoundError") {
     return "Die App findet den Datenordner nicht. Vielleicht hat jemand ihn verschoben oder gelöscht.";
   }
-  return `Unerwarteter Fehler: ${error instanceof Error ? error.message : String(error)}`;
+  return `Unerwarteter Fehler: ${errorText(error)}`;
 }
 
 /**
@@ -342,9 +344,12 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
         <DataFolderGate host={folderHost} optional={folderOptional}>
           {(folder, changeFolder) =>
             folder ? (
-              <FileView folder={folder} changeFolder={changeFolder}>
-                {children}
-              </FileView>
+              // Shared files (for example the AI settings) work also when the data file is broken.
+              <DataFolderContext value={{ folder, appVersion: options.app.version }}>
+                <FileView folder={folder} changeFolder={changeFolder}>
+                  {children}
+                </FileView>
+              </DataFolderContext>
             ) : (
               <Context value={noFolderApi}>{children}</Context>
             )

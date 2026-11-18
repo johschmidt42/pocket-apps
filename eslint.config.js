@@ -13,7 +13,8 @@ import testingLibrary from "eslint-plugin-testing-library";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import { tailwind4 } from "tailwind-csstree";
-import { listApps } from "./packages/vite-config/index.js";
+import { join } from "node:path";
+import { listApps, readAppInfo, ROOT_DIR } from "./packages/vite-config/index.js";
 import tseslint from "typescript-eslint";
 
 // Apps must not use browser storage. The data file in @pocket-apps/core is the only storage.
@@ -67,6 +68,8 @@ const APP_IMPORT_PATTERNS = [
 ];
 
 const offlineApps = listApps().filter((app) => !app.network);
+// The launcher follows the same flag. It needs the internet for the AI settings (key check).
+const launcherOffline = !readAppInfo(join(ROOT_DIR, "launcher")).network;
 
 export default defineConfig([
   globalIgnores([
@@ -219,10 +222,10 @@ export default defineConfig([
     },
   },
 
-  // Offline apps (and the launcher): no network access.
+  // Offline apps (and the launcher, if it is offline): no network access.
   {
     files: [
-      "launcher/src/**/*.{ts,tsx}",
+      ...(launcherOffline ? ["launcher/src/**/*.{ts,tsx}"] : []),
       ...offlineApps.map((app) => `apps/${app.name}/src/**/*.{ts,tsx}`),
     ],
     rules: {

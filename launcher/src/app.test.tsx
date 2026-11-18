@@ -2,12 +2,13 @@ import { createMemoryFolder, createMemoryFolderHost } from "@pocket-apps/core/da
 import { testAppInfo } from "@pocket-apps/core/testing";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { IDBFactory } from "fake-indexeddb";
+import { describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
 
 const apps = [
   testAppInfo({ name: "zinsrechner", title: "Zinsrechner", version: "1.2", stateful: false }),
-  testAppInfo({ name: "app-ideen", title: "App-Ideen", stateful: true, network: true }),
+  testAppInfo({ name: "app-ideen", title: "App-Ideen", stateful: true, network: true, ai: true }),
 ];
 
 describe("Launcher", () => {
@@ -33,6 +34,29 @@ describe("Launcher", () => {
       within(liste).getByRole("img", { name: "Speichert Daten in einer eigenen Datei" }),
     ).toBeInTheDocument();
     expect(within(liste).getByRole("img", { name: "Nutzt Online-Dienste" })).toBeInTheDocument();
+    // Only apps with AI show the AI icon.
+    expect(
+      within(liste).getByRole("img", { name: "Nutzt KI mit deinem API-Key" }),
+    ).toBeInTheDocument();
+    expect(within(zins).queryByRole("img", { name: /KI/ })).not.toBeInTheDocument();
+  });
+
+  it("opens the AI settings, only with the data folder", async () => {
+    vi.stubGlobal("indexedDB", new IDBFactory());
+    const user = userEvent.setup();
+    const { unmount } = render(<App apps={apps} />);
+    expect(screen.queryByRole("button", { name: "KI einrichten" })).not.toBeInTheDocument();
+    unmount();
+
+    render(
+      <App apps={apps} folderHost={createMemoryFolderHost({ saved: createMemoryFolder() })} />,
+    );
+    await user.click(await screen.findByRole("button", { name: "KI einrichten" }));
+    const dialog = screen.getByRole("dialog", { name: "KI einrichten" });
+    expect(await within(dialog).findByLabelText("API-Key")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("filters the apps by the search text", async () => {

@@ -2,7 +2,8 @@ import type { AppInfo } from "@pocket-apps/vite-config";
 import { Button } from "@pocket-apps/ui/components/button";
 import { Input } from "@pocket-apps/ui/components/input";
 import { Label } from "@pocket-apps/ui/components/label";
-import { ArrowUpDown, Search } from "lucide-react";
+import { AiSettingsDialog } from "@pocket-apps/core/ai";
+import { ArrowUpDown, Search, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { AppGrid } from "./app-grid.tsx";
@@ -22,6 +23,7 @@ export function LauncherView({ apps }: { apps: readonly AppInfo[] }) {
   const { data, update, hasFolder } = useDataFile();
   const [query, setQuery] = useState("");
   const [sorting, setSorting] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const ordered = orderApps(apps, data.order);
   const visible = filterApps(ordered, query);
   // Decide on the sections from all apps, not from the search result. Then they stay while the person types.
@@ -106,7 +108,24 @@ export function LauncherView({ apps }: { apps: readonly AppInfo[] }) {
             Reihenfolge ändern
           </Button>
         )}
+        {hasFolder && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setAiOpen(true);
+            }}
+          >
+            <Sparkles data-icon="inline-start" />
+            KI einrichten
+          </Button>
+        )}
       </div>
+      <AiSettingsDialog
+        open={aiOpen}
+        onClose={() => {
+          setAiOpen(false);
+        }}
+      />
       {visible.length === 0 ? (
         <p className="text-sm text-muted-foreground">Keine App passt zu „{query}“.</p>
       ) : withSections ? (

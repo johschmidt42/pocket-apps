@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./app-shell": "./src/app-shell/index.ts",
+    "./ai": "./src/ai/index.ts",
     "./data-file": "./src/data-file/index.ts",
     "./data-file/testing": "./src/data-file/testing.ts",
     "./fetch-json": "./src/fetch-json.ts",
@@ -20,8 +21,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.4.0",
     "@pocket-apps/ui": "workspace:*",
     "lucide-react": "1.70.0",
+    "openai": "7.49.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zod": "4.6.7"

@@ -9,7 +9,7 @@ import {
 } from "@pocket-apps/ui/components/card";
 import { Button } from "@pocket-apps/ui/components/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@pocket-apps/ui/components/tooltip";
-import { Globe, Save, SaveOff, Star, WifiOff, type LucideIcon } from "lucide-react";
+import { Globe, Save, SaveOff, Sparkles, Star, WifiOff, type LucideIcon } from "lucide-react";
 import { favoriteButtonId } from "./favorites.ts";
 
 /** An icon with a tooltip. Screen readers read the label. */
@@ -106,6 +106,8 @@ export function AppCard({ app, heading: Heading, favorite }: AppCardProps) {
               icon={app.network ? Globe : WifiOff}
               label={app.network ? "Nutzt Online-Dienste" : "Nutzt keine Online-Dienste"}
             />
+            {/* Only apps with AI show this icon. Most apps have none. */}
+            {app.ai && <LabelIcon icon={Sparkles} label="Nutzt KI mit deinem API-Key" />}
           </CardFooter>
         </Card>
       </a>

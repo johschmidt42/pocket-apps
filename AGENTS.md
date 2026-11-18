@@ -10,11 +10,12 @@ Most apps use no online services. An app that needs an external API declares thi
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). The code is in `launcher/`. The launcher is also the place to pick the data folder. With a folder, the user can change the order of the apps ("Reihenfolge ändern") and mark apps as favorites (star button on the card). If there are favorites, the launcher shows them first, under "Favoriten", and the other apps under "Weitere Apps". Both sections use the one order of all apps. The launcher keeps the order and the favorites in `launcher/launcher.json` in the data folder. Without a folder, it shows the apps in the build order, with no star buttons and no sections.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app. Each card shows the version (`1.0`) and two icons with a tooltip: data file (disk icon "Speichert Daten in einer eigenen Datei" or crossed-out disk "Speichert keine Daten") and online services (globe "Nutzt Online-Dienste" or crossed-out Wi-Fi "Nutzt keine Online-Dienste"). An app with AI features has a third icon: sparkles "Nutzt KI mit deinem API-Key". The code is in `launcher/`. The launcher is also the place to pick the data folder. With a folder, the user can change the order of the apps ("Reihenfolge ändern") and mark apps as favorites (star button on the card). If there are favorites, the launcher shows them first, under "Favoriten", and the other apps under "Weitere Apps". Both sections use the one order of all apps. The launcher keeps the order and the favorites in `launcher/launcher.json` in the data folder. Without a folder, it shows the apps in the build order, with no star buttons and no sections.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
 - **Data folder:** the folder that the user picks once, for example "Pocket Apps Daten". It can be in a OneDrive or Google Drive folder. The apps use the File System Access API. Thus only Chrome and Edge on a computer can use it.
 - **App folder:** the folder of one app in the data folder: `<app>/`, for example `app-ideen/`. It holds the data file, its backups and the extra files of the app. The store creates it.
 - **Data file:** the JSON file of one app in its app folder: `<app>/<app>.json`, for example `app-ideen/app-ideen.json`.
+- **AI settings:** the AI provider and the model for all apps, in `ai/ai.json` in the data folder. The API key of the provider is not in this file. It stays in the browser (IndexedDB). See "AI features".
 - **Extra file:** another file of an app in its app folder, besides the data file and its backups, for example an image: `lebenslauf/foto-<id>.jpg`.
 - **Stateful app:** an app with a data file. A stateless app keeps nothing after the tab closes.
 - **Envelope:** the outer JSON object of a data file: `{ app, schemaVersion, savedWith, savedAt, data }`. `savedWith` is the app version that wrote the file. `savedAt` is an ISO time. The code calls it `Envelope` (`envelope.ts`).
@@ -53,7 +54,9 @@ packages/core/             Shared code:
   src/app-shell/           AppHeader (back link, title, version, theme switch) and the theme logic.
   src/data-file/           Data folder and data file: pick, load, save, migrate, validate.
   src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
+  src/ai/                  AI settings for all apps: AiSettingsDialog, useAiSettings(), activeAccess().
   src/fetch-json.ts        fetchJson() for apps with "network": true. It never throws.
+  src/error-text.ts        errorText(error): the message of an error, as text.
   src/name-dialog.tsx      NameDialog: asks for the name of a new item, or a new name for an item (rename).
   src/file-button.tsx      FileButton: a button that opens the file dialog of the system and gives the
                            picked file to the app (for example a photo). Apps use no own
@@ -115,11 +118,14 @@ Each app declares its info in its `package.json`:
 | `pocketApp.emoji`    | `"💡"`                   | One emoji as the icon on the launcher card.                            |
 | `pocketApp.stateful` | `true`                   | `true` if the app has a data file.                                     |
 | `pocketApp.network`  | `false`                  | `true` if the app needs the internet, for example for an external API. |
+| `pocketApp.connect`  | `["https://api.x.org"]`  | Optional. The origins of the external APIs. See "Internet access".     |
+| `pocketApp.ai`       | `true`                   | Optional. `true` if the app has AI features. See "AI features".        |
 | `pocketApp.backLink` | `false`                  | Optional. `false` turns the back link off for this app.                |
 
 - The build validates `package.json` and `pocket-apps.config.json` with zod. A wrong or missing field stops the build with a message.
 - The build makes this info available as `__POCKET_APP__`. Do not write the title or the version by hand anywhere else.
 - The build also writes the title into `<title>`. It writes name and version into the meta tags `pocket-app-name` and `pocket-app-version`.
+- The build writes a Content Security Policy as the first tag in `<head>`: `connect-src 'self'`, the origins in `pocketApp.connect` and, with `"ai": true`, the AI providers. The page code can call only these addresses.
 - Every app shows `AppHeader` from `@pocket-apps/core/app-shell` at the top. It holds the back link, the `<h1>`, the version and the theme switch.
 - A stateless app renders `<AppHeader app={__POCKET_APP__} />` itself.
 - A stateful app gets the header from `DataFileProvider`. Pass `{ app: __POCKET_APP__ }` to `createDataFileStore()`.
@@ -135,14 +141,33 @@ Each app declares its info in its `package.json`:
 
 ### Internet access
 
-- Set `pocketApp.network` to `true` only if the app needs an external API.
-- In apps with `"network": false` and in the launcher, ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` and `@pocket-apps/core/fetch-json`.
+- Set `pocketApp.network` to `true` only if the app needs an external API. List the origin of each API in `pocketApp.connect`, for example `"https://openholidaysapi.org"`. The Content Security Policy blocks all other addresses. An app with `"network": false` has no `connect` list. The dev server has no policy: a blocked address shows only in the built file (`pnpm build`, `pnpm serve`).
+- In apps with `"network": false` (and in the launcher, if it has `"network": false`), ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` and `@pocket-apps/core/fetch-json`.
 - For JSON requests, use `fetchJson(url)` from `@pocket-apps/core/fetch-json`. It never throws. It returns `{ kind: "ok", json }` with `json` as `unknown`, or a failure: `offline`, `http-error` (with `status`) or `bad-body` (the answer is not JSON). Validate `json` with zod. Give `App` the optional prop `fetchJson` (type `FetchJson`), so that unit tests can give a fake. See `apps/schuljahr/src/app.tsx`.
 - An app with `"network": true` must start without internet. Catch each failed request. Show a clear German message. Do not log the failure with `console.error`.
 - Use only APIs that allow requests from the origin `https://johschmidt42.github.io` (CORS). Test the API from that origin before you build the app.
 - Keep settings such as a city in the data file. Then the app is stateful. Do not use `localStorage`.
-- Never put an API key or a password into the code. Everyone who has the app file can read it. If an API needs a key, the user types it in. A stateful app can keep it in the data file.
+- Never put an API key or a password into the code. Everyone who has the app file can read it. If an API needs a key, the user types it in. A stateful app can keep the key of its own API in its data file (for example the Alpha Vantage key in `kursverlauf`). Keys for AI are different: see "AI features".
 - Send to an API only the data that the request needs, for example a city name for a weather API. Do not send the content of the data file.
+
+### AI features
+
+- Set `"ai": true` in `pocketApp`. The app also needs `"stateful": true` and `"network": true`. The build stops if one is missing. The build adds the AI providers (`https://api.anthropic.com`, `https://api.openai.com`) to the Content Security Policy. An app that calls only these providers needs no `connect` list. The launcher card shows the sparkles icon "Nutzt KI mit deinem API-Key".
+- The user sets up the AI once, in the launcher ("KI einrichten") or in an AI app: the provider (Claude or OpenAI), the API key and the model for this provider. "Verbindung prüfen" asks the provider for its list of models. This shows if the key works and fills the model choice. All apps use this setup.
+- The provider and the model of each provider are in `ai/ai.json` in the data folder. They sync with the folder. The API key stays in the browser (IndexedDB): the user types it once per browser and per web address. Never write an API key into a data file.
+- In the app, get the access like this. Use the hook and `AiSettingsDialog` only inside `DataFileProvider`.
+
+  ```tsx
+  const { state } = useAiSettings(); // from @pocket-apps/core/ai
+  const access = state.status === "ready" ? activeAccess(state.setup) : null;
+  // access: { provider, apiKey, model }
+  ```
+
+  `access` is `null` if the user set up no AI, or if this browser has no key. In that case, show a German hint and a button that opens `AiSettingsDialog`.
+
+- Send to the AI only the data that the feature needs. Tell the user which data goes to the provider.
+- The AI module calls the providers with their official SDKs (`@anthropic-ai/sdk`, `openai`), not with `fetchJson`. The SDKs know the errors of the providers. See "AI settings for all apps" in `docs/decisions.md`.
+- In unit tests, replace the browser APIs: `vi.stubGlobal("indexedDB", new IDBFactory())` (from `fake-indexeddb`) and `vi.stubGlobal("fetch", ...)`. See `packages/core/src/ai/ai-settings-dialog.test.tsx`. In browser tests, answer the provider requests with `page.route()`, because the tests have no internet. See `e2e/launcher.spec.ts`.
 
 ### UI
 

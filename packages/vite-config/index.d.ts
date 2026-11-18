@@ -19,9 +19,19 @@ export type AppInfo = {
   stateful: boolean;
   /** True if the app needs the internet, for example for an external API (`pocketApp.network`). */
   network: boolean;
+  /** True if the app has AI features with the API key of the user (`pocketApp.ai`). */
+  ai: boolean;
+  /**
+   * The origins that the app may call: `pocketApp.connect`, plus the AI providers with `ai`.
+   * The build writes them into the Content Security Policy.
+   */
+  allowedOrigins: string[];
   /** The link back to the launcher, or `null` if it is off. */
   backLink: BackLink | null;
 };
+
+/** The APIs of the AI providers. Every app with "ai": true may call them. */
+export declare const AI_ORIGINS: string[];
 
 /** The repository root folder. */
 export declare const ROOT_DIR: string;

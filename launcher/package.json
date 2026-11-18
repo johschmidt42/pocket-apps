@@ -8,8 +8,9 @@
     "title": "Pocket Apps",
     "emoji": "🧰",
     "stateful": true,
-    "network": false,
-    "backLink": false
+    "network": true,
+    "backLink": false,
+    "ai": true
   },
   "scripts": {
     "dev": "vite",

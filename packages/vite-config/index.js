@@ -12,6 +12,9 @@ import { z } from "zod";
 /** The repository root folder. */
 export const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
+/** The APIs of the AI providers. Every app with "ai": true may call them. */
+export const AI_ORIGINS = ["https://api.anthropic.com", "https://api.openai.com"];
+
 const backLinkSchema = z.object({ href: z.string().min(1), label: z.string().min(1) });
 
 const repoConfigSchema = z.object({
@@ -25,13 +28,37 @@ const packageSchema = z.object({
     .string()
     .regex(/^\d+\.\d+\.0$/, 'Use "major.minor.0", for example "1.0.0" or "2.3.0".'),
   description: z.string().min(1),
-  pocketApp: z.object({
-    title: z.string().min(1),
-    emoji: z.string().min(1),
-    stateful: z.boolean(),
-    network: z.boolean(),
-    backLink: z.boolean().optional(),
-  }),
+  pocketApp: z
+    .object({
+      title: z.string().min(1),
+      emoji: z.string().min(1),
+      stateful: z.boolean(),
+      network: z.boolean(),
+      // AI features: the app uses the AI settings (ai/ai.json and the key in the browser).
+      ai: z.boolean().optional(),
+      // The web addresses (origins) of the external APIs. Only these, the app itself and (with
+      // "ai") the AI providers are allowed (Content Security Policy).
+      connect: z
+        .array(
+          z
+            .string()
+            .regex(/^https:\/\/[a-z0-9.-]+$/, 'Use an origin, e.g. "https://api.example.org".'),
+        )
+        .optional(),
+      backLink: z.boolean().optional(),
+    })
+    .refine((app) => app.ai !== true || (app.stateful && app.network), {
+      message: 'An app with "ai": true needs "stateful": true and "network": true.',
+      path: ["ai"],
+    })
+    .refine((app) => app.network || (app.connect ?? []).length === 0, {
+      message: 'An app with "network": false has no "connect" list.',
+      path: ["connect"],
+    })
+    .refine((app) => !app.network || app.ai === true || (app.connect ?? []).length > 0, {
+      message: 'An app with "network": true lists its APIs in "connect" (or has "ai": true).',
+      path: ["connect"],
+    }),
 });
 
 /**
@@ -76,6 +103,8 @@ export function readAppInfo(appDir) {
     emoji: pocketApp.emoji,
     stateful: pocketApp.stateful,
     network: pocketApp.network,
+    ai: pocketApp.ai === true,
+    allowedOrigins: [...(pocketApp.connect ?? []), ...(pocketApp.ai === true ? AI_ORIGINS : [])],
     backLink: showBackLink ? { href: backLink.href, label: backLink.label } : null,
   };
 }
@@ -121,6 +150,37 @@ function appMetaPlugin(app) {
 }
 
 /**
+ * Adds a Content Security Policy as the first tag in <head>. Requests of the page code (fetch,
+ * XMLHttpRequest, WebSocket, EventSource) can go only to its own web address and to
+ * `app.allowedOrigins`. This makes it harder for a foreign script to send data (for example
+ * an API key) to another server. It does not stop all ways: an image URL or a page change can
+ * still carry data. Scripts and styles are inline in the one HTML file, so the policy limits
+ * only `connect-src`. Only for the build: the dev server needs its own
+ * WebSocket. See "Content Security Policy" in docs/decisions.md.
+ *
+ * @param {import("./index.d.ts").AppInfo} app
+ * @returns {import("vite").Plugin}
+ */
+function cspPlugin(app) {
+  return {
+    name: "pocket-apps:csp",
+    apply: "build",
+    transformIndexHtml() {
+      return [
+        {
+          tag: "meta",
+          attrs: {
+            "http-equiv": "Content-Security-Policy",
+            content: ["connect-src 'self'", ...app.allowedOrigins].join(" "),
+          },
+          injectTo: "head-prepend",
+        },
+      ];
+    },
+  };
+}
+
+/**
  * Creates the Vite config for one app or the launcher.
  * The build output is one self-contained HTML file: dist/index.html.
  *
@@ -135,7 +195,7 @@ export function createAppConfig(configUrl, options = {}) {
     root: appDir,
     // Relative paths: the files work on GitHub Pages and from disk (file://, in the browser tests).
     base: "./",
-    plugins: [react(), tailwindcss(), viteSingleFile(), appMetaPlugin(app)],
+    plugins: [react(), tailwindcss(), viteSingleFile(), appMetaPlugin(app), cspPlugin(app)],
     define: {
       __POCKET_APP__: JSON.stringify(app),
       __POCKET_APPS__: JSON.stringify(options.withAppList === true ? listApps() : []),

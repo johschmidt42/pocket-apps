@@ -180,3 +180,64 @@ test.describe("launcher in browsers without folder access", () => {
     await expect(page.getByRole("button", { name: /Favoriten/ })).toHaveCount(0);
   });
 });
+
+test.describe("launcher AI settings", () => {
+  test("checks a key, saves provider and model in ai/ai.json and the key only in the browser", async ({
+    page,
+    pageErrors,
+  }) => {
+    // The tests have no internet. A fake answer stands for the model list of Anthropic.
+    await page.route("https://api.anthropic.com/v1/models**", (route) =>
+      route.fulfill({
+        json: {
+          data: [
+            {
+              type: "model",
+              id: "claude-opus-5-5",
+              display_name: "Claude Opus 5.5",
+              created_at: "2026-10-01T00:00:00Z",
+            },
+            {
+              type: "model",
+              id: "claude-haiku-5-5",
+              display_name: "Claude Haiku 5.5",
+              created_at: "2026-09-01T00:00:00Z",
+            },
+          ],
+          has_more: false,
+        },
+        headers: { "access-control-allow-origin": "*" },
+      }),
+    );
+    await withDataFolder(page);
+    await page.goto(releaseUrl("index.html"));
+    // The policy allows only the own address and the AI providers.
+    await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
+      "content",
+      "connect-src 'self' https://api.anthropic.com https://api.openai.com",
+    );
+
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+    await page.getByRole("button", { name: "KI einrichten" }).click();
+    const dialog = page.getByRole("dialog", { name: "KI einrichten" });
+    await dialog.getByLabel("API-Key").fill("sk-ant-e2e");
+    await dialog.getByRole("button", { name: "Verbindung prüfen" }).click();
+    await expect(dialog.getByText(/Der Key funktioniert\. 2 Modelle verfügbar\./)).toBeVisible();
+    await expect(dialog.getByLabel("Modell")).toHaveValue("claude-opus-5-5");
+    await dialog.getByRole("button", { name: "Speichern" }).click();
+    await expect(dialog).toBeHidden();
+
+    const file = (await readDataFile(page, "ai/ai.json")) ?? "";
+    expect(JSON.parse(file)).toMatchObject({
+      app: "ai",
+      data: { active: "anthropic", models: { anthropic: "claude-opus-5-5", openai: null } },
+    });
+    expect(file).not.toContain("sk-ant-e2e");
+
+    // The key stays in the browser after a reload.
+    await page.reload();
+    await page.getByRole("button", { name: "KI einrichten" }).click();
+    await expect(page.getByRole("dialog").getByLabel("API-Key")).toHaveValue("sk-ant-e2e");
+    expect(pageErrors).toEqual([]);
+  });
+});

@@ -8,7 +8,10 @@
     "title": "Schuljahr",
     "emoji": "🎒",
     "stateful": true,
-    "network": true
+    "network": true,
+    "connect": [
+      "https://openholidaysapi.org"
+    ]
   },
   "scripts": {
     "dev": "vite",

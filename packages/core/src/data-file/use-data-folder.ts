@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { errorText } from "../error-text.ts";
 import type { DataFolder, FolderHost } from "./folder.ts";
 
 export type FolderState =
@@ -15,7 +16,7 @@ function stateFor(folder: DataFolder, access: PermissionState): FolderState {
 }
 
 function folderErrorMessage(error: unknown): string {
-  return `Der Datenordner ist nicht verfügbar: ${error instanceof Error ? error.message : String(error)}`;
+  return `Der Datenordner ist nicht verfügbar: ${errorText(error)}`;
 }
 
 /** Finds the remembered data folder and its access state. Offers pick (also to change the folder) and grant. */

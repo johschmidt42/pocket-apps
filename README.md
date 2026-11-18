@@ -21,6 +21,7 @@ Each card shows the app version (for example `1.0`) and two icons. Move the mous
 
 - Disk icon: the app keeps your data in a file in your data folder. A crossed-out disk: the app keeps nothing.
 - Globe: the app uses an online service. A crossed-out Wi-Fi symbol: the app uses no online service and sends no data to the internet.
+- Sparkles: the app has AI features. They use your own API key. See "Set up the AI".
 
 The header shows the app version, for example `1.0`. The moon button switches to dark mode. The sun button switches back to light mode.
 
@@ -53,6 +54,24 @@ More tips:
 - Do you have a data file from an earlier version of Pocket Apps (before the data folder), for example `app-ideen.json`? Put it into the data folder before you open the app, but only if the app has no folder there yet (for example `app-ideen/`). The app then moves the file into its folder and opens it.
 
 Apps with data work only in Chrome and Edge on a computer. Other browsers show a notice. Apps without data, for example the Zinsrechner, also work in other browsers.
+
+### Set up the AI
+
+Apps with AI features use your own API key of Claude (Anthropic) or OpenAI. The provider charges you for each use. A Claude Pro or ChatGPT subscription does not include this use.
+
+1. Create an API key: for Claude at https://platform.claude.com/settings/keys, for OpenAI at https://platform.openai.com/api-keys. Set a spend limit at the provider. For a Claude key, also set an expiry date. Then a lost key can do little damage.
+2. On the start page, pick your data folder. Then click "KI einrichten". An app with AI features also has this dialog.
+3. Select the provider. Paste the key into "API-Key".
+4. Click "Verbindung prüfen". The app asks the provider for its list of models. This check costs nothing.
+5. Select the model. For Claude, the app selects Claude Opus 5.5 first, if your key can use it. Click "Speichern".
+
+Where the app keeps the setup:
+
+- The provider and the model are in the file `ai/ai.json` in your data folder. Your other computers get them with the folder.
+- The API key stays in this browser. It is not in the data folder and not in Google Drive. In another browser or on another computer, type the key once more.
+- "Key entfernen" in the same dialog removes the key only from this browser.
+
+The apps block requests to servers that they do not need. This makes it harder for a faulty page on johschmidt42.github.io to send your key away, but not impossible. Thus set the spend limit.
 
 ### Updates
 
