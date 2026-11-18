@@ -6,6 +6,7 @@ import { Plus, Sparkles } from "lucide-react";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { AiEntryDialog, type AiEntryState } from "./ai-entry-dialog.tsx";
+import { NO_EXERCISE_FILTER, type ExerciseFilter } from "./exercise-filter.ts";
 import { HistoryList } from "./history-list.tsx";
 import { ResultDialog, type ResultDraft } from "./result-dialog.tsx";
 import { useDataFile } from "./schema.ts";
@@ -60,6 +61,7 @@ export function LogbookView({ ask }: LogbookViewProps) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
+  const [exercises, setExercises] = useState<ExerciseFilter>(NO_EXERCISE_FILTER);
   const [resultDraft, setResultDraft] = useState<ResultDraft | null>(null);
   const [workoutDialog, setWorkoutDialog] = useState<WorkoutDialogState>({ kind: "closed" });
   const [aiEntry, setAiEntry] = useState<AiEntryState>(null);
@@ -153,6 +155,8 @@ export function LogbookView({ ask }: LogbookViewProps) {
               onFilter={setFilter}
               status={status}
               onStatus={setStatus}
+              exercises={exercises}
+              onExercises={setExercises}
               onOpen={openWorkout}
             />
           </TabsContent>

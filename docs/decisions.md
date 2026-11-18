@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-18: Exercise filter with Include and Exclude (trainingsbuch)
+
+- **Context:** The workout list of `trainingsbuch` has a filter by exercises: exercises that a workout must have, and exercises that it must not have. AGENTS.md says: UI text is German.
+- **Decision:** A workout matches if it has all "Include" exercises (AND) and none of the "Exclude" exercises. The filter works together with the text search, the category and the status. It is not saved: it is gone after a reload, like the other filters of the list.
+- **Decision:** A switch with two parts (`ToggleGroup`) at the top of the dialog sets the mode: "Include" or "Exclude". Each time the dialog opens, the mode is "Include". Each exercise is a chip: a tap chooses it in the current mode, a second tap removes it. A chip of the other mode stays visible, but paler, with its icon (✓ or ⃠) and its color. A tap moves it to the current mode. For screen readers, the name of each chip says its mode, for example "Row, 35 Workouts: Exclude".
+- **Decision:** The two modes have the English names "Include" and "Exclude". The project owner chose them. All other text of the dialog stays German. Other apps use these words for the same filter (recipe apps for ingredients). The exercise names are English too (see "Workout texts and exercise names in English").
+- **Rejected:** Two buttons "Mit" and "Ohne" in each row of the dialog: too much repetition with more than 100 exercises. One chip with three states (a tap for "mit", a second tap for "ohne", a third tap for neutral): a second tap that does not remove the choice is not clear. German words: "Mit / Ohne" and "Enthält / Enthält nicht" were the alternatives.
+
 ## 2026-11-18: Launcher icons for apps with AI (launcher)
 
 - **Context:** The first app with AI (`trainingsbuch`) showed two icons on its launcher card: the globe "Nutzt Online-Dienste" and the sparkles. The project owner noted: with AI, a user expects the internet anyway. The globe makes the user think of external APIs, for example holidays or stock prices. The app goes online only for the AI.
