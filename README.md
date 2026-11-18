@@ -99,16 +99,16 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 
 ## Apps
 
-| App           | Data file | Internet | Description                                                                                                                   |
-| ------------- | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| zinsrechner   | no        | no       | Compound interest for a capital.                                                                                              |
-| app-ideen     | yes       | no       | Collects ideas for new apps.                                                                                                  |
-| fixkosten     | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles.                                                               |
-| kursverlauf   | yes       | yes      | Price history of ETFs from Xetra, with a comparison.                                                                          |
-| countdown     | yes       | no       | Days, hours, minutes and seconds until your events.                                                                           |
-| attraktor     | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.                                                                |
-| schuljahr     | yes       | yes      | Holidays, public holidays and school days of a school year.                                                                   |
-| zeitstrahl    | yes       | no       | Moments and time ranges on vertical timelines, for example a CV.                                                              |
-| lebenslauf    | yes       | no       | CV as an A4 page with variants per job ad. Print it or save a PDF.                                                            |
-| galerie       | no        | no       | The images of a folder, with thumbnails and a large preview.                                                                  |
-| trainingsbuch | yes       | no       | Logs your results of well-known fitness workouts (for example "The Girls" and the yearly Open), and of workouts that you add. |
+| App           | Data file | Internet | Description                                                                                                                                                                      |
+| ------------- | --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| zinsrechner   | no        | no       | Compound interest for a capital.                                                                                                                                                 |
+| app-ideen     | yes       | no       | Collects ideas for new apps.                                                                                                                                                     |
+| fixkosten     | yes       | no       | Running costs as Sankey, bars, tiles and months, with profiles.                                                                                                                  |
+| kursverlauf   | yes       | yes      | Price history of ETFs from Xetra, with a comparison.                                                                                                                             |
+| countdown     | yes       | no       | Days, hours, minutes and seconds until your events.                                                                                                                              |
+| attraktor     | no        | no       | Glowing lines of a strange attractor. The mouse pulls on them.                                                                                                                   |
+| schuljahr     | yes       | yes      | Holidays, public holidays and school days of a school year.                                                                                                                      |
+| zeitstrahl    | yes       | no       | Moments and time ranges on vertical timelines, for example a CV.                                                                                                                 |
+| lebenslauf    | yes       | no       | CV as an A4 page with variants per job ad. Print it or save a PDF.                                                                                                               |
+| galerie       | no        | no       | The images of a folder, with thumbnails and a large preview.                                                                                                                     |
+| trainingsbuch | yes       | yes      | Logs your results of well-known fitness workouts (for example "The Girls" and the yearly Open), and of workouts that you add. The AI can record a result from a text or a photo. |

@@ -102,12 +102,13 @@ export function AppCard({ app, heading: Heading, favorite }: AppCardProps) {
                 app.stateful ? "Speichert Daten in einer eigenen Datei" : "Speichert keine Daten"
               }
             />
-            <LabelIcon
-              icon={app.network ? Globe : WifiOff}
-              label={app.network ? "Nutzt Online-Dienste" : "Nutzt keine Online-Dienste"}
-            />
-            {/* Only apps with AI show this icon. Most apps have none. */}
-            {app.ai && <LabelIcon icon={Sparkles} label="Nutzt KI mit deinem API-Key" />}
+            {/* The globe stands for external APIs. An app that goes online only for the AI shows only
+                the AI icon: two icons for one thing would suggest more traffic. */}
+            {!app.network && <LabelIcon icon={WifiOff} label="Nutzt keine Online-Dienste" />}
+            {app.apis && <LabelIcon icon={Globe} label="Nutzt Online-Dienste" />}
+            {app.ai && (
+              <LabelIcon icon={Sparkles} label="Nutzt KI über das Internet, mit deinem API-Key" />
+            )}
           </CardFooter>
         </Card>
       </a>

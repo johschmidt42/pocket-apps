@@ -25,11 +25,13 @@ test.describe("launcher (release/index.html)", () => {
           name: app.stateful ? "Speichert Daten in einer eigenen Datei" : "Speichert keine Daten",
         }),
       ).toBeVisible();
-      await expect(
-        card.getByRole("img", {
-          name: app.network ? "Nutzt Online-Dienste" : "Nutzt keine Online-Dienste",
-        }),
-      ).toBeVisible();
+      await expect(card.getByRole("img", { name: "Nutzt keine Online-Dienste" })).toHaveCount(
+        app.network ? 0 : 1,
+      );
+      await expect(card.getByRole("img", { name: "Nutzt Online-Dienste" })).toHaveCount(
+        app.apis ? 1 : 0,
+      );
+      await expect(card.getByRole("img", { name: /Nutzt KI/ })).toHaveCount(app.ai ? 1 : 0);
     }
     await expect(page.getByRole("link", { name: "Alle Apps" })).toHaveCount(0);
     expect(pageErrors).toEqual([]);

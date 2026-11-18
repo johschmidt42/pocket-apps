@@ -1,9 +1,11 @@
+import type { AskAi } from "@pocket-apps/core/ai";
 import { isOneOf } from "@pocket-apps/core/one-of";
 import { Button } from "@pocket-apps/ui/components/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@pocket-apps/ui/components/tabs";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import { AiEntryDialog, type AiEntryState } from "./ai-entry-dialog.tsx";
 import { HistoryList } from "./history-list.tsx";
 import { ResultDialog, type ResultDraft } from "./result-dialog.tsx";
 import { useDataFile } from "./schema.ts";
@@ -26,8 +28,13 @@ import {
 const TABS = ["workouts", "history"] as const;
 type Tab = (typeof TABS)[number];
 
+export type LogbookViewProps = {
+  /** Only for tests: a fake for the requests to the AI. */
+  ask?: AskAi | undefined;
+};
+
 /** The whole app: the workout list, the history and one open workout. */
-export function LogbookView() {
+export function LogbookView({ ask }: LogbookViewProps) {
   const { data, update } = useDataFile();
   const [openId, setOpenId] = useState<string | null>(null);
   // Where the list was scrolled to before a workout opened. "Back" returns there.
@@ -55,6 +62,7 @@ export function LogbookView() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [resultDraft, setResultDraft] = useState<ResultDraft | null>(null);
   const [workoutDialog, setWorkoutDialog] = useState<WorkoutDialogState>({ kind: "closed" });
+  const [aiEntry, setAiEntry] = useState<AiEntryState>(null);
 
   const workouts = allWorkouts(data);
   const open = workouts.find((workout) => workout.id === openId) ?? null;
@@ -73,6 +81,9 @@ export function LogbookView() {
           onBack={closeWorkout}
           onAddResult={() => {
             setResultDraft({ workout: open, result: null });
+          }}
+          onAddWithAi={() => {
+            setAiEntry({ focus: open });
           }}
           onEditResult={(result) => {
             setResultDraft({ workout: open, result });
@@ -109,15 +120,25 @@ export function LogbookView() {
               <TabsTrigger value="workouts">Workouts</TabsTrigger>
               <TabsTrigger value="history">Verlauf</TabsTrigger>
             </TabsList>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setWorkoutDialog({ kind: "new" });
-              }}
-            >
-              <Plus data-icon="inline-start" />
-              Eigenes Workout
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setWorkoutDialog({ kind: "new" });
+                }}
+              >
+                <Plus data-icon="inline-start" />
+                Eigenes Workout
+              </Button>
+              <Button
+                onClick={() => {
+                  setAiEntry({ focus: null });
+                }}
+              >
+                <Sparkles data-icon="inline-start" />
+                Mit KI eintragen
+              </Button>
+            </div>
           </div>
 
           <TabsContent value="workouts" className="flex flex-col gap-4">
@@ -155,6 +176,21 @@ export function LogbookView() {
         }}
         onClose={() => {
           setResultDraft(null);
+        }}
+      />
+
+      <AiEntryDialog
+        state={aiEntry}
+        ask={ask}
+        onSave={({ newWorkout, result }) => {
+          update((current) =>
+            upsertResult(newWorkout ? upsertWorkout(current, newWorkout) : current, result),
+          );
+          setAiEntry(null);
+          openWorkout(result.workoutId);
+        }}
+        onClose={() => {
+          setAiEntry(null);
         }}
       />
 

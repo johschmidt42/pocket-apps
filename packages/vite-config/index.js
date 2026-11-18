@@ -104,6 +104,7 @@ export function readAppInfo(appDir) {
     stateful: pocketApp.stateful,
     network: pocketApp.network,
     ai: pocketApp.ai === true,
+    apis: (pocketApp.connect ?? []).length > 0,
     allowedOrigins: [...(pocketApp.connect ?? []), ...(pocketApp.ai === true ? AI_ORIGINS : [])],
     backLink: showBackLink ? { href: backLink.href, label: backLink.label } : null,
   };

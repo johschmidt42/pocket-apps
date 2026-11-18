@@ -2,7 +2,7 @@ import { Badge } from "@pocket-apps/ui/components/badge";
 import { isOneOf } from "@pocket-apps/core/one-of";
 import { Button } from "@pocket-apps/ui/components/button";
 import { ToggleGroup, ToggleGroupItem } from "@pocket-apps/ui/components/toggle-group";
-import { ArrowLeft, Pencil, Plus, Trash2, Trophy } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Sparkles, Trash2, Trophy } from "lucide-react";
 import { formatDay, formatShortDay } from "./dates.ts";
 import { DivisionBadge } from "./division-badge.tsx";
 import { ExerciseIcon } from "./exercise-icon.tsx";
@@ -23,6 +23,8 @@ export type WorkoutDetailProps = {
   onUnits: (units: UnitSystem) => void;
   onBack: () => void;
   onAddResult: () => void;
+  /** Opens "Mit KI eintragen" for this workout. */
+  onAddWithAi: () => void;
   onEditResult: (result: Result) => void;
   onRemoveResult: (result: Result) => void;
   /** Only for own workouts: change or remove the workout. */
@@ -37,6 +39,7 @@ export function WorkoutDetail({
   onUnits,
   onBack,
   onAddResult,
+  onAddWithAi,
   onEditResult,
   onRemoveResult,
   ownActions,
@@ -108,10 +111,16 @@ export function WorkoutDetail({
               <p className="text-2xl font-bold">Noch kein Ergebnis</p>
             )}
           </aside>
-          <Button size="lg" onClick={onAddResult}>
-            <Plus data-icon="inline-start" />
-            Ergebnis eintragen
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="lg" onClick={onAddResult}>
+              <Plus data-icon="inline-start" />
+              Ergebnis eintragen
+            </Button>
+            <Button size="lg" variant="outline" onClick={onAddWithAi}>
+              <Sparkles data-icon="inline-start" />
+              Mit KI
+            </Button>
+          </div>
         </div>
       </header>
 

@@ -11,6 +11,7 @@ export function testAppInfo(overrides: Partial<AppInfo> = {}): AppInfo {
     stateful: false,
     network: false,
     ai: false,
+    apis: false,
     allowedOrigins: [],
     backLink: { href: "./index.html", label: "Alle Apps" },
     ...overrides,

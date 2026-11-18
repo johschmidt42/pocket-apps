@@ -21,6 +21,8 @@ export type AppInfo = {
   network: boolean;
   /** True if the app has AI features with the API key of the user (`pocketApp.ai`). */
   ai: boolean;
+  /** True if the app calls external APIs (`pocketApp.connect` is not empty). */
+  apis: boolean;
   /**
    * The origins that the app may call: `pocketApp.connect`, plus the AI providers with `ai`.
    * The build writes them into the Content Security Policy.

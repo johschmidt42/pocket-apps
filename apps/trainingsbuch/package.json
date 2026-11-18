@@ -1,14 +1,15 @@
 {
   "name": "trainingsbuch",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Speichert deine Ergebnisse bei Benchmark-, Hero- und Open-Workouts.",
+  "description": "Speichert deine Ergebnisse bei Benchmark-, Hero- und Open-Workouts. Auf Wunsch trägt die KI sie aus Text oder Foto ein.",
   "pocketApp": {
     "title": "Trainingsbuch",
     "emoji": "🏋️",
     "stateful": true,
-    "network": false
+    "network": true,
+    "ai": true
   },
   "scripts": {
     "dev": "vite",

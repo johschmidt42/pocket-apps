@@ -11,9 +11,18 @@ const apps = [
   testAppInfo({ name: "app-ideen", title: "App-Ideen", stateful: true, network: true, ai: true }),
 ];
 
+/** An app with own APIs and AI. Only the test of the icons uses it. */
+const SCHULJAHR_APP = testAppInfo({
+  name: "schuljahr",
+  title: "Schuljahr",
+  network: true,
+  apis: true,
+  ai: true,
+});
+
 describe("Launcher", () => {
   it("shows a card with a link for every app", () => {
-    render(<App apps={apps} />);
+    render(<App apps={[...apps, SCHULJAHR_APP]} />);
 
     expect(screen.getByRole("link", { name: "Zinsrechner" })).toHaveAttribute(
       "href",
@@ -33,12 +42,18 @@ describe("Launcher", () => {
     expect(
       within(liste).getByRole("img", { name: "Speichert Daten in einer eigenen Datei" }),
     ).toBeInTheDocument();
-    expect(within(liste).getByRole("img", { name: "Nutzt Online-Dienste" })).toBeInTheDocument();
-    // Only apps with AI show the AI icon.
+    // Only apps with AI show the AI icon. An app that goes online only for the AI shows no globe.
     expect(
-      within(liste).getByRole("img", { name: "Nutzt KI mit deinem API-Key" }),
+      within(liste).getByRole("img", { name: "Nutzt KI über das Internet, mit deinem API-Key" }),
     ).toBeInTheDocument();
+    expect(within(liste).queryByRole("img", { name: /Online-Dienste/ })).not.toBeInTheDocument();
     expect(within(zins).queryByRole("img", { name: /KI/ })).not.toBeInTheDocument();
+    // An app with own APIs and AI shows both.
+    const schuljahr = screen.getByRole("link", { name: "Schuljahr" });
+    expect(
+      within(schuljahr).getByRole("img", { name: "Nutzt Online-Dienste" }),
+    ).toBeInTheDocument();
+    expect(within(schuljahr).getByRole("img", { name: /Nutzt KI/ })).toBeInTheDocument();
   });
 
   it("opens the AI settings, only with the data folder", async () => {
