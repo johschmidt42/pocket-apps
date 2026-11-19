@@ -6,6 +6,7 @@
   "exports": {
     "./app-shell": "./src/app-shell/index.ts",
     "./ai": "./src/ai/index.ts",
+    "./camera-button": "./src/camera-button.tsx",
     "./data-file": "./src/data-file/index.ts",
     "./data-file/testing": "./src/data-file/testing.ts",
     "./fetch-json": "./src/fetch-json.ts",

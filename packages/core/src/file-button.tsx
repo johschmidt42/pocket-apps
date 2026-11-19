@@ -9,6 +9,11 @@ export type FileButtonProps = Omit<ComponentProps<typeof Button>, "onClick" | "t
   inputLabel: string;
   /** Gets the file that the person picked. Not called if the person cancels. */
   onFile: (file: File) => void;
+  /**
+   * Opens the camera instead of the file dialog, on phones and tablets: "environment" is the
+   * camera on the back. Computers ignore it. See `CameraButton`.
+   */
+  capture?: "environment" | "user";
 };
 
 /**
@@ -17,7 +22,14 @@ export type FileButtonProps = Omit<ComponentProps<typeof Button>, "onClick" | "t
  * It only reads a file that the person picks. To keep the file, write it into the data folder
  * (`useDataFile().files`).
  */
-export function FileButton({ accept, inputLabel, onFile, children, ...props }: FileButtonProps) {
+export function FileButton({
+  accept,
+  inputLabel,
+  onFile,
+  capture,
+  children,
+  ...props
+}: FileButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -34,6 +46,7 @@ export function FileButton({ accept, inputLabel, onFile, children, ...props }: F
         ref={inputRef}
         type="file"
         accept={accept}
+        capture={capture}
         aria-label={inputLabel}
         tabIndex={-1}
         className="hidden"

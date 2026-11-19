@@ -13,6 +13,21 @@ export type AiImage = { mediaType: AiImageType; base64: string };
  */
 export const MAX_IMAGE_BYTES = (5 * 1024 * 1024 * 3) / 4;
 
+/**
+ * The longest edge of an image for the AI, in pixels. Claude makes larger images smaller itself,
+ * so more pixels only cost upload time. A camera photo of a whiteboard stays readable.
+ */
+export const MAX_IMAGE_EDGE = 1568;
+
+/** The JPEG quality of a smaller copy: small files, and the text on a photo stays sharp. */
+const JPEG_QUALITY = 0.85;
+
+/**
+ * Makes an image smaller for the AI. Returns a JPEG copy, or `null` to keep the file: when the
+ * file already fits, or when the browser cannot read it.
+ */
+export type ShrinkImage = (file: Blob) => Promise<Blob | null>;
+
 /** The number of bytes for each call of `String.fromCharCode()`. */
 const CHUNK_BYTES = 0x8000;
 
@@ -32,12 +47,49 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(text);
 }
 
-/** Reads a picked file (for example from `FileButton`) as an image for the AI. */
-export async function imageForAi(file: Blob): Promise<ImageCheck> {
-  if (!isImageType(file.type)) return { kind: "wrong-type" };
-  if (file.size > MAX_IMAGE_BYTES) return { kind: "too-large" };
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  return { kind: "ok", image: { mediaType: file.type, base64: toBase64(bytes) } };
+/**
+ * The browser makes the image smaller: a camera photo (often 3 to 6 MB, 4000 pixels wide) or an
+ * image in another format, for example HEIC. `createImageBitmap()` turns the photo by its EXIF
+ * orientation.
+ */
+export const shrinkInBrowser: ShrinkImage = async (file) => {
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    // The browser cannot read the image. The size and type check decides.
+    return null;
+  }
+  const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height));
+  if (scale === 1 && isImageType(file.type) && file.size <= MAX_IMAGE_BYTES) {
+    bitmap.close();
+    return null;
+  }
+  const canvas = new OffscreenCanvas(
+    Math.round(bitmap.width * scale),
+    Math.round(bitmap.height * scale),
+  );
+  const context = canvas.getContext("2d");
+  if (context) context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  // Without a 2D context, the copy would be empty: keep the file.
+  return context ? canvas.convertToBlob({ type: "image/jpeg", quality: JPEG_QUALITY }) : null;
+};
+
+/**
+ * Reads a picked file (for example from `FileButton` or `CameraButton`) as an image for the AI.
+ * A large image becomes a smaller JPEG first. `shrink` is only for tests.
+ */
+export async function imageForAi(
+  file: Blob,
+  shrink: ShrinkImage = shrinkInBrowser,
+): Promise<ImageCheck> {
+  if (!file.type.startsWith("image/")) return { kind: "wrong-type" };
+  const image = (await shrink(file)) ?? file;
+  if (!isImageType(image.type)) return { kind: "wrong-type" };
+  if (image.size > MAX_IMAGE_BYTES) return { kind: "too-large" };
+  const bytes = new Uint8Array(await image.arrayBuffer());
+  return { kind: "ok", image: { mediaType: image.type, base64: toBase64(bytes) } };
 }
 
 /** The problem with an image as a German sentence. */

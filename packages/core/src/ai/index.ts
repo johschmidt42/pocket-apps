@@ -14,7 +14,13 @@ export {
   type AskAi,
 } from "./ask.ts";
 export { checkKey, type AiModel, type KeyCheck } from "./check-key.ts";
-export { imageForAi, imageMessage, type AiImage, type ImageCheck } from "./images.ts";
+export {
+  imageForAi,
+  imageMessage,
+  MAX_IMAGE_EDGE,
+  type AiImage,
+  type ImageCheck,
+} from "./images.ts";
 export { addUsage, formatUsage, type AiUsage } from "./pricing.ts";
 export {
   activeAccess,

@@ -3,6 +3,13 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-19: Photos with the camera of a phone (core, trainingsbuch)
+
+- **Context:** With OneDrive, the apps work on a phone. In `trainingsbuch`, the user takes a photo of the whiteboard in the gym. On Android, the file dialog of "Foto" did not offer the camera. A camera photo has often 3 to 6 MB and 4000 pixels. `imageForAi()` refused images larger than 3.75 MiB.
+- **Decision:** `CameraButton` in `packages/core` is a `FileButton` with `capture="environment"`: a tap opens the camera on the back. It shows only on a device with a touch screen as its main pointer (`(pointer: coarse)`). On a computer, the browser ignores `capture` and opens the file dialog, so a second button would only confuse. Next to it, "Foto wählen" opens the gallery or the files, with `accept="image/*"`.
+- **Decision:** `imageForAi()` makes an image smaller before it reads it: at most 1568 pixels on the long edge, JPEG with quality 0.85. It does this also for formats that the AI does not read (for example HEIC), if the browser can read them. Claude makes larger images smaller itself, so the copy loses nothing for the AI. It saves mobile data, upload time and tokens. `createImageBitmap()` turns the photo by its EXIF orientation. The browser does the work (`OffscreenCanvas`), there is no new dependency.
+- **Consequence:** `trainingsbuch` 3.1. `e2e/trainingsbuch.spec.ts` emulates a phone (`isMobile`, `hasTouch`) and checks that a photo of 4000 × 3000 pixels reaches the AI as 1568 × 1176 pixels.
+
 ## 2026-11-19: OneDrive as a second storage for the data (core)
 
 - **Context:** The data folder works only in Chrome and Edge on a computer (File System Access API). The project owner wants to use the apps on a phone and in all browsers, for example `trainingsbuch` in the gym. The data must stay with the user, without a server of ours.

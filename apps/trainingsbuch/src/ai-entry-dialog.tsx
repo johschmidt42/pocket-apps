@@ -13,6 +13,7 @@ import {
   type AiUsage,
   type AskAi,
 } from "@pocket-apps/core/ai";
+import { CameraButton } from "@pocket-apps/core/camera-button";
 import { FileButton } from "@pocket-apps/core/file-button";
 import { Alert, AlertDescription } from "@pocket-apps/ui/components/alert";
 import { Button } from "@pocket-apps/ui/components/button";
@@ -51,7 +52,8 @@ export type AiEntryDialogProps = {
 };
 
 /** The file types that both AI providers read. */
-const PHOTO_TYPES = "image/jpeg,image/png,image/gif,image/webp";
+/** All images: the app makes a large photo or another format (for example HEIC) a smaller JPEG. */
+const PHOTO_TYPES = "image/*";
 
 /** How often the app sends a problem of a draft back to the AI before it gives up. */
 const MAX_FIXES = 2;
@@ -360,6 +362,16 @@ function Conversation({
           }}
         />
         <div className="flex flex-wrap items-center gap-2">
+          {/* Only on phones and tablets: there, a photo of the whiteboard is one tap away. */}
+          <CameraButton
+            variant="outline"
+            size="sm"
+            inputLabel="Kamera"
+            onFile={(file) => void pickPhoto(file)}
+          >
+            <Camera data-icon="inline-start" />
+            Foto aufnehmen
+          </CameraButton>
           <FileButton
             variant="outline"
             size="sm"
@@ -367,8 +379,8 @@ function Conversation({
             inputLabel="Foto-Datei"
             onFile={(file) => void pickPhoto(file)}
           >
-            <Camera data-icon="inline-start" />
-            Foto
+            <ImageIcon data-icon="inline-start" />
+            Foto wählen
           </FileButton>
           {photo && (
             <span className="flex min-w-0 items-center gap-1 text-sm">

@@ -174,6 +174,10 @@ describe("Mit KI eintragen", () => {
     const dialog = screen.getByRole("dialog", { name: "Mit KI eintragen" });
     expect(within(dialog).getByText(/kg oder lb und das Workout „Fran“/)).toBeVisible();
 
+    // A computer has no camera button: there, it would open only the file dialog.
+    expect(
+      within(dialog).queryByRole("button", { name: "Foto aufnehmen" }),
+    ).not.toBeInTheDocument();
     const photo = new File([new Uint8Array([1, 2, 3])], "whiteboard.png", { type: "image/png" });
     await user.upload(within(dialog).getByLabelText("Foto-Datei"), photo);
     expect(within(dialog).getByText("whiteboard.png")).toBeInTheDocument();
@@ -219,6 +223,29 @@ describe("Mit KI eintragen", () => {
     expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Foto entfernen" }));
     expect(within(dialog).queryByText("a.jpg")).not.toBeInTheDocument();
+  });
+
+  it("takes a photo with the camera on a phone", async () => {
+    vi.stubGlobal("matchMedia", (query: string) => ({ matches: query === "(pointer: coarse)" }));
+    const ask = fakeAsk(ok(DRAFT));
+    const { user } = await openApp(ask);
+    await user.click(screen.getByRole("button", { name: "Mit KI eintragen" }));
+    const dialog = screen.getByRole("dialog", { name: "Mit KI eintragen" });
+
+    expect(within(dialog).getByRole("button", { name: "Foto aufnehmen" })).toBeVisible();
+    const photo = new File([new Uint8Array([7])], "kamera.jpg", { type: "image/jpeg" });
+    await user.upload(within(dialog).getByLabelText("Kamera"), photo);
+    expect(within(dialog).getByText("kamera.jpg")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "Senden" }));
+
+    await within(dialog).findByRole("region", { name: "Dein Eintrag" });
+    expect(ask.mock.calls[0]?.[0].messages).toEqual([
+      {
+        role: "user",
+        text: "Hier ist ein Foto.",
+        images: [{ mediaType: "image/jpeg", base64: "Bw==" }],
+      },
+    ]);
   });
 
   it("sends a problem of a draft back to the AI and shows only the fixed draft", async () => {

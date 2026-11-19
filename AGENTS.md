@@ -64,6 +64,7 @@ packages/core/             Shared code:
   src/error-text.ts        errorText(error): the message of an error, as text.
   src/name-dialog.tsx      NameDialog: asks for the name of a new item, or a new name (rename).
   src/file-button.tsx      FileButton: opens the file dialog of the system, gives the picked file.
+  src/camera-button.tsx    CameraButton: opens the camera on the back of a phone. Only on touch screens.
   src/folder-button.tsx    FolderButton: opens the folder dialog, gives all files of the folder (read
                            only, not remembered, not related to the data folder).
   src/one-of.ts            isOneOf(list, value): narrows a string to one of the list items.
@@ -185,6 +186,7 @@ Read `packages/core/src/ai/README.md` before you write or change an AI feature. 
 - When a click shows a sub-page of the app with a button back to the main page (for example the detail of one item), use `useSubPage()` from `@pocket-apps/core/sub-page`. Then the back button of the browser closes the sub-page, and a reload shows it again. Read its JSDoc first.
 - Only a sub-page adds an entry to the browser history. Tabs, filters, a selected item in a list and dialogs do not.
 - For a file dialog, use `FileButton` or `FolderButton` from `packages/core`. Apps use no own `<input type="file">`.
+- To take a photo, show `CameraButton` ("Foto aufnehmen") next to a `FileButton` ("Foto wählen"). `CameraButton` shows only on phones and tablets. See `apps/trainingsbuch/src/ai-entry-dialog.tsx`.
 - Make layouts work in narrow windows (320 px). Write classes for small screens first. Add `sm:` and `md:` classes only for larger screens.
 
 ### HTML and accessibility

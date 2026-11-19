@@ -71,10 +71,15 @@ The provider keeps the start of the conversation in its cache for 5 minutes, if 
 
 ## Images
 
-Call `await imageForAi(file)`. It accepts JPEG, PNG, GIF and WebP up to 3.75 MiB per image. Base64 makes the image 4/3 as large, and Claude accepts 5 MiB of base64 text. It returns:
+Call `await imageForAi(file)`. Use `accept="image/*"` on the `FileButton`.
+
+- If the image has more than 1568 pixels (`MAX_IMAGE_EDGE`) on its long edge, or is not JPEG, PNG, GIF or WebP, or is larger than 3.75 MiB, the browser makes a smaller JPEG copy first. Claude makes larger images smaller itself, so more pixels only cost upload time. A camera photo (often 3 to 6 MB) becomes much smaller.
+- The limit of 3.75 MiB comes from Claude: it accepts 5 MiB of base64 text, and base64 makes the image 4/3 as large.
+
+It returns:
 
 - `{ kind: "ok", image }`: put `image` into `images` of the message of the user.
-- `{ kind: "wrong-type" }` or `{ kind: "too-large" }`: `imageMessage(check)` gives the German message.
+- `{ kind: "wrong-type" }` or `{ kind: "too-large" }`: `imageMessage(check)` gives the German message. This happens only for a file that is not an image, or for an image that the browser cannot read.
 
 ## Notices and cost
 
