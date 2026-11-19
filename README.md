@@ -39,6 +39,8 @@ Some apps keep data, for example a list of ideas. All these apps use one data fo
 3. Do this once in each browser on each device.
 4. Microsoft allows a login of a browser app for 24 hours. Thus, about once a day, the app shows "Bei OneDrive anmelden". Click "Anmelden". Microsoft usually knows your account, so you do not type your password again.
 
+Do not delete the folder `Apps/Pocket Apps` and do not replace it with another folder. OneDrive knows it by an internal ID, not by its name. To bring your data into it, move the app folders (for example `app-ideen/`) into it.
+
 **A folder on this computer:** only this computer has the data.
 
 1. Make a folder, for example "Pocket Apps Daten". If you have the desktop program of OneDrive or Google Drive, put the folder into its folder on your computer. Then you have a backup automatically.

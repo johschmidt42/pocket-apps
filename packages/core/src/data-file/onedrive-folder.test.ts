@@ -310,7 +310,7 @@ describe("the OneDrive login", () => {
       "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
     );
     expect(Object.fromEntries(url.searchParams)).toMatchObject({
-      client_id: "68c00226-31d2-41f6-ab60-bb12fc6208f8",
+      client_id: "33746798-d776-4907-85da-27d3636bf316",
       response_type: "code",
       redirect_uri: START_PAGE,
       scope: "Files.ReadWrite.AppFolder offline_access",
@@ -362,7 +362,7 @@ describe("the OneDrive login", () => {
     expect(ended).toBe(false);
     expect(replaceAddress).toHaveBeenCalledWith(START_PAGE);
     expect(formOf(server.requests[0])).toEqual({
-      client_id: "68c00226-31d2-41f6-ab60-bb12fc6208f8",
+      client_id: "33746798-d776-4907-85da-27d3636bf316",
       grant_type: "authorization_code",
       code: "abc",
       redirect_uri: START_PAGE,

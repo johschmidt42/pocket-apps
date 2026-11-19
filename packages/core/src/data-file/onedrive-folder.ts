@@ -11,7 +11,7 @@ import type { DataFolder, FileSnapshot } from "./folder.ts";
 import { FOLDER_KEY, indexedDbStore, type KeyValueStore } from "./settings-store.ts";
 
 /** The app registration "Pocket Apps". A client ID is public, it is not a secret. */
-const CLIENT_ID = "68c00226-31d2-41f6-ab60-bb12fc6208f8";
+const CLIENT_ID = "33746798-d776-4907-85da-27d3636bf316";
 const AUTHORITY = "https://login.microsoftonline.com/common/oauth2/v2.0";
 const APP_ROOT = "https://graph.microsoft.com/v1.0/me/drive/special/approot";
 const SCOPE = "Files.ReadWrite.AppFolder offline_access";
