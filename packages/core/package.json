@@ -14,6 +14,7 @@
     "./name-dialog": "./src/name-dialog.tsx",
     "./numbers": "./src/numbers.ts",
     "./one-of": "./src/one-of.ts",
+    "./sub-page": "./src/sub-page.ts",
     "./testing": "./src/testing.ts",
     "./use-width": "./src/use-width.ts"
   },

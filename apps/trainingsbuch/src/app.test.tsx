@@ -1,5 +1,5 @@
 import { createMemoryFolder, createMemoryFolderHost } from "@pocket-apps/core/data-file/testing";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
@@ -613,7 +613,44 @@ describe("Trainingsbuch", () => {
     expect(document.documentElement.scrollTop).toBe(0);
 
     await user.click(screen.getByRole("button", { name: "Alle Workouts" }));
-    expect(document.documentElement.scrollTop).toBe(900);
+    await waitFor(() => {
+      expect(document.documentElement.scrollTop).toBe(900);
+    });
+  });
+
+  it("goes back to the list in the same tab with the back button of the browser", async () => {
+    const { user } = await openApp({ workouts: [], results: [fran("r1", 300)] });
+    await user.click(screen.getByRole("tab", { name: "Verlauf" }));
+    await user.click(screen.getByRole("button", { name: /^Fran/ }));
+    expect(screen.getByRole("heading", { level: 2, name: "Fran" })).toBeVisible();
+    expect(window.location.hash).toBe("#fran");
+
+    act(() => {
+      window.history.back();
+    });
+    expect(await screen.findByRole("tab", { name: "Verlauf" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(window.location.hash).toBe("");
+  });
+
+  it("shows the open workout again after a reload", async () => {
+    window.history.replaceState(null, "", "/#fran");
+    const user = userEvent.setup();
+    render(<App folderHost={createMemoryFolderHost({ saved: createMemoryFolder() })} />);
+    expect(await screen.findByRole("heading", { level: 2, name: "Fran" })).toBeVisible();
+
+    // No entry of the app is before the workout. The button shows the list all the same.
+    await user.click(screen.getByRole("button", { name: "Alle Workouts" }));
+    expect(screen.getByRole("tab", { name: "Workouts" })).toBeVisible();
+    expect(window.location.hash).toBe("");
+  });
+
+  it("shows the list for an unknown workout in the URL", async () => {
+    window.history.replaceState(null, "", "/#gibt-es-nicht");
+    await openApp();
+    expect(screen.getByRole("tab", { name: "Workouts" })).toBeVisible();
   });
 
   it("says so when there are no results yet", async () => {

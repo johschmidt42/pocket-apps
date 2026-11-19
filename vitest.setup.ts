@@ -6,6 +6,8 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  // useSubPage() keeps the open sub-page in the hash. The next test starts on the main page.
+  window.history.replaceState(null, "", window.location.pathname);
 });
 
 // jsdom has no ResizeObserver. Radix needs it when a tooltip opens. jsdom has no layout,

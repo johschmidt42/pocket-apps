@@ -61,6 +61,14 @@ test.describe("attraktor", () => {
       page.getByRole("heading", { level: 2, name: "Ausgangszustand wählen" }),
     ).toBeVisible();
     await expect(page.locator("canvas")).toHaveCount(0);
+
+    // The buttons of the browser go to the attractor and back to the gallery.
+    await page.goForward();
+    await expect(picture.locator("canvas")).toBeVisible();
+    await page.goBack();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Ausgangszustand wählen" }),
+    ).toBeVisible();
     expect(pageErrors).toEqual([]);
   });
 });

@@ -1,18 +1,20 @@
 import { AppHeader } from "@pocket-apps/core/app-shell";
+import { useSubPage } from "@pocket-apps/core/sub-page";
 import { TooltipProvider } from "@pocket-apps/ui/components/tooltip";
 import { useState } from "react";
 import { AttractorStage } from "./attractor-stage.tsx";
-import type { Attractor } from "./attractors.ts";
+import { ATTRACTORS } from "./attractors.ts";
 import { Gallery } from "./gallery.tsx";
 import type { MouseMode } from "./mouse-effects.ts";
 import { findPalette, type PaletteId } from "./palettes.ts";
 import { webglViewFactory, type ViewFactory } from "./webgl-view.ts";
 
-type Screen = { kind: "gallery" } | { kind: "stage"; attractor: Attractor };
-
 /** `viewFactory` is only for tests. jsdom has no WebGL. */
 export function App({ viewFactory = webglViewFactory }: { viewFactory?: ViewFactory }) {
-  const [screen, setScreen] = useState<Screen>({ kind: "gallery" });
+  // The open attractor is a sub-page: the back button of the browser shows the gallery again.
+  const { page, open, back } = useSubPage();
+  // An unknown ID in the URL (for example an old link) shows the gallery.
+  const attractor = ATTRACTORS.find((candidate) => candidate.id === page) ?? null;
   const [mode, setMode] = useState<MouseMode>("lens");
   // null: each attractor shows its own colors. After a choice, all attractors use it.
   const [paletteId, setPaletteId] = useState<PaletteId | null>(null);
@@ -20,24 +22,22 @@ export function App({ viewFactory = webglViewFactory }: { viewFactory?: ViewFact
   return (
     <TooltipProvider>
       <AppHeader app={__POCKET_APP__} />
-      {screen.kind === "gallery" ? (
+      {attractor === null ? (
         <Gallery
-          onSelect={(attractor) => {
-            setScreen({ kind: "stage", attractor });
+          onSelect={(selected) => {
+            open(selected.id);
           }}
         />
       ) : (
         <AttractorStage
           // A new attractor starts a new scene.
-          key={screen.attractor.id}
-          attractor={screen.attractor}
+          key={attractor.id}
+          attractor={attractor}
           mode={mode}
           onModeChange={setMode}
-          palette={findPalette(paletteId ?? screen.attractor.palette)}
+          palette={findPalette(paletteId ?? attractor.palette)}
           onPaletteChange={setPaletteId}
-          onBack={() => {
-            setScreen({ kind: "gallery" });
-          }}
+          onBack={back}
           viewFactory={viewFactory}
         />
       )}

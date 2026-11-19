@@ -1,10 +1,10 @@
 import type { AskAi } from "@pocket-apps/core/ai";
 import { isOneOf } from "@pocket-apps/core/one-of";
+import { useSubPage } from "@pocket-apps/core/sub-page";
 import { Button } from "@pocket-apps/ui/components/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@pocket-apps/ui/components/tabs";
 import { Plus, Sparkles } from "lucide-react";
-import { useRef, useState } from "react";
-import { flushSync } from "react-dom";
+import { useState } from "react";
 import { AiEntryDialog, type AiEntryState } from "./ai-entry-dialog.tsx";
 import { NO_EXERCISE_FILTER, type ExerciseFilter } from "./exercise-filter.ts";
 import { HistoryList } from "./history-list.tsx";
@@ -37,26 +37,8 @@ export type LogbookViewProps = {
 /** The whole app: the workout list, the history and one open workout. */
 export function LogbookView({ ask }: LogbookViewProps) {
   const { data, update } = useDataFile();
-  const [openId, setOpenId] = useState<string | null>(null);
-  // Where the list was scrolled to before a workout opened. "Back" returns there.
-  const listScroll = useRef(0);
-
-  /** Shows a workout from its top. The page keeps the scroll position of the list. */
-  function openWorkout(id: string) {
-    if (openId === null) listScroll.current = document.documentElement.scrollTop;
-    flushSync(() => {
-      setOpenId(id);
-    });
-    document.documentElement.scrollTop = 0;
-  }
-
-  /** Shows the list again, at the place where the user left it. */
-  function closeWorkout() {
-    flushSync(() => {
-      setOpenId(null);
-    });
-    document.documentElement.scrollTop = listScroll.current;
-  }
+  // The open workout is a sub-page: the back button of the browser shows the list again.
+  const { page: openId, open: openWorkout, back: closeWorkout } = useSubPage();
   const [tab, setTab] = useState<Tab>("workouts");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");

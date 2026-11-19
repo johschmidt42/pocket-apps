@@ -69,6 +69,8 @@ packages/core/             Shared code:
   src/one-of.ts            isOneOf(list, value): true if the string value is in the list. Then TypeScript
                            knows that value is one of the list items.
   src/use-width.ts         useWidth(ref): the width of an element in pixels. 0 in jsdom.
+  src/sub-page.ts          useSubPage(): one sub-page of the app (for example the detail of a workout)
+                           in the browser history. The back button of the browser closes it.
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).
   src/charts.ts            The Recharts parts for apps (own code, not vendor code).
@@ -226,6 +228,16 @@ Each app declares its info in its `package.json`:
 - Use icons only from `lucide-react`.
 - Show the hand cursor on everything that the user can click. `globals.css` gives it to each `button`, `select` and `[role="button"]` that is not disabled. Give other clickable elements the class `cursor-pointer`, for example a `<label>` that switches a checkbox. A drag handle gets `cursor-grab active:cursor-grabbing`.
 - To let the user change the order of a list, use drag and drop with a grip at the left of each row: `useDragSort()`, `DragHandle` and `SortHint` from `packages/ui`. Do not use up/down buttons. See `apps/app-ideen/src/idea-list-view.tsx` and `launcher/src/order-editor.tsx`.
+- When a click shows a sub-page of the app with a button back to the main page (for example the detail of one item), use `useSubPage()` from `@pocket-apps/core/sub-page`. Then the back button of the browser closes the sub-page, and a reload shows it again. Example: `apps/trainingsbuch/src/logbook-view.tsx`.
+  - The hook gives `{ page, open, back }`. `page` is the ID of the open sub-page, or `null` for the main page. Show the sub-page if `page` is not `null`.
+  - `open(id)` shows the sub-page of the ID from its top. The ID can be any string, for example the ID of a workout. The hook writes it encoded into the hash of the URL: `trainingsbuch.html#fran`.
+  - There is only one level. If a sub-page is open, `open(id)` replaces it. Thus `back()` and the back button of the browser always show the main page.
+  - Give `back` to the button back to the main page. It does the same as the back button of the browser. Call `back()` also after the user deletes the item of the open sub-page.
+  - If the tab starts on a sub-page (a bookmark or a link), the hook puts an entry of the main page before it. Thus the back button of the browser shows the main page first, and does not leave the app.
+  - If no item has the ID (for example an old bookmark), the app shows the main page. The hash stays in the URL until the next `open()` or `back()`.
+  - The main page shows again at the scroll position of the window where the user left it. The hook keeps only the scroll position of the window, not of inner scroll areas.
+  - Use the hook only once per app, and only for one kind of sub-page. It owns the hash of the URL and `history.state`. Other code must not change them. Do not use `#anchor` links in an app with sub-pages.
+- Tabs, filters, a selected item in a list and dialogs do not add an entry to the browser history. Only a sub-page does. If a dialog is open on a sub-page and the user clicks the back button of the browser, the main page shows behind the dialog. The dialog stays open.
 - Make layouts work in narrow windows (320 px). Write classes for small screens first. Add `sm:` and `md:` classes only for larger screens.
 
 ### HTML and accessibility
@@ -357,7 +369,10 @@ Use a migration as soon as a version with the old shape is on GitHub Pages. Befo
 - `folder.writeError` makes saves fail. `folder.changeElsewhere(path, text)` simulates a change on another computer (conflict).
 - Saves come 500 ms after a change. Do not use fake timers. Wait with `findBy…` queries.
 - For app info in unit tests, use `testAppInfo()` from `@pocket-apps/core/testing`.
-- jsdom has no layout. Recharts measures its container with `getBoundingClientRect()` and draws nothing at 0 px. In a unit test of a chart, give elements a size with `vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")`. Return all fields of a `DOMRect`, for example `width: 640` and `height: 400`. See `apps/fixkosten/src/app.test.tsx`. This replaces a browser API, not an internal of our code, so it is allowed. `vitest.setup.ts` restores all mocks after each test and gives jsdom an empty `ResizeObserver`.
+- jsdom has no layout. Recharts measures its container with `getBoundingClientRect()` and draws nothing at 0 px. In a unit test of a chart, give elements a size with `vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")`. Return all fields of a `DOMRect`, for example `width: 640` and `height: 400`. See `apps/fixkosten/src/app.test.tsx`. This replaces a browser API, not an internal of our code, so it is allowed. `vitest.setup.ts` restores all mocks after each test, removes the hash of the URL and gives jsdom an empty `ResizeObserver`.
+- To test the back button of the browser on a sub-page, open the sub-page with a click first. Then call `window.history.back()` in `act()`. The browser goes back a little later, so wait with `findBy…` queries.
+- To test a reload or a bookmark of a sub-page, put the ID into the URL before the render: `window.history.replaceState(null, "", "/#fran")`.
+- In browser tests, use `page.goBack()` and `page.goForward()`.
 - Keep pure logic (calculations, list operations) in `.ts` files with their own unit tests.
 - The browser tests use the local web server of `pnpm serve`. Playwright starts it.
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.

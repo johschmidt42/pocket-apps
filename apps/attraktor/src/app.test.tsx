@@ -157,7 +157,7 @@ describe("App", () => {
     expect(screen.getByText("Farben: Regenbogen")).toBeVisible();
 
     await user.click(screen.getByRole("button", { name: "Galerie" }));
-    await user.click(screen.getByRole("button", { name: "Thomas" }));
+    await user.click(await screen.findByRole("button", { name: "Thomas" }));
     expect(screen.getByRole("radio", { name: "Regenbogen" })).toBeChecked();
   });
 
@@ -212,8 +212,35 @@ describe("App", () => {
   it("goes back to the gallery and frees the graphics", async () => {
     const { user, views } = await openAttractor("Halvorsen");
     await user.click(screen.getByRole("button", { name: "Galerie" }));
-    expect(screen.getByRole("heading", { level: 2, name: "Ausgangszustand wählen" })).toBeVisible();
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Ausgangszustand wählen" }),
+    ).toBeVisible();
     expect(views[0]!.dispose).toHaveBeenCalled();
+  });
+
+  it("goes back to the gallery with the back button of the browser", async () => {
+    await openAttractor("Lorenz");
+    expect(window.location.hash).toBe("#lorenz");
+
+    act(() => {
+      window.history.back();
+    });
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Ausgangszustand wählen" }),
+    ).toBeVisible();
+    expect(window.location.hash).toBe("");
+  });
+
+  it("shows the attractor of the URL after a reload", () => {
+    window.history.replaceState(null, "", "/#thomas");
+    render(<App viewFactory={fakeFactory().factory} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Thomas" })).toBeVisible();
+  });
+
+  it("shows the gallery for an unknown attractor in the URL", () => {
+    window.history.replaceState(null, "", "/#gibt-es-nicht");
+    render(<App viewFactory={fakeFactory().factory} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Ausgangszustand wählen" })).toBeVisible();
   });
 
   it("gives the picture its new size", async () => {

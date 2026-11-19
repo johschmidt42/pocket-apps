@@ -30,10 +30,50 @@ test.describe("trainingsbuch in Chrome and Edge", () => {
       { workoutId: "fran", date: "2026-11-17", score: { kind: "time", seconds: 245 } },
     ]);
 
+    // A reload shows the open workout again. The back button of the browser shows the list.
     await page.reload();
+    await expect(page.getByRole("heading", { level: 2, name: "Fran" })).toBeVisible();
+    await page.goBack();
     await page.getByRole("tab", { name: "Verlauf" }).click();
 
     await expect(page.getByRole("button", { name: /^Fran.*4:05/ })).toBeVisible();
+    await page.goForward();
+    await expect(page.getByRole("heading", { level: 2, name: "Fran" })).toBeVisible();
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("goes back to the list at the same place, also after a bookmark", async ({
+    page,
+    pageErrors,
+  }) => {
+    await withDataFolder(page);
+    await page.goto(releaseUrl("trainingsbuch.html"));
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+
+    // Murph is far down in the list.
+    const murph = page.getByRole("button", { name: /^Murph/ });
+    await murph.scrollIntoViewIfNeeded();
+    const listScroll = await page.evaluate(() => window.scrollY);
+    expect(listScroll).toBeGreaterThan(500);
+    // A click with the mouse: `murph.click()` can scroll the page again before the click.
+    const box = await murph.boundingBox();
+    if (box === null) throw new Error("The card of Murph has no size.");
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.getByRole("heading", { level: 2, name: "Murph" })).toBeVisible();
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+
+    await page.goBack();
+    await expect(murph).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(listScroll);
+
+    // A bookmark of the detail in a new page load: the back button shows the list and stays in
+    // the app.
+    await page.goto("about:blank");
+    await page.goto(`${releaseUrl("trainingsbuch.html")}#murph`);
+    await expect(page.getByRole("heading", { level: 2, name: "Murph" })).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole("tab", { name: "Workouts" })).toBeVisible();
+    expect(page.url()).toBe(releaseUrl("trainingsbuch.html"));
     expect(pageErrors).toEqual([]);
   });
 
@@ -125,7 +165,10 @@ test.describe("trainingsbuch in Chrome and Edge", () => {
     });
     expect(file).not.toContain("sk-ant-e2e");
 
+    // A reload shows the open workout again.
     await page.reload();
+    await expect(page.getByRole("heading", { level: 2, name: "Fran" })).toBeVisible();
+    await page.getByRole("button", { name: "Alle Workouts" }).click();
     await page.getByRole("tab", { name: "Verlauf" }).click();
     await expect(page.getByRole("button", { name: /^Fran.*6:42/ })).toBeVisible();
     expect(pageErrors).toEqual([]);
