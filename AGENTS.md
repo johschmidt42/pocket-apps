@@ -352,6 +352,15 @@ To check: `gh run list --workflow "CD - Release" --limit 3`. To publish again, r
 
 ## Definition of done
 
-- `pnpm check:all` passes.
-- For UI changes, run `pnpm build` and `pnpm serve`. Open `http://localhost:4173/pocket-apps/` in Chrome. Look at the apps in light and dark mode.
+The checks depend on the size of the change:
+
+| Change        | Example                                   | Checks                                                       |
+| ------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| Small (x.1)   | A text, a bug fix, one button             | A test for the fix. `pnpm check` passes. CI runs `pnpm e2e`. |
+| Feature (x.0) | A new dialog, a new AI feature, a new app | `pnpm check:all` passes. Look at the UI in Chrome.           |
+| New pattern   | A new library, new behavior in `core`     | As a feature. Also a decision entry in `docs/decisions.md`.  |
+
+- A small change to the layout or the styles also needs a look at the UI in Chrome.
+- `CD - Release` publishes only after all CI pipelines pass. Thus a small change cannot reach GitHub Pages without the browser tests.
+- To look at the UI, run `pnpm build` and `pnpm serve`. Open `http://localhost:4173/pocket-apps/` in Chrome. Look at the apps in light and dark mode.
 - For changes to a stateful app or to `packages/core/src/data-file/`, also test with a real folder in Chrome: pick a folder, change data, reload, and look at the file.
