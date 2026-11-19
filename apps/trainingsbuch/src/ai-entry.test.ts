@@ -23,7 +23,7 @@ const OWN: OwnWorkout = {
   notes: "Ruhig angehen",
 };
 
-const DATA: Logbook = { workouts: [OWN], results: [], units: "metric" };
+const DATA: Logbook = { workouts: [OWN], results: [], units: "metric", loadsFor: "men" };
 
 function workout(id: string): Workout {
   const found = CATALOG.find((item) => item.id === id);

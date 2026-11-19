@@ -51,6 +51,7 @@ export function LogbookView({ ask }: LogbookViewProps) {
   const workouts = allWorkouts(data);
   const open = workouts.find((workout) => workout.id === openId) ?? null;
   const ownOpen = data.workouts.find((workout) => workout.id === openId) ?? null;
+  const display = { units: data.units, loadsFor: data.loadsFor };
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
@@ -58,9 +59,9 @@ export function LogbookView({ ask }: LogbookViewProps) {
         <WorkoutDetail
           workout={open}
           results={resultsOf(data, open.id)}
-          units={data.units}
-          onUnits={(units) => {
-            update((current) => ({ ...current, units }));
+          display={display}
+          onDisplay={(next) => {
+            update((current) => ({ ...current, ...next }));
           }}
           onBack={closeWorkout}
           onAddResult={() => {
@@ -130,7 +131,7 @@ export function LogbookView({ ask }: LogbookViewProps) {
             <WorkoutList
               workouts={workouts}
               results={data.results}
-              units={data.units}
+              display={display}
               search={search}
               onSearch={setSearch}
               filter={filter}

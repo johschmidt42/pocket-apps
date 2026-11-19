@@ -95,7 +95,7 @@ describe("built-in catalog", () => {
 
 describe("workouts", () => {
   it("joins built-in and own workouts", () => {
-    const data: Logbook = { workouts: [OWN], results: [], units: "metric" };
+    const data: Logbook = { workouts: [OWN], results: [], units: "metric", loadsFor: "men" };
     const all = allWorkouts(data);
     expect(all).toHaveLength(CATALOG.length + 1);
     expect(all.at(-1)).toEqual({
@@ -148,7 +148,7 @@ describe("workouts", () => {
 
 describe("changes", () => {
   it("adds, replaces and removes results", () => {
-    let data: Logbook = { workouts: [], results: [], units: "metric" };
+    let data: Logbook = { workouts: [], results: [], units: "metric", loadsFor: "men" };
     data = upsertResult(data, result("r1", "fran", "2026-11-01"));
     data = upsertResult(data, result("r2", "fran", "2026-11-03"));
     data = upsertResult(data, { ...result("r1", "fran", "2026-11-01"), notes: "neu" });
@@ -174,6 +174,7 @@ describe("changes", () => {
       workouts: [],
       results: [result("r1", "own1", "2026-11-01")],
       units: "metric",
+      loadsFor: "men",
     };
     data = upsertWorkout(data, OWN);
     data = upsertWorkout(data, { ...OWN, name: "Dienstag" });
@@ -183,6 +184,7 @@ describe("changes", () => {
       workouts: [],
       results: [result("r2", "fran", "2026-11-02")],
       units: "metric",
+      loadsFor: "men",
     });
   });
 

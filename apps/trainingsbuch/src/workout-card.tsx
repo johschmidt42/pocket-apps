@@ -3,9 +3,9 @@ import { useId } from "react";
 import { ExerciseIcon } from "./exercise-icon.tsx";
 import { EXERCISE_NAMES } from "./exercises.ts";
 import { planBlocks } from "./plan.ts";
-import type { Result, ScoreType, UnitSystem } from "./schema.ts";
+import type { Result, ScoreType } from "./schema.ts";
 import { bestResult, DIVISION_LABELS, formatScore } from "./score.ts";
-import { showUnits } from "./units.ts";
+import { showLine, type TextDisplay } from "./units.ts";
 import { CATEGORY_COLORS, formatLabel, type Workout } from "./workouts.ts";
 
 /** A symbol for each score type: a stop watch for "For Time", arrows for "AMRAP" and so on. */
@@ -22,7 +22,7 @@ export type WorkoutCardProps = {
   /** The results of this workout. */
   results: readonly Result[];
   /** How the texts show loads and distances. */
-  units: UnitSystem;
+  display: TextDisplay;
   onOpen: () => void;
 };
 
@@ -46,7 +46,7 @@ function formatLine(workout: Workout): string | null {
  * A workout in the list: name, format and all exercises as chips. A symbol shows if the
  * user did the workout. Then the card also shows the best result.
  */
-export function WorkoutCard({ workout, results, units, onOpen }: WorkoutCardProps) {
+export function WorkoutCard({ workout, results, display, onOpen }: WorkoutCardProps) {
   const best = bestResult(results);
   // The IDs connect the name, the status and the lines with the button. They must be unique.
   const id = useId();
@@ -90,7 +90,7 @@ export function WorkoutCard({ workout, results, units, onOpen }: WorkoutCardProp
         </span>
         <span id={`${id}-plan`} className="flex flex-col gap-2">
           {format !== null && (
-            <span className="text-sm text-muted-foreground">{showUnits(format, units)}</span>
+            <span className="text-sm text-muted-foreground">{showLine(format, display)}</span>
           )}
           {names.length > 0 && (
             <>

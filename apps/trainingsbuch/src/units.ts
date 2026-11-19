@@ -1,5 +1,5 @@
 import { inchesText } from "./exercises.ts";
-import type { UnitSystem } from "./schema.ts";
+import type { LoadsFor, UnitSystem } from "./schema.ts";
 
 /**
  * A metric value with its imperial value in parentheses, as in the texts of the built-in
@@ -14,17 +14,32 @@ const INCHES = /^([\d.,/]+) in$/;
 /** A line about a box: box jumps, box step-overs or step-ups. */
 const BOX_LINE = /\bbox|\bstep-ups?\b/i;
 
+/** How the texts of the built-in workouts show loads, heights and distances. */
+export type TextDisplay = { units: UnitSystem; loadsFor: LoadsFor };
+
+/** A pair of values with a unit: "43/29 kg", "24/20 Zoll". The first is for men. */
+const MEN_WOMEN = /(\d[\d.,]*)\/(\d[\d.,]*)( (?:kg|lb|cm|in|m|ft|pood|miles?|Zoll)\b)/g;
+
 /**
- * The line with only one unit system. Metric: "9/6 kg". Imperial: "20/14 lb". A value
- * without a pair stays as it is. In a line about a box, a height in inches always shows in
- * inches, with the German word: "24/20 Zoll". Gyms give box heights in inches, also in countries
- * with kg. Other heights (for example of a pull-up bar) follow the unit system.
+ * A line of a built-in workout as the user wants to see it:
+ * - One unit system. Metric: "9/6 kg". Imperial: "20/14 lb". A value without a pair stays.
+ * - In a line about a box, a height in inches always shows in inches, with the German word:
+ *   "24/20 Zoll". Gyms give box heights in inches, also in countries with kg. Other heights (for
+ *   example of a pull-up bar) follow the unit system.
+ * - Only the value for men or for women: "43 kg" or "29 kg". A fraction such as
+ *   "3/4 body weight" has no unit and stays.
  */
-export function showUnits(line: string, system: UnitSystem): string {
+export function showLine(line: string, { units, loadsFor }: TextDisplay): string {
   const box = BOX_LINE.test(line);
-  return line.replace(PAIR, (_match, metric: string, words: string, imperial: string) => {
-    const inches = box ? INCHES.exec(imperial) : null;
-    if (inches) return `${inchesText(inches[1] ?? "")}${words}`;
-    return system === "metric" ? `${metric}${words}` : `${imperial}${words}`;
-  });
+  const oneSystem = line.replace(
+    PAIR,
+    (_match, metric: string, words: string, imperial: string) => {
+      const inches = box ? INCHES.exec(imperial) : null;
+      if (inches) return `${inchesText(inches[1] ?? "")}${words}`;
+      return units === "metric" ? `${metric}${words}` : `${imperial}${words}`;
+    },
+  );
+  return oneSystem.replace(MEN_WOMEN, (_match, men: string, women: string, unit: string) =>
+    loadsFor === "men" ? `${men}${unit}` : `${women}${unit}`,
+  );
 }

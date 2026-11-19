@@ -23,9 +23,14 @@ const OWN = {
 };
 
 describe("trainingsbuch schema", () => {
-  it("starts at version 2 with an empty logbook", () => {
-    expect(currentVersion(schema)).toBe(2);
-    expect(schema.initial()).toEqual({ workouts: [], results: [], units: "metric" });
+  it("starts at version 3 with an empty logbook", () => {
+    expect(currentVersion(schema)).toBe(3);
+    expect(schema.initial()).toEqual({
+      workouts: [],
+      results: [],
+      units: "metric",
+      loadsFor: "men",
+    });
   });
 
   it("accepts results and own workouts", () => {
@@ -39,6 +44,7 @@ describe("trainingsbuch schema", () => {
         { ...RESULT, id: "r4", score: { kind: "load", kg: 102.5 } },
         { ...RESULT, id: "r5", score: { kind: "reps", reps: 0 } },
       ],
+      loadsFor: "women",
     };
     // A file without `units` gets the default: metric.
     expect(schema.validate.parse(data)).toEqual({ ...data, units: "metric" });

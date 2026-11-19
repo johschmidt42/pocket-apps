@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-19: Loads for men or for women (trainingsbuch)
+
+- **Context:** The built-in workouts give each load, height and distance as a pair: "43/29 kg", "24/20 Zoll". The first value is for men, the second for women. The project owner wants to switch between them.
+- **Decision:** A second switch "Männer | Frauen" next to "kg | lb" on a built-in workout. The texts then show one value: "43 kg" or "29 kg". The switch is for all built-in workouts, like "kg | lb". `showLine()` in `units.ts` does both: first the unit system, then the value of the pair.
+- **Decision:** The data file keeps the choice in `loadsFor` (schema version 3). Then it is the same on all devices. Own workouts have one load per exercise, so the switch does not show there.
+- **Decision:** The switch changes only the texts. For the results of the project owner, Rx stays the load for men (see "Record a result with the AI"). A user who does the loads for women saves "Scaled", or the app needs a later change.
+- **Consequence:** Version 4.0 did not reach GitHub Pages (CI failed). Thus the box heights (schema version 2) and this switch (schema version 3) come together in version 4.0.
+
 ## 2026-11-19: Box heights always in inches (trainingsbuch)
 
 - **Context:** In kg mode, `showUnits()` showed box heights in cm ("Box jumps, 61/51 cm"). Gyms give box heights in inches, also in countries with kg. Own workouts had no box height at all: "10 × Box Jump". The project owner wants the height always in inches and always next to a box exercise.

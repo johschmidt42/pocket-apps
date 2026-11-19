@@ -2,6 +2,7 @@ import { createDataFileStore, defineDataSchema } from "@pocket-apps/core/data-fi
 import { z } from "zod";
 import { EXERCISE_IDS, UNITS } from "./exercises.ts";
 import { toV2 } from "./migrations/to-v2.ts";
+import { toV3 } from "./migrations/to-v3.ts";
 
 /**
  * How a workout is scored:
@@ -15,6 +16,8 @@ export const SCORE_TYPES = ["time", "time-or-reps", "rounds-reps", "reps", "load
 export const DIVISIONS = ["rx", "scaled"] as const;
 /** How the texts of the built-in workouts show loads and distances: kg and m, or lb and ft. */
 export const UNIT_SYSTEMS = ["metric", "imperial"] as const;
+/** Which value of a pair "43/29 kg" the texts of the built-in workouts show: men or women. */
+export const LOADS_FOR = ["men", "women"] as const;
 
 const count = z.number().int().min(0);
 
@@ -75,11 +78,13 @@ const logbookSchema = z.object({
   workouts: z.array(ownWorkoutSchema),
   results: z.array(resultSchema),
   units: z.enum(UNIT_SYSTEMS).default("metric"),
+  loadsFor: z.enum(LOADS_FOR),
 });
 
 export type ScoreType = (typeof SCORE_TYPES)[number];
 export type Division = (typeof DIVISIONS)[number];
 export type UnitSystem = (typeof UNIT_SYSTEMS)[number];
+export type LoadsFor = (typeof LOADS_FOR)[number];
 export type Score = z.infer<typeof scoreSchema>;
 export type Result = z.infer<typeof resultSchema>;
 export type Part = z.infer<typeof partSchema>;
@@ -89,9 +94,9 @@ export type Logbook = z.infer<typeof logbookSchema>;
 export const schema = defineDataSchema<Logbook>({
   app: "trainingsbuch",
   validate: logbookSchema,
-  initial: () => ({ workouts: [], results: [], units: "metric" }),
+  initial: () => ({ workouts: [], results: [], units: "metric", loadsFor: "men" }),
   // Append new migrations at the end. Never change old ones.
-  migrations: [toV2],
+  migrations: [toV2, toV3],
 });
 
 export const { DataFileProvider, useDataFile } = createDataFileStore(schema, {

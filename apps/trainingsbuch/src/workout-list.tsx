@@ -18,7 +18,8 @@ import {
   type ExerciseFilter,
 } from "./exercise-filter.ts";
 import { EXERCISE_NAMES } from "./exercises.ts";
-import type { Result, UnitSystem } from "./schema.ts";
+import type { Result } from "./schema.ts";
+import type { TextDisplay } from "./units.ts";
 import { WorkoutCard } from "./workout-card.tsx";
 import {
   CATEGORY_COLORS,
@@ -36,7 +37,7 @@ import {
 export type WorkoutListProps = {
   workouts: readonly Workout[];
   results: readonly Result[];
-  units: UnitSystem;
+  display: TextDisplay;
   search: string;
   onSearch: (search: string) => void;
   filter: Filter;
@@ -55,7 +56,7 @@ export type WorkoutListProps = {
 export function WorkoutList({
   workouts,
   results,
-  units,
+  display,
   search,
   onSearch,
   filter,
@@ -241,7 +242,7 @@ export function WorkoutList({
                 <WorkoutCard
                   workout={workout}
                   results={results.filter((result) => result.workoutId === workout.id)}
-                  units={units}
+                  display={display}
                   onOpen={() => {
                     onOpen(workout.id);
                   }}

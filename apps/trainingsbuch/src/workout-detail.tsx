@@ -9,18 +9,18 @@ import { ExerciseIcon } from "./exercise-icon.tsx";
 import { EXERCISE_NAMES } from "./exercises.ts";
 import { PlanView } from "./plan-view.tsx";
 import { ProgressChart } from "./progress-chart.tsx";
-import { UNIT_SYSTEMS, type Result, type UnitSystem } from "./schema.ts";
+import { LOADS_FOR, UNIT_SYSTEMS, type Result } from "./schema.ts";
 import { bestResult, DIVISION_LABELS, formatKg, formatScore } from "./score.ts";
-import { showUnits } from "./units.ts";
+import { showLine, type TextDisplay } from "./units.ts";
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatLabel, type Workout } from "./workouts.ts";
 
 export type WorkoutDetailProps = {
   workout: Workout;
   /** The results of this workout, newest first. */
   results: readonly Result[];
-  /** How the texts of the built-in workouts show loads and distances. */
-  units: UnitSystem;
-  onUnits: (units: UnitSystem) => void;
+  /** How the texts of the built-in workouts show loads, heights and distances. */
+  display: TextDisplay;
+  onDisplay: (display: TextDisplay) => void;
   onBack: () => void;
   onAddResult: () => void;
   /** Opens "Mit KI eintragen" for this workout. */
@@ -35,8 +35,8 @@ export type WorkoutDetailProps = {
 export function WorkoutDetail({
   workout,
   results,
-  units,
-  onUnits,
+  display,
+  onDisplay,
   onBack,
   onAddResult,
   onAddWithAi,
@@ -132,31 +132,50 @@ export function WorkoutDetail({
           >
             Ablauf
           </h3>
-          {/* Own workouts are always in kg. Only the built-in texts have both units. */}
+          {/* Own workouts have one load in kg. Only the built-in texts have both. */}
           {workout.category !== "own" && (
-            <ToggleGroup
-              type="single"
-              variant="outline"
-              size="sm"
-              aria-label="Einheiten"
-              value={units}
-              onValueChange={(value) => {
-                if (isOneOf(UNIT_SYSTEMS, value)) onUnits(value);
-              }}
-            >
-              <ToggleGroupItem value="metric" className="px-3">
-                kg
-              </ToggleGroupItem>
-              <ToggleGroupItem value="imperial" className="px-3">
-                lb
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <div className="flex flex-wrap justify-end gap-2">
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                aria-label="Gewichte für"
+                value={display.loadsFor}
+                onValueChange={(value) => {
+                  if (isOneOf(LOADS_FOR, value)) onDisplay({ ...display, loadsFor: value });
+                }}
+              >
+                <ToggleGroupItem value="men" className="px-3">
+                  Männer
+                </ToggleGroupItem>
+                <ToggleGroupItem value="women" className="px-3">
+                  Frauen
+                </ToggleGroupItem>
+              </ToggleGroup>
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                size="sm"
+                aria-label="Einheiten"
+                value={display.units}
+                onValueChange={(value) => {
+                  if (isOneOf(UNIT_SYSTEMS, value)) onDisplay({ ...display, units: value });
+                }}
+              >
+                <ToggleGroupItem value="metric" className="px-3">
+                  kg
+                </ToggleGroupItem>
+                <ToggleGroupItem value="imperial" className="px-3">
+                  lb
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
           )}
         </div>
         <div className={`border-l-4 pl-5 ${colors.border}`}>
           {workout.lines.length > 0 || (workout.notes ?? []).length > 0 ? (
             <PlanView
-              lines={workout.lines.map((line) => showUnits(line, units))}
+              lines={workout.lines.map((line) => showLine(line, display))}
               notes={workout.notes ?? []}
             />
           ) : (

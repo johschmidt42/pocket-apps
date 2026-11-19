@@ -33,8 +33,8 @@ function fran(id: string, seconds: number, extra: Partial<Result> = {}): Result 
   };
 }
 
-/** A data file of a test. Without `units`, the app uses its default (metric). */
-type TestData = Omit<Logbook, "units"> & Partial<Pick<Logbook, "units">>;
+/** A data file of a test. Without `units` and `loadsFor`: metric, loads for men. */
+type TestData = Omit<Logbook, "units" | "loadsFor"> & Partial<Pick<Logbook, "units" | "loadsFor">>;
 
 async function openApp(data?: TestData) {
   const folder = createMemoryFolder();
@@ -42,10 +42,10 @@ async function openApp(data?: TestData) {
     folder.files.set(FILE, {
       text: JSON.stringify({
         app: "trainingsbuch",
-        schemaVersion: 2,
+        schemaVersion: 3,
         savedWith: "1.0",
         savedAt: "2026-11-17T12:00:00.000Z",
-        data,
+        data: { loadsFor: "men", ...data },
       }),
       lastModified: 1,
     });
@@ -130,7 +130,7 @@ describe("Trainingsbuch", () => {
         name: "lb",
       }),
     );
-    expect(within(plan).getByText("Thruster, 95/65 lb")).toBeInTheDocument();
+    expect(within(plan).getByText("Thruster, 95 lb")).toBeInTheDocument();
     await waitForSave();
     expect(savedData(folder).units).toBe("imperial");
     await user.click(
@@ -138,7 +138,27 @@ describe("Trainingsbuch", () => {
         name: "kg",
       }),
     );
-    expect(within(plan).getByText("Thruster, 43/29 kg")).toBeInTheDocument();
+    expect(within(plan).getByText("Thruster, 43 kg")).toBeInTheDocument();
+  });
+
+  it("shows the loads for women and keeps the choice in the data file", async () => {
+    const { folder, user } = await openApp();
+    await user.click(card("Fran"));
+    const plan = screen.getByRole("region", { name: "Ablauf" });
+    const loadsFor = within(screen.getByRole("radiogroup", { name: "Gewichte für" }));
+    expect(loadsFor.getByRole("radio", { name: "Männer" })).toBeChecked();
+
+    await user.click(loadsFor.getByRole("radio", { name: "Frauen" }));
+    expect(within(plan).getByText("Thruster, 29 kg")).toBeInTheDocument();
+    await waitForSave();
+    expect(savedData(folder).loadsFor).toBe("women");
+    // The two switches work together.
+    await user.click(
+      within(screen.getByRole("radiogroup", { name: "Einheiten" })).getByRole("radio", {
+        name: "lb",
+      }),
+    );
+    expect(within(plan).getByText("Thruster, 65 lb")).toBeInTheDocument();
   });
 
   it("logs a time for Fran, saves it and shows it in the list and the history", async () => {
@@ -154,7 +174,7 @@ describe("Trainingsbuch", () => {
       within(within(plan).getAllByRole("list")[0]!)
         .getAllByRole("listitem")
         .map((item) => item.textContent),
-    ).toEqual(["Thruster, 43/29 kg", "Pull-up"]);
+    ).toEqual(["Thruster, 43 kg", "Pull-up"]);
 
     expect(screen.getByText("Noch kein Ergebnis")).toBeInTheDocument();
     expect(screen.getByText("Noch kein Ergebnis. Trage dein erstes Ergebnis ein.")).toBeVisible();
@@ -542,6 +562,7 @@ describe("Trainingsbuch", () => {
       workouts: [],
       results: [fran("r2", 200)],
       units: "metric",
+      loadsFor: "men",
     });
   });
 
