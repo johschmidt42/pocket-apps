@@ -1,7 +1,7 @@
 // The data folder in the browser: a folder on this computer (File System Access API, Chrome and
 // Edge) or OneDrive. The choice stays in IndexedDB. Every page of the same web address uses it.
 import type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
-import { createOneDrive, ONEDRIVE, type OneDrive } from "./onedrive-folder.ts";
+import { createOneDrive, ONEDRIVE_CHOICE, type OneDrive } from "./onedrive-folder.ts";
 import { FOLDER_KEY, indexedDbStore, type KeyValueStore } from "./settings-store.ts";
 
 // These functions are not in the TypeScript DOM types yet.
@@ -110,13 +110,20 @@ export function createBrowserFolderHost(
       ...(typeof crypto.subtle === "object" ? (["onedrive"] as const) : []),
     ],
     loadSaved: async () => {
-      await oneDrive.finishLogin();
+      // A failed or cancelled login keeps the earlier choice. Only without one, the person sees
+      // the error next to the choice.
+      const login = await oneDrive.finishLogin().then(
+        () => null,
+        (error: unknown) => ({ error }),
+      );
       const saved = await storage.get(FOLDER_KEY);
-      if (saved === ONEDRIVE) return oneDrive.folder;
-      return isDirectoryHandle(saved) ? wrapDirectory(saved) : null;
+      if (saved === ONEDRIVE_CHOICE) return oneDrive.folder;
+      if (isDirectoryHandle(saved)) return wrapDirectory(saved);
+      if (login) throw login.error;
+      return null;
     },
     pick: async (kind) => {
-      if (kind === "onedrive") return oneDrive.startLogin(true);
+      if (kind === "onedrive") return oneDrive.startLogin({ chooseAccount: true });
       if (!window.showDirectoryPicker) return null;
       try {
         const handle = await window.showDirectoryPicker({

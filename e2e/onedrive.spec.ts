@@ -41,7 +41,7 @@ async function fakeMicrosoft(page: Page) {
       clock += 1000;
       const time = new Date(clock).toISOString();
       files.set(path, { text: request.postData() ?? "", time });
-      return route.fulfill({ headers: CORS, json: { lastModifiedDateTime: time } });
+      return route.fulfill({ headers: CORS, json: { lastModifiedDateTime: time, eTag: time } });
     }
     if (!file) return route.fulfill({ status: 404, headers: CORS, body: "missing" });
     if (request.method() === "DELETE") {
@@ -50,7 +50,10 @@ async function fakeMicrosoft(page: Page) {
     }
     return rest === "/content"
       ? route.fulfill({ headers: CORS, body: file.text })
-      : route.fulfill({ headers: CORS, json: { lastModifiedDateTime: file.time } });
+      : route.fulfill({
+          headers: CORS,
+          json: { lastModifiedDateTime: file.time, eTag: file.time },
+        });
   });
   return { files, tokenForms };
 }

@@ -33,22 +33,26 @@ function fakeServer() {
     fetch: vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = input instanceof Request ? input.url : input.toString();
       server.requests.push({ url, init });
-      if (server.offline) return Promise.reject(new TypeError("Failed to fetch"));
+      if (server.offline) throw new TypeError("Failed to fetch");
       if (url === TOKEN_URL) {
         const body = server.tokenBody ?? {
           access_token: `access-${String(server.requests.length)}`,
           refresh_token: "refresh",
           expires_in: 3600,
         };
-        return Promise.resolve(Response.json(body, { status: server.tokenStatus }));
+        return Response.json(body, { status: server.tokenStatus });
       }
       if (server.graphStatus !== null) {
-        return Promise.resolve(new Response("error", { status: server.graphStatus }));
+        return new Response("error", { status: server.graphStatus });
       }
       const address = decodeURIComponent(url.slice(APP_ROOT.length));
       const [path = "", rest = ""] = address.split(":");
       const file = server.files.get(path);
       const method = init?.method ?? "GET";
+      const ifMatch = new Headers(init?.headers).get("If-Match");
+      if (method === "PUT" && ifMatch !== null && ifMatch !== `tag-${file?.time ?? ""}`) {
+        return new Response("changed", { status: 412 });
+      }
       if (method === "PUT") {
         server.clock += 1000;
         const time = new Date(server.clock).toISOString();
@@ -56,18 +60,16 @@ function fakeServer() {
         // Node's Response cannot read a jsdom Blob, so the fake keeps the text.
         const text = typeof body === "string" ? body : await (body as Blob).text();
         server.files.set(path, { text, time });
-        return Promise.resolve(Response.json({ lastModifiedDateTime: time }));
+        return Response.json({ lastModifiedDateTime: time, eTag: `tag-${time}` });
       }
-      if (!file) return Promise.resolve(new Response("missing", { status: 404 }));
+      if (!file) return new Response("missing", { status: 404 });
       if (method === "DELETE") {
         server.files.delete(path);
-        return Promise.resolve(new Response(null, { status: 204 }));
+        return new Response(null, { status: 204 });
       }
-      return Promise.resolve(
-        rest === "/content"
-          ? new Response(file.text)
-          : Response.json({ lastModifiedDateTime: file.time }),
-      );
+      return rest === "/content"
+        ? new Response(file.text)
+        : Response.json({ lastModifiedDateTime: file.time, eTag: `tag-${file.time}` });
     }),
   };
   return server;
@@ -87,7 +89,7 @@ function setup(options: { address?: string; tokens?: unknown } = {}) {
     session: window.sessionStorage,
     fetch: server.fetch,
     address: () => page.address,
-    go,
+    navigate: go,
     replaceAddress,
     now: () => 1_000_000,
   };
@@ -129,7 +131,7 @@ describe("the OneDrive folder", () => {
     expect(await folder.lastModified("app-ideen/app-ideen.json")).toBe(time);
     expect(lastAuthorization(server)).toBe("Bearer access");
     expect(server.requests.at(-1)?.url).toBe(
-      `${APP_ROOT}app-ideen/app-ideen.json:?$select=lastModifiedDateTime`,
+      `${APP_ROOT}app-ideen/app-ideen.json:?$select=lastModifiedDateTime,eTag`,
     );
 
     await folder.write("app-ideen/foto.jpg", new Blob(["jpeg"], { type: "image/jpeg" }));
@@ -182,7 +184,7 @@ describe("the OneDrive folder", () => {
     expect(await oneDrive.folder.queryAccess()).toBe("prompt");
     expect(store.values.get("onedrive-tokens")).toBeNull();
     await expect(oneDrive.folder.read("a.json")).rejects.toThrow(
-      /Anmeldung bei OneDrive ist abgelaufen/,
+      /Anmeldung bei OneDrive gilt nicht mehr/,
     );
   });
 
@@ -214,6 +216,73 @@ describe("the OneDrive folder", () => {
     );
   });
 
+  it("reads the time first and then the text", async () => {
+    const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
+    await oneDrive.folder.write("a.json", "{}");
+    server.requests.length = 0;
+
+    await oneDrive.folder.read("a.json");
+
+    expect(server.requests.map((request) => request.url)).toEqual([
+      `${APP_ROOT}a.json:?$select=lastModifiedDateTime,eTag`,
+      `${APP_ROOT}a.json:/content`,
+    ]);
+  });
+
+  it("writes only if the file did not change after the check", async () => {
+    const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
+    await oneDrive.folder.write("a.json", "eins");
+    await oneDrive.folder.lastModified("a.json");
+
+    // Another device writes the file after the check.
+    server.clock += 1000;
+    server.files.set("a.json", { text: "fremd", time: new Date(server.clock).toISOString() });
+
+    await expect(oneDrive.folder.write("a.json", "zwei")).rejects.toThrow(
+      "Die Datei hat sich gerade woanders geändert.",
+    );
+    expect(server.files.get("a.json")?.text).toBe("fremd");
+
+    // After a new check, the write works.
+    await oneDrive.folder.lastModified("a.json");
+    await oneDrive.folder.write("a.json", "zwei");
+    expect(server.files.get("a.json")?.text).toBe("zwei");
+  });
+
+  it("writes a new file without a condition", async () => {
+    const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
+
+    expect(await oneDrive.folder.lastModified("neu.json")).toBeNull();
+    await oneDrive.folder.write("neu.json", "{}");
+
+    const upload = server.requests.find((request) => request.init?.method === "PUT");
+    expect(new Headers(upload?.init?.headers).has("If-Match")).toBe(false);
+  });
+
+  it("gives a German error for an answer of an unexpected shape", async () => {
+    const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
+    server.fetch.mockImplementationOnce(() => Promise.resolve(Response.json({ id: "x" })));
+
+    await expect(oneDrive.folder.lastModified("a.json")).rejects.toThrow(
+      "OneDrive hat eine unerwartete Antwort geschickt.",
+    );
+
+    server.fetch.mockImplementationOnce(() => Promise.resolve(new Response("no json")));
+    await expect(oneDrive.folder.write("a.json", "{}")).rejects.toThrow(
+      "OneDrive hat eine unerwartete Antwort geschickt.",
+    );
+  });
+
+  it("keeps the tokens when Microsoft has a short failure", async () => {
+    const { oneDrive, server, store } = setup({ tokens: OLD_TOKENS });
+    server.tokenStatus = 503;
+
+    await expect(oneDrive.folder.queryAccess()).rejects.toThrow(
+      "Die Anmeldung bei Microsoft hat mit dem Fehler 503 geantwortet.",
+    );
+    expect(store.values.get("onedrive-tokens")).toEqual(OLD_TOKENS);
+  });
+
   it("forgets the tokens on request", async () => {
     const { oneDrive, store } = setup({ tokens: VALID_TOKENS });
 
@@ -227,7 +296,7 @@ describe("the OneDrive login", () => {
   it("goes to Microsoft with PKCE and comes back to the start page", async () => {
     const { oneDrive, go } = setup();
 
-    void oneDrive.startLogin(true);
+    void oneDrive.startLogin({ chooseAccount: true });
     await vi.waitFor(() => {
       expect(go).toHaveBeenCalled();
     });
@@ -325,7 +394,7 @@ describe("the OneDrive login", () => {
     const { oneDrive, server } = setup({ address: `${START_PAGE}?code=abc&state=other` });
     window.sessionStorage.setItem(
       "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
+      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
     );
 
     await expect(oneDrive.finishLogin()).rejects.toThrow(/passt nicht zu deiner Anmeldung/);
@@ -360,20 +429,63 @@ describe("the OneDrive login", () => {
     await expect(codeOnly.oneDrive.finishLogin()).rejects.toThrow(/nicht geklappt: server_error/);
   });
 
-  it("fails when Microsoft gives no token", async () => {
-    for (const change of [{ tokenStatus: 400 }, { tokenBody: { access_token: "a" } }]) {
-      const { oneDrive, server, store } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
-      Object.assign(server, change);
-      window.sessionStorage.setItem(
-        "pocket-apps-onedrive-login",
-        JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
-      );
+  it("fails when Microsoft does not accept the code", async () => {
+    const { oneDrive, server, store } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
+    server.tokenStatus = 400;
+    window.sessionStorage.setItem(
+      "pocket-apps-onedrive-login",
+      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
+    );
 
-      await expect(oneDrive.finishLogin()).rejects.toThrow(
-        "Die Anmeldung bei OneDrive hat nicht geklappt. Versuche es noch einmal.",
-      );
-      expect(store.values.get("data-folder")).toBeUndefined();
-    }
+    await expect(oneDrive.finishLogin()).rejects.toThrow(
+      "Die Anmeldung bei OneDrive hat nicht geklappt. Versuche es noch einmal.",
+    );
+    expect(store.values.get("data-folder")).toBeUndefined();
+  });
+
+  it("fails on a token answer of an unexpected shape", async () => {
+    const { oneDrive, server } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
+    server.tokenBody = { access_token: "a" };
+    window.sessionStorage.setItem(
+      "pocket-apps-onedrive-login",
+      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
+    );
+
+    await expect(oneDrive.finishLogin()).rejects.toThrow(
+      "OneDrive hat eine unerwartete Antwort geschickt.",
+    );
+  });
+
+  it("goes back to the app after a failed login, and the app shows the error", async () => {
+    const start = setup({ address: `${START_PAGE}?error=access_denied` });
+    window.sessionStorage.setItem(
+      "pocket-apps-onedrive-login",
+      JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
+    );
+
+    void start.oneDrive.finishLogin();
+    await vi.waitFor(() => {
+      expect(start.go).toHaveBeenCalledWith(APP_PAGE);
+    });
+
+    const app = setup({ address: APP_PAGE });
+    await expect(app.oneDrive.finishLogin()).rejects.toThrow(
+      "Du hast die Anmeldung bei OneDrive abgebrochen.",
+    );
+    // The error shows only once.
+    await app.oneDrive.finishLogin();
+  });
+
+  it("passes on errors that are not German errors, and stays on the page", async () => {
+    const { oneDrive, store, go } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
+    window.sessionStorage.setItem(
+      "pocket-apps-onedrive-login",
+      JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
+    );
+    store.set = () => Promise.reject(new Error("IndexedDB full"));
+
+    await expect(oneDrive.finishLogin()).rejects.toThrow("IndexedDB full");
+    expect(go).not.toHaveBeenCalled();
   });
 });
 
@@ -403,7 +515,7 @@ describe("the default browser functions", () => {
       assign,
     } as unknown as Location);
 
-    void createOneDrive({ store: memoryStore() }).startLogin(false);
+    void createOneDrive({ store: memoryStore() }).startLogin({ chooseAccount: false });
     await vi.waitFor(() => {
       expect(assign).toHaveBeenCalled();
     });

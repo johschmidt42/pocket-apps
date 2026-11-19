@@ -138,7 +138,7 @@ export function DataFolderGate({ host, optional = false, children }: DataFolderG
             <TaskCard title="Bei OneDrive anmelden" optional={optional}>
               <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
                 <p>
-                  Deine Anmeldung bei OneDrive ist abgelaufen. Microsoft erlaubt eine Anmeldung für
+                  Deine Anmeldung bei OneDrive gilt nicht mehr. Microsoft erlaubt eine Anmeldung für
                   24 Stunden. Melde dich wieder an.
                 </p>
                 <p>Deine Daten bleiben in OneDrive.</p>

@@ -16,9 +16,11 @@ const AUTHORITY = "https://login.microsoftonline.com/common/oauth2/v2.0";
 const APP_ROOT = "https://graph.microsoft.com/v1.0/me/drive/special/approot";
 const SCOPE = "Files.ReadWrite.AppFolder offline_access";
 /** The value of `FOLDER_KEY` when the person picked OneDrive. */
-export const ONEDRIVE = "onedrive";
+export const ONEDRIVE_CHOICE = "onedrive";
 const TOKEN_KEY = "onedrive-tokens";
 const LOGIN_KEY = "pocket-apps-onedrive-login";
+/** A login error on the start page, for the page of the app. */
+const LOGIN_ERROR_KEY = "pocket-apps-onedrive-login-error";
 
 const tokenAnswerSchema = z.object({
   access_token: z.string(),
@@ -32,7 +34,10 @@ const tokensSchema = z.object({
 });
 type Tokens = z.infer<typeof tokensSchema>;
 const loginSchema = z.object({ verifier: z.string(), state: z.string(), returnTo: z.string() });
-const itemSchema = z.object({ lastModifiedDateTime: z.string() });
+const itemSchema = z.object({
+  lastModifiedDateTime: z.iso.datetime({ offset: true }),
+  eTag: z.string(),
+});
 
 /** What the OneDrive code needs from the browser. Tests give fakes. */
 export type OneDriveDeps = {
@@ -44,7 +49,7 @@ export type OneDriveDeps = {
   /** The address of the page. */
   address: () => string;
   /** Opens another page: the Microsoft login, or the page of the app after the login. */
-  go: (url: string) => void;
+  navigate: (url: string) => void;
   /** Changes the address without a new page, for example to remove the login code. */
   replaceAddress: (url: string) => void;
   now: () => number;
@@ -56,7 +61,7 @@ function browserDeps(): OneDriveDeps {
     session: window.sessionStorage,
     fetch: (input, init) => window.fetch(input, init),
     address: () => window.location.href,
-    go: (url) => {
+    navigate: (url) => {
       window.location.assign(url);
     },
     replaceAddress: (url) => {
@@ -100,8 +105,14 @@ function itemUrl(path: string): string {
 const loginExpired = () =>
   new DataFileError(
     "onedrive-login",
-    "Deine Anmeldung bei OneDrive ist abgelaufen. Lade die Seite neu und melde dich wieder an.",
+    "Deine Anmeldung bei OneDrive gilt nicht mehr. Lade die Seite neu und melde dich wieder an.",
   );
+
+/** A promise that never ends: the page leaves, so the code after it must not run. */
+const stayOnPage = () => new Promise<never>(() => undefined);
+
+const unexpected = () =>
+  new DataFileError("onedrive-failed", "OneDrive hat eine unerwartete Antwort geschickt.");
 
 const offline = () =>
   new DataFileError(
@@ -115,11 +126,12 @@ export type OneDrive = {
    * Goes to the Microsoft login. The promise does not end, because the page leaves.
    * `chooseAccount`: Microsoft shows the list of accounts, also if one account is logged in.
    */
-  startLogin: (chooseAccount: boolean) => Promise<never>;
+  startLogin: (options: { chooseAccount: boolean }) => Promise<never>;
   /**
    * Ends a login when Microsoft sent the person back to this page. Then OneDrive is the picked
    * storage. If the login started on another page, the promise does not end: the page goes back
-   * there. Does nothing on a normal visit.
+   * there, also after a failed login. Then that page throws the error. Does nothing on a normal
+   * visit.
    */
   finishLogin: () => Promise<void>;
   /** Forgets the tokens, for example when the person picks a folder on this computer. */
@@ -130,6 +142,9 @@ export type OneDrive = {
 export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive {
   const deps = { ...browserDeps(), ...overrides };
   let refreshing: Promise<string | null> | null = null;
+  // The eTag of the last check of each file. The next write sends it as `If-Match`: OneDrive
+  // writes only if nobody changed the file after the check of the store.
+  const checkedTags = new Map<string, string>();
 
   /** Sends a request. A failed connection is a German error. */
   async function send(url: string, init: RequestInit): Promise<Response> {
@@ -140,15 +155,25 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
     }
   }
 
+  /**
+   * Gets tokens and keeps them. `null`: Microsoft does not accept the code or the refresh token
+   * (400 or 401). Other failures, for example 503, are errors: the tokens stay.
+   */
   async function tokenRequest(fields: Record<string, string>): Promise<Tokens | null> {
     const response = await send(`${AUTHORITY}/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ client_id: CLIENT_ID, ...fields }),
     });
-    if (!response.ok) return null;
+    if (response.status === 400 || response.status === 401) return null;
+    if (!response.ok) {
+      throw new DataFileError(
+        "onedrive-failed",
+        `Die Anmeldung bei Microsoft hat mit dem Fehler ${String(response.status)} geantwortet.`,
+      );
+    }
     const answer = tokenAnswerSchema.safeParse(await response.json());
-    if (!answer.success) return null;
+    if (!answer.success) throw unexpected();
     const tokens: Tokens = {
       accessToken: answer.data.access_token,
       refreshToken: answer.data.refresh_token,
@@ -196,6 +221,12 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
       await deps.store.set(TOKEN_KEY, null);
       throw loginExpired();
     }
+    if (response.status === 412) {
+      throw new DataFileError(
+        "onedrive-failed",
+        "Die Datei hat sich gerade woanders geändert. Die App prüft sie gleich noch einmal.",
+      );
+    }
     if (!response.ok && response.status !== 404) {
       throw new DataFileError(
         "onedrive-failed",
@@ -205,10 +236,21 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
     return response;
   }
 
+  /** The time of the last change from an answer of Graph. Keeps the eTag for the next write. */
+  async function timeOf(path: string, response: Response): Promise<number> {
+    const item = itemSchema.safeParse(await response.json().catch(() => null));
+    if (!item.success) throw unexpected();
+    checkedTags.set(path, item.data.eTag);
+    return Date.parse(item.data.lastModifiedDateTime);
+  }
+
   async function lastModified(path: string): Promise<number | null> {
-    const response = await graph(`${itemUrl(path)}?$select=lastModifiedDateTime`);
-    if (response.status === 404) return null;
-    return Date.parse(itemSchema.parse(await response.json()).lastModifiedDateTime);
+    const response = await graph(`${itemUrl(path)}?$select=lastModifiedDateTime,eTag`);
+    if (response.status === 404) {
+      checkedTags.delete(path);
+      return null;
+    }
+    return timeOf(path, response);
   }
 
   async function readBlob(path: string): Promise<Blob | null> {
@@ -220,32 +262,38 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
     name: "OneDrive",
     kind: "onedrive",
     queryAccess: async () => ((await accessToken()) === null ? "prompt" : "granted"),
-    requestAccess: () => startLogin(false),
+    requestAccess: () => startLogin({ chooseAccount: false }),
     lastModified,
     readBlob,
     async read(path): Promise<FileSnapshot | null> {
-      // Both at the same time: this saves one round trip. If the file changes in between, the
-      // time is older than the text. Then the next save shows a conflict and loses nothing.
-      const [time, blob] = await Promise.all([lastModified(path), readBlob(path)]);
+      // First the time, then the text. If the file changes in between, the time is older than
+      // the text. Then the next save shows a conflict and loses nothing. The other order could
+      // overwrite the change of another device.
+      const time = await lastModified(path);
+      const blob = time === null ? null : await readBlob(path);
       return time === null || blob === null
         ? null
         : { text: await blob.text(), lastModified: time };
     },
     async write(path, content) {
       const type = typeof content === "string" ? "text/plain; charset=utf-8" : content.type;
+      const headers = new Headers({ "Content-Type": type || "application/octet-stream" });
+      const tag = checkedTags.get(path);
+      if (tag !== undefined) headers.set("If-Match", tag);
       const response = await graph(`${itemUrl(path)}/content`, {
         method: "PUT",
-        headers: { "Content-Type": type || "application/octet-stream" },
+        headers,
         body: content,
       });
-      return Date.parse(itemSchema.parse(await response.json()).lastModifiedDateTime);
+      return timeOf(path, response);
     },
     async remove(path) {
+      checkedTags.delete(path);
       await graph(itemUrl(path), { method: "DELETE" });
     },
   };
 
-  async function startLogin(chooseAccount: boolean): Promise<never> {
+  async function startLogin({ chooseAccount }: { chooseAccount: boolean }): Promise<never> {
     const verifier = randomText();
     const state = randomText();
     const address = deps.address();
@@ -261,8 +309,8 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
       code_challenge_method: "S256",
       ...(chooseAccount && { prompt: "select_account" }),
     }).toString();
-    deps.go(url.href);
-    return new Promise<never>(() => undefined);
+    deps.navigate(url.href);
+    return stayOnPage();
   }
 
   function savedLogin() {
@@ -276,13 +324,8 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
     }
   }
 
-  async function finishLogin(): Promise<void> {
-    const address = deps.address();
-    const params = new URL(address).searchParams;
-    if (!params.has("code") && !params.has("error")) return;
-    const login = savedLogin();
-    // The code works only once. It must not stay in the address or in the browser history.
-    deps.replaceAddress(withoutQuery(address));
+  /** Gets the tokens for the code in the address. Throws a German error if it fails. */
+  async function redeemCode(params: URLSearchParams, address: string, verifier: string | null) {
     const code = params.get("code");
     if (code === null) {
       const error = String(params.get("error"));
@@ -293,7 +336,7 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
           : `Die Anmeldung bei OneDrive hat nicht geklappt: ${params.get("error_description") ?? error}`,
       );
     }
-    if (login?.state !== params.get("state")) {
+    if (verifier === null) {
       throw new DataFileError(
         "onedrive-login",
         "Die Antwort von Microsoft passt nicht zu deiner Anmeldung. Versuche es noch einmal.",
@@ -303,7 +346,7 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
       grant_type: "authorization_code",
       code,
       redirect_uri: startPageOf(address),
-      code_verifier: login.verifier,
+      code_verifier: verifier,
     });
     if (!tokens) {
       throw new DataFileError(
@@ -311,10 +354,32 @@ export function createOneDrive(overrides: Partial<OneDriveDeps> = {}): OneDrive 
         "Die Anmeldung bei OneDrive hat nicht geklappt. Versuche es noch einmal.",
       );
     }
-    await deps.store.set(FOLDER_KEY, ONEDRIVE);
-    if (withoutQuery(login.returnTo) !== withoutQuery(address)) {
-      deps.go(login.returnTo);
-      await new Promise<never>(() => undefined);
+    await deps.store.set(FOLDER_KEY, ONEDRIVE_CHOICE);
+  }
+
+  async function finishLogin(): Promise<void> {
+    // A login that failed on the start page: this page shows the error.
+    const earlierError = deps.session.getItem(LOGIN_ERROR_KEY);
+    deps.session.removeItem(LOGIN_ERROR_KEY);
+    if (earlierError !== null) throw new DataFileError("onedrive-login", earlierError);
+
+    const address = deps.address();
+    const params = new URL(address).searchParams;
+    if (!params.has("code") && !params.has("error")) return;
+    const login = savedLogin();
+    // The code works only once. It must not stay in the address or in the browser history.
+    deps.replaceAddress(withoutQuery(address));
+    const fits = login !== null && login.state === params.get("state");
+    const elsewhere = login !== null && withoutQuery(login.returnTo) !== withoutQuery(address);
+    try {
+      await redeemCode(params, address, fits ? login.verifier : null);
+    } catch (error) {
+      if (!elsewhere || !(error instanceof DataFileError)) throw error;
+      deps.session.setItem(LOGIN_ERROR_KEY, error.message);
+    }
+    if (elsewhere) {
+      deps.navigate(login.returnTo);
+      await stayOnPage();
     }
   }
 

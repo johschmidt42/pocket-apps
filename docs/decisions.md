@@ -12,7 +12,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** The login always comes back to the start page of the site. The start page ends the login and goes back to the page of the app. Then the registration needs one address per web address (dev server, `pnpm serve`, GitHub Pages), and a new app needs no change of the registration.
 - **Decision:** The Content Security Policy of each stateful app allows the Microsoft login, Microsoft Graph and the download servers of OneDrive (`STORAGE_ORIGINS`). `pocketApp.network` stays about the app itself: an app with `"network": false` can keep its data in OneDrive. The launcher card of such an app still shows "Nutzt keine Online-Dienste".
 - **Consequence:** Microsoft gives a browser app a refresh token for 24 hours only. A new refresh token keeps the end time of the first one. Thus the user clicks "Anmelden" once a day, also with daily use. Microsoft usually remembers the account, so the user does not type the password again. If the login ends while an app is open, a save fails, and the change that is not saved is lost after the new login. The browser warns before the page leaves.
-- **Consequence:** Each read and each save goes over the internet. The prototype measured 0.5–1 s per request: about 1 s to open an app and about 1.3 s for a save in the background. A save with `If-Match` in one request could save one round trip later.
+- **Consequence:** Each read and each save goes over the internet. The prototype measured 0.5–1 s per request: about 1 s to open an app and about 1.3 s for a save in the background. A read gets the time first and then the text. A save sends the eTag of the conflict check as `If-Match`. Thus a change on another device between the check and the write is never lost.
 - **Consequence:** Without internet, an app with OneDrive cannot load or save. The store shows the error and tries again.
 - **Rejected:** Google Drive first: a browser app gets no refresh token (one login click per hour), and the scope `drive.file` does not see the files of the desktop program. Dropbox: a good fit (long refresh tokens), it comes later. A server of our own: we would be responsible for the data of other people (GDPR), and we would run the server. A native app: costs for the App Store, and the data still needs a cloud for the sync.
 - **Changes:** "Apps on GitHub Pages, data in a local folder (like draw.io)": the apps are no longer only for Chrome and Edge.
@@ -367,6 +367,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 
 ## 2026-11-09: Apps on GitHub Pages, data in a local folder (like draw.io)
 
+- **Status:** Changed by "OneDrive as a second storage for the data" (2026-11-19): the apps are no longer only for Chrome and Edge, and phones can use OneDrive.
 - **Decision:** The apps come only from GitHub Pages (`johschmidt42.github.io/pocket-apps`). There is no release to Google Drive and no opening by double-click anymore.
 - **Decision:** Each person picks one local data folder once: "Pocket Apps Daten". The apps read and write it with the File System Access API. The folder can be inside a sync folder (Google Drive, OneDrive, Dropbox). Then the sync program does the backup.
 - **Decision:** Only Chrome and Edge on a computer. No smartphones for now. Other browsers show a clear notice.

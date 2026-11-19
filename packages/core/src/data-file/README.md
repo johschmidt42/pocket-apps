@@ -65,10 +65,13 @@ To add a kind (for example Dropbox):
 - The login uses OAuth 2.0 with PKCE in the browser. There is no secret and no server. The tokens stay in IndexedDB under the key `onedrive-tokens`.
 - Microsoft gives a browser app a refresh token for 24 hours. A new refresh token keeps the end time of the first one. Thus the user logs in again once a day, also with daily use. Then `queryAccess()` gives `"prompt"`, and the app shows "Bei OneDrive anmelden".
 - The login always comes back to the start page of the site (`/pocket-apps/`, on the dev server `/`). Before the login, `startLogin()` keeps the PKCE verifier, the `state` and the address of the app page in `sessionStorage`. The start page checks the `state`, gets the tokens, saves the choice and goes back to the app page. Thus the app registration needs only one address per web address, and a new app needs no change of the registration. The registration lists `http://localhost:5173/`, `http://localhost:4173/pocket-apps/` and `https://johschmidt42.github.io/pocket-apps/`.
-- Failures are `DataFileError`s with a German message: 401 (the login is not valid: the tokens go away), other HTTP errors (for example 429 or 503: the store tries again), and no connection.
+- Failures are `DataFileError`s with a German message: 401 (the login is not valid: the tokens go away), 412 (the file changed after the conflict check), other HTTP errors (for example 429 or 503: the store tries again, the tokens stay), an answer of an unexpected shape, and no connection.
+- A failed or cancelled login goes back to the page of the app too. That page shows the error. If the user had a storage before, the app keeps it.
 - If the login ends while the app is open, a save fails. "Jetzt erneut versuchen" goes to the Microsoft login. A change that is not saved is then lost. The browser warns before the page leaves.
 - A file that does not exist gives a 404 answer. Chrome writes each 404 answer to the console. This is normal.
-- Each read sends two requests at the same time (the time of the last change and the content). Each save sends two requests one after the other (the conflict check and the write).
+- Each read sends two requests: first the time of the last change, then the content. In this order, a change in between gives a conflict at the next save, not a lost change.
+- Each save sends two requests: the conflict check of the store (`lastModified`) and the write. The write sends the eTag of the check as `If-Match`. Thus OneDrive writes only if nobody changed the file in between.
+- The dev server must run on port 5173, because the app registration lists only this port.
 - A write is one request (Graph "simple upload"). Graph limits its size. The data files and the photos of the apps are small. Large files are not tested.
 
 Earlier versions kept the data file as `<app>.json` in the data folder itself. This applies to all storage kinds. If the store finds only this old file, it moves it into the app folder first: it writes the copy, reads it back and deletes the old file. Old backups (`<app>.backup-v<N>.json`) stay where they are.

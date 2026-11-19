@@ -142,13 +142,17 @@ describe("wrapDirectory", () => {
 });
 
 /** A stand-in for OneDrive. `finishLogin` can mark OneDrive as the picked storage. */
-function fakeOneDrive(store: KeyValueStore, loginDone = false): OneDrive & { forgotten: boolean } {
+function fakeOneDrive(
+  store: KeyValueStore,
+  login: "none" | "done" | "failed" = "none",
+): OneDrive & { forgotten: boolean } {
   const fake = {
     forgotten: false,
     folder: { name: "OneDrive", kind: "onedrive" } as DataFolder,
     startLogin: vi.fn(() => new Promise<never>(() => undefined)),
     finishLogin: async () => {
-      if (loginDone) await store.set("data-folder", "onedrive");
+      if (login === "failed") throw new Error("Du hast die Anmeldung bei OneDrive abgebrochen.");
+      if (login === "done") await store.set("data-folder", "onedrive");
     },
     forget: () => {
       fake.forgotten = true;
@@ -203,15 +207,28 @@ describe("createBrowserFolderHost", () => {
 
     void createBrowserFolderHost(store, oneDrive).pick("onedrive");
 
-    expect(oneDrive.startLogin).toHaveBeenCalledWith(true);
+    expect(oneDrive.startLogin).toHaveBeenCalledWith({ chooseAccount: true });
   });
 
   it("gives OneDrive after a finished login and on later visits", async () => {
     const store = memoryStore();
-    const host = createBrowserFolderHost(store, fakeOneDrive(store, true));
+    const host = createBrowserFolderHost(store, fakeOneDrive(store, "done"));
 
     expect(await host.loadSaved()).toMatchObject({ name: "OneDrive", kind: "onedrive" });
     expect(store.values.get("data-folder")).toBe("onedrive");
+  });
+
+  it("keeps the earlier choice after a failed login", async () => {
+    const store = memoryStore();
+    const host = createBrowserFolderHost(store, fakeOneDrive(store, "failed"));
+
+    await expect(host.loadSaved()).rejects.toThrow("abgebrochen");
+
+    store.values.set("data-folder", fakeDirectory("Daten"));
+    expect((await host.loadSaved())?.name).toBe("Daten");
+
+    store.values.set("data-folder", "onedrive");
+    expect((await host.loadSaved())?.name).toBe("OneDrive");
   });
 
   it("ignores saved values that are not a folder", async () => {

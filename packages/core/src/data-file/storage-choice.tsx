@@ -15,7 +15,7 @@ const OPTIONS: Record<StorageKind, Option> = {
     icon: HardDrive,
     title: "Ordner auf diesem Computer",
     texts: [
-      "Deine Daten liegen in einem Ordner auf diesem Computer, zum Beispiel „Pocket Apps Daten“. Andere Geräte sehen sie nicht.",
+      "Deine Daten liegen in einem Ordner auf diesem Computer, zum Beispiel „Pocket Apps Daten“. Nur dieser Computer hat die Daten. Für ein Backup lege den Ordner gern in deinen OneDrive- oder Google-Drive-Ordner.",
       "Chrome fragt danach, ob die Seite den Ordner bearbeiten darf. Erlaube es.",
     ],
     button: "Ordner wählen …",
