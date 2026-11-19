@@ -1,6 +1,6 @@
 import { CATALOG } from "./catalog.ts";
 import { formatDecimal } from "./decimal.ts";
-import { EXERCISE_NAMES, UNIT_LABELS, type ExerciseId } from "./exercises.ts";
+import { EXERCISE_NAMES, hasBox, inchesText, UNIT_LABELS, type ExerciseId } from "./exercises.ts";
 import type { Logbook, OwnWorkout, Part, Result, ScoreType } from "./schema.ts";
 
 export const CATEGORIES = ["girls", "hero", "open", "own"] as const;
@@ -92,7 +92,9 @@ export function formatLabel(workout: Workout): string {
   }
 }
 
-/** One part as a line: "21 × Thruster, 43 kg", "10 × Box Jump, 24 Zoll", "400 m Run" or "Burpee". */
+/**
+ * One part as a line: "21 × Thruster, 43 kg", "10 × Box Jump, 24 Zoll", "400 m Run" or "Burpee".
+ */
 export function partLine(part: Part): string {
   const name = EXERCISE_NAMES[part.exercise];
   const amount =
@@ -102,7 +104,12 @@ export function partLine(part: Part): string {
         ? `${formatDecimal(part.amount)} × `
         : `${formatDecimal(part.amount)} ${UNIT_LABELS[part.unit].short} `;
   const kg = part.kg === null ? "" : `, ${formatDecimal(part.kg)} kg`;
-  const box = part.boxInches === null ? "" : `, ${String(part.boxInches)} Zoll`;
+  // Data from before schema version 2 has no box height. The line says so: then the user adds it.
+  const box = !hasBox(part.exercise)
+    ? ""
+    : part.boxInches === null
+      ? ", Boxhöhe fehlt"
+      : `, ${inchesText(part.boxInches)}`;
   return `${amount}${name}${kg}${box}`;
 }
 

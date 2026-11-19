@@ -21,7 +21,7 @@ export type PartDraft = {
   unit: Unit;
   kg: string;
   /** The box height in inches, or "" if the user did not choose one yet. */
-  box: string;
+  boxInches: string;
 };
 
 function optionalInput(value: number | null): string {
@@ -41,7 +41,7 @@ export function newPartDraft(exercise: ExerciseId, id: string): PartDraft {
     amount: "",
     unit: unitsOf(exercise)[0] ?? "reps",
     kg: "",
-    box: hasBox(exercise) ? String(DEFAULT_BOX_INCHES) : "",
+    boxInches: hasBox(exercise) ? String(DEFAULT_BOX_INCHES) : "",
   };
 }
 
@@ -52,7 +52,7 @@ export function draftFromPart(part: Part): PartDraft {
     amount: optionalInput(part.amount),
     unit: part.unit,
     kg: optionalInput(part.kg),
-    box: part.boxInches === null ? "" : String(part.boxInches),
+    boxInches: part.boxInches === null ? "" : String(part.boxInches),
   };
 }
 
@@ -90,7 +90,7 @@ export function partFromDraft(draft: PartDraft): PartCheck {
   }
   let boxInches: number | null = null;
   if (hasBox(draft.exercise)) {
-    boxInches = Number(draft.box);
+    boxInches = Number(draft.boxInches);
     // The select gives only whole numbers. An empty choice is 0.
     if (!Number.isInteger(boxInches) || boxInches <= 0) {
       return { kind: "error", message: `${name}: Bitte die Boxhöhe in Zoll wählen.` };

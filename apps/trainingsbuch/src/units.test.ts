@@ -25,7 +25,12 @@ describe("units in workout texts", () => {
       expect(showUnits("30 box jumps, 61/51 cm (24/20 in)", system)).toBe(
         "30 box jumps, 24/20 Zoll",
       );
+      expect(showUnits("26 step-ups, 61/51 cm (24/20 in)", system)).toBe("26 step-ups, 24/20 Zoll");
     }
+    // Other heights follow the unit system.
+    const bar = "Pull-up bar ideally 15 cm (6 in) above max standing reach";
+    expect(showUnits(bar, "metric")).toBe("Pull-up bar ideally 15 cm above max standing reach");
+    expect(showUnits(bar, "imperial")).toBe("Pull-up bar ideally 6 in above max standing reach");
   });
 
   it("handles nested pairs and lines without a pair", () => {

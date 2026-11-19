@@ -9,7 +9,7 @@ describe("parts of an own workout", () => {
       amount: "",
       unit: "reps",
       kg: "",
-      box: "",
+      boxInches: "",
     });
     expect(newPartDraft("bike", "b").unit).toBe("cal");
     expect(amountInputId("a")).toBe("part-a-amount");
@@ -22,7 +22,7 @@ describe("parts of an own workout", () => {
       amount: "21",
       unit: "reps",
       kg: "42,5",
-      box: "",
+      boxInches: "",
     });
     expect(check).toEqual({
       kind: "ok",
@@ -35,16 +35,23 @@ describe("parts of an own workout", () => {
       amount: "21",
       unit: "reps",
       kg: "42,5",
-      box: "",
+      boxInches: "",
     });
     expect(
-      partFromDraft({ id: "b", exercise: "run", amount: "", unit: "m", kg: "", box: "" }),
+      partFromDraft({ id: "b", exercise: "run", amount: "", unit: "m", kg: "", boxInches: "" }),
     ).toEqual({
       kind: "ok",
       part: { id: "b", exercise: "run", amount: null, unit: "m", kg: null, boxInches: null },
     });
     expect(
-      partFromDraft({ id: "c", exercise: "l-sit", amount: "12,5", unit: "s", kg: "", box: "" }),
+      partFromDraft({
+        id: "c",
+        exercise: "l-sit",
+        amount: "12,5",
+        unit: "s",
+        kg: "",
+        boxInches: "",
+      }),
     ).toMatchObject({
       kind: "ok",
       part: { amount: 12.5 },
@@ -53,7 +60,14 @@ describe("parts of an own workout", () => {
 
   it("ignores a weight for an exercise without a weight", () => {
     expect(
-      partFromDraft({ id: "a", exercise: "burpee", amount: "10", unit: "reps", kg: "20", box: "" }),
+      partFromDraft({
+        id: "a",
+        exercise: "burpee",
+        amount: "10",
+        unit: "reps",
+        kg: "20",
+        boxInches: "",
+      }),
     ).toMatchObject({
       kind: "ok",
       part: { kg: null },
@@ -62,22 +76,36 @@ describe("parts of an own workout", () => {
 
   it("gives a German message for a wrong input", () => {
     expect(
-      partFromDraft({ id: "a", exercise: "burpee", amount: "10,5", unit: "reps", kg: "", box: "" }),
+      partFromDraft({
+        id: "a",
+        exercise: "burpee",
+        amount: "10,5",
+        unit: "reps",
+        kg: "",
+        boxInches: "",
+      }),
     ).toEqual({
       kind: "error",
       message: "Burpee: Bitte Wiederholungen als Zahl eingeben (ganze Zahl).",
     });
     expect(
-      partFromDraft({ id: "a", exercise: "run", amount: "-1", unit: "m", kg: "", box: "" }),
+      partFromDraft({ id: "a", exercise: "run", amount: "-1", unit: "m", kg: "", boxInches: "" }),
     ).toEqual({
       kind: "error",
       message: "Run: Bitte Meter als Zahl eingeben.",
     });
     expect(
-      partFromDraft({ id: "a", exercise: "run", amount: "x", unit: "m", kg: "", box: "" }),
+      partFromDraft({ id: "a", exercise: "run", amount: "x", unit: "m", kg: "", boxInches: "" }),
     ).toMatchObject({ kind: "error" });
     expect(
-      partFromDraft({ id: "a", exercise: "run", amount: "200000", unit: "m", kg: "", box: "" }),
+      partFromDraft({
+        id: "a",
+        exercise: "run",
+        amount: "200000",
+        unit: "m",
+        kg: "",
+        boxInches: "",
+      }),
     ).toMatchObject({ kind: "error" });
     expect(
       partFromDraft({
@@ -86,7 +114,7 @@ describe("parts of an own workout", () => {
         amount: "5",
         unit: "reps",
         kg: "schwer",
-        box: "",
+        boxInches: "",
       }),
     ).toEqual({
       kind: "error",

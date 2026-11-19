@@ -332,7 +332,7 @@ describe("Trainingsbuch", () => {
       within(within(plan).getAllByRole("list")[0]!)
         .getAllByRole("listitem")
         .map((item) => item.textContent);
-    expect(lines()).toEqual(["10 ×Box Jump"]);
+    expect(lines()).toEqual(["10 ×Box Jump, Boxhöhe fehlt"]);
 
     await user.click(screen.getByRole("button", { name: "Box Chipper bearbeiten" }));
     const dialog = screen.getByRole("dialog", { name: "Workout bearbeiten" });

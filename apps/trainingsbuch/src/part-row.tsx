@@ -11,6 +11,7 @@ import {
   BOX_HEIGHTS,
   EXERCISE_NAMES,
   hasBox,
+  inchesText,
   isWeighted,
   unitsOf,
   UNIT_LABELS,
@@ -30,7 +31,7 @@ export type PartRowProps = {
 function boxChoices(current: string): number[] {
   const inches = Number(current);
   const usual: readonly number[] = BOX_HEIGHTS;
-  return current === "" || usual.includes(inches)
+  return !Number.isInteger(inches) || inches <= 0 || usual.includes(inches)
     ? [...usual]
     : [...usual, inches].sort((a, b) => a - b);
 }
@@ -123,16 +124,18 @@ export function PartRow({ draft, handleProps, invalid, onChange, onRemove }: Par
             <NativeSelect
               id={`${prefix}-box`}
               className="w-full"
-              value={draft.box}
+              value={draft.boxInches}
               aria-invalid={invalid}
               onChange={(event) => {
-                onChange({ ...draft, box: event.target.value });
+                onChange({ ...draft, boxInches: event.target.value });
               }}
             >
-              {draft.box === "" && <NativeSelectOption value="">Bitte wählen</NativeSelectOption>}
-              {boxChoices(draft.box).map((inches) => (
+              {draft.boxInches === "" && (
+                <NativeSelectOption value="">Bitte wählen</NativeSelectOption>
+              )}
+              {boxChoices(draft.boxInches).map((inches) => (
                 <NativeSelectOption key={inches} value={String(inches)}>
-                  {`${String(inches)} Zoll`}
+                  {inchesText(inches)}
                 </NativeSelectOption>
               ))}
             </NativeSelect>

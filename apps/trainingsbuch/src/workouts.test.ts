@@ -206,6 +206,10 @@ describe("text for the screens", () => {
     expect(
       partLine({ ...part, exercise: "step-up", unit: "reps", amount: 50, kg: 20, boxInches: 20 }),
     ).toBe("50 × Step-up, 20 kg, 20 Zoll");
+    // Data from before schema version 2 has no box height.
+    expect(partLine({ ...part, exercise: "box-jump", unit: "reps", amount: 10 })).toBe(
+      "10 × Box Jump, Boxhöhe fehlt",
+    );
   });
 
   it("names the format of a workout", () => {

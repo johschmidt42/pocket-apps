@@ -387,6 +387,11 @@ export const BOX_HEIGHTS = [12, 16, 20, 24, 30] as const;
 /** The box height of a new part. */
 export const DEFAULT_BOX_INCHES = 24;
 
+/** A height in inches as German text: "24 Zoll", "24/20 Zoll". */
+export function inchesText(value: string | number): string {
+  return `${String(value)} Zoll`;
+}
+
 /** The exercises sorted by name, for pickers. */
 export function exercisesByName(): { id: ExerciseId; name: string }[] {
   return EXERCISE_IDS.map((id) => ({ id, name: EXERCISE_NAMES[id] })).sort((a, b) =>
