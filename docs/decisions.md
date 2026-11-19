@@ -3,6 +3,13 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-19: AGENTS.md holds rules, the modules hold their API docs
+
+- **Context:** `AGENTS.md` had grown to 460 lines. Each agent session loads all of it. About a third was API documentation: how to use `useAi()`, how the data file store works, how `useSubPage()` behaves. The same facts were also in the JSDoc. Two places for one fact can drift apart.
+- **Decision:** `AGENTS.md` keeps the rules, the steps and the gotchas: what to do, what not to do, and why when it is not clear. For the details of a module, it points to the module.
+- **Decision:** The two large modules have a `README.md` next to their code: `packages/core/src/data-file/README.md` and `packages/core/src/ai/README.md`. `AGENTS.md` says to read the README before you change a stateful app or an AI feature. Small modules keep their documentation in the JSDoc only (for example `useSubPage()` and `fetchJson()`).
+- **Rejected:** One `docs/api.md` for all modules: it is far from the code, so a change of the code does not remind anyone to change it.
+
 ## 2026-11-19: Sub-pages in the browser history (core)
 
 - **Context:** `trainingsbuch` (the detail of a workout) and `attraktor` (an attractor) show a sub-page after a click. A button leads back to the main page. The back button of the browser did not: it left the app, because the apps changed the page only in React state. AGENTS.md allows no router.

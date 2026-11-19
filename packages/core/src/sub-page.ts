@@ -27,8 +27,23 @@ export type SubPage = {
  * One sub-page of an app (for example the detail of a workout), in the browser history.
  * The hash of the URL holds the sub-page: `trainingsbuch.html#fran`. Thus the back button of the
  * browser closes the sub-page, and a reload shows the same sub-page again. When the main page
- * shows again, it scrolls to the place where the user left it. Use the hook once per app: it
- * owns the hash and `history.state`.
+ * shows again, it scrolls to the place where the user left it. Only the scroll position of the
+ * window stays, not the scroll position of inner scroll areas.
+ *
+ * - Show the sub-page if `page` is not `null`. If no item has the ID (for example an old
+ *   bookmark), show the main page. The hash then stays in the URL until the next `open()` or
+ *   `back()`.
+ * - There is only one level: `back()` and the back button of the browser always show the main
+ *   page. If the tab starts on a sub-page (a bookmark or a link), the hook puts an entry of the
+ *   main page before it. Thus the back button does not leave the app.
+ * - Give `back` to the button back to the main page. Call it also after the user deletes the
+ *   item of the open sub-page.
+ * - Use the hook once per app, for one kind of sub-page. It owns the hash and `history.state`.
+ *   Other code must not change them, and the app must not use `#anchor` links.
+ *
+ * Unit tests: open the sub-page with a click, then call `window.history.back()` in `act()` and
+ * wait with `findBy…` queries. To test a reload or a bookmark, set the hash before the render:
+ * `window.history.replaceState(null, "", "/#fran")`. Example: `apps/trainingsbuch/src/logbook-view.tsx`.
  */
 export function useSubPage(): SubPage {
   const [page, setPage] = useState(() => pageFromHash(window.location.hash));
