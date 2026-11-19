@@ -18,13 +18,13 @@ const OWN = {
   scoreType: "time-or-reps",
   timeCapMinutes: 12,
   rounds: 3,
-  parts: [{ id: "p1", exercise: "thruster", amount: 21, unit: "reps", kg: 42.5 }],
+  parts: [{ id: "p1", exercise: "thruster", amount: 21, unit: "reps", kg: 42.5, boxInches: null }],
   notes: "",
 };
 
 describe("trainingsbuch schema", () => {
-  it("starts at version 1 with an empty logbook", () => {
-    expect(currentVersion(schema)).toBe(1);
+  it("starts at version 2 with an empty logbook", () => {
+    expect(currentVersion(schema)).toBe(2);
     expect(schema.initial()).toEqual({ workouts: [], results: [], units: "metric" });
   });
 

@@ -139,7 +139,7 @@ describe("Mit KI eintragen", () => {
           scoreType: "rounds-reps",
           timeCapMinutes: 12,
           rounds: null,
-          parts: [{ exercise: "wall-ball", amount: 10, unit: "reps", kg: 9 }],
+          parts: [{ exercise: "wall-ball", amount: 10, unit: "reps", kg: 9, boxInches: null }],
           notes: "",
         },
         division: "scaled",

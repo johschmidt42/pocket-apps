@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-19: Box heights always in inches (trainingsbuch)
+
+- **Context:** In kg mode, `showUnits()` showed box heights in cm ("Box jumps, 61/51 cm"). Gyms give box heights in inches, also in countries with kg. Own workouts had no box height at all: "10 × Box Jump". The project owner wants the height always in inches and always next to a box exercise.
+- **Decision:** `showUnits()` shows a value in inches always in inches, in kg mode and in lb mode, with the German word: "24/20 Zoll". "in" next to German text reads like the German word "in".
+- **Decision:** Each part of an own workout has `boxInches` (schema version 2). The form shows "Box (Zoll)" for the exercises with a box (`hasBox()`: box jump, box jump-over, burpee box jump, burpee box jump-over, box step-over, step-up) and needs a value. It is a select with 12, 16, 20, 24 and 30 inches: a tap on a phone, no typing. A new part starts with 24, the Rx height for men in most workouts. The AI must give `boxInches` for a box exercise of a new workout. Else the app sends the problem back, and the AI asks the user.
+- **Consequence:** The migration to version 2 sets `boxInches` to `null` in all parts: the old data has no height. The line then shows no height, and the form asks for it at the next change. `trainingsbuch` 4.0.
+- **Not changed:** The built-in workouts "Drew" and "Wesley" show no box height. Their sources give none, and the catalog does not invent values.
+
 ## 2026-11-19: Photos with the camera of a phone (core, trainingsbuch)
 
 - **Context:** With OneDrive, the apps work on a phone. In `trainingsbuch`, the user takes a photo of the whiteboard in the gym. On Android, the file dialog of "Foto" did not offer the camera. A camera photo has often 3 to 6 MB and 4000 pixels. `imageForAi()` refused images larger than 3.75 MiB.

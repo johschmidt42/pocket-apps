@@ -1,7 +1,7 @@
 // The logic of "Mit KI eintragen": the shape of the AI answer, the instructions for the AI and
 // the check of a draft. The dialog is in ai-entry-dialog.tsx.
 import { z } from "zod";
-import { EXERCISE_IDS, isWeighted, UNITS, unitsOf } from "./exercises.ts";
+import { EXERCISE_IDS, hasBox, isWeighted, UNITS, unitsOf } from "./exercises.ts";
 import {
   DIVISIONS,
   SCORE_TYPES,
@@ -31,6 +31,9 @@ const newWorkoutSchema = z.object({
       amount: z.number().nullable().describe("Reps, meters, calories or seconds. null: max."),
       unit: z.enum(UNITS),
       kg: z.number().nullable().describe("The load in kg. Only for an exercise with a weight."),
+      boxInches: count.describe(
+        "Only for an exercise with a box: the box height in inches for men, for example 24 or 30. Else null.",
+      ),
     }),
   ),
   notes: z.string().describe("Other details of the workout, in German. Can be empty."),
@@ -148,6 +151,8 @@ export function buildInstructions({ today, units, workouts, focus }: Instruction
     "- Never invent a value. If the user does not say the day, use today.",
     "- Use only exercises from the schema. If an exercise does not fit, ask the user which",
     "  exercise is right.",
+    "- Box heights are in inches (Zoll), never in cm. Rx for men is usually 24 in, in some",
+    "  workouts 30 in.",
     "- Put details of the result into the notes, for example sets, scaling or how it felt.",
     "- Write all text for the user in German: short, friendly, with du.",
     "- When the user corrects a value, give the full draft again.",
@@ -223,6 +228,9 @@ function checkNewWorkout(
     if (part.kg !== null && isWeighted(part.exercise) && !isPositive(part.kg)) {
       return `The load of ${part.exercise} must be more than 0 kg, or null.`;
     }
+    if (hasBox(part.exercise) && !(isCount(part.boxInches) && part.boxInches > 0)) {
+      return `${part.exercise} needs boxInches: the box height in inches, for example 24 or 30. Ask the user if the input does not say it.`;
+    }
   }
   const cap =
     isCount(draft.timeCapMinutes) && draft.timeCapMinutes > 0 ? draft.timeCapMinutes : null;
@@ -246,8 +254,9 @@ function checkNewWorkout(
       exercise: part.exercise,
       amount: part.amount,
       unit: part.unit,
-      // An exercise without a weight has no kg, also if the AI gives one.
+      // An exercise without a weight has no kg, also if the AI gives one. The same for a box.
       kg: isWeighted(part.exercise) ? part.kg : null,
+      boxInches: hasBox(part.exercise) ? part.boxInches : null,
     })),
     notes: draft.notes.trim(),
   };

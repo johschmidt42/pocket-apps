@@ -1,6 +1,7 @@
 import { createDataFileStore, defineDataSchema } from "@pocket-apps/core/data-file";
 import { z } from "zod";
 import { EXERCISE_IDS, UNITS } from "./exercises.ts";
+import { toV2 } from "./migrations/to-v2.ts";
 
 /**
  * How a workout is scored:
@@ -49,6 +50,8 @@ const partSchema = z.object({
   unit: z.enum(UNITS),
   /** Only for exercises with a weight. */
   kg: z.number().positive().nullable(),
+  /** Only for exercises with a box: its height in inches. `null` in data from before version 2. */
+  boxInches: z.number().int().positive().nullable(),
 });
 
 const ownWorkoutSchema = z.object({
@@ -87,8 +90,8 @@ export const schema = defineDataSchema<Logbook>({
   app: "trainingsbuch",
   validate: logbookSchema,
   initial: () => ({ workouts: [], results: [], units: "metric" }),
-  // Version 1 has no migrations. Append new ones at the end. Never change old ones.
-  migrations: [],
+  // Append new migrations at the end. Never change old ones.
+  migrations: [toV2],
 });
 
 export const { DataFileProvider, useDataFile } = createDataFileStore(schema, {

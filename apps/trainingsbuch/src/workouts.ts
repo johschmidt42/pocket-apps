@@ -92,7 +92,7 @@ export function formatLabel(workout: Workout): string {
   }
 }
 
-/** One part as a line: "21 × Thruster, 43 kg", "400 m Run" or "Burpee". */
+/** One part as a line: "21 × Thruster, 43 kg", "10 × Box Jump, 24 Zoll", "400 m Run" or "Burpee". */
 export function partLine(part: Part): string {
   const name = EXERCISE_NAMES[part.exercise];
   const amount =
@@ -102,7 +102,8 @@ export function partLine(part: Part): string {
         ? `${formatDecimal(part.amount)} × `
         : `${formatDecimal(part.amount)} ${UNIT_LABELS[part.unit].short} `;
   const kg = part.kg === null ? "" : `, ${formatDecimal(part.kg)} kg`;
-  return `${amount}${name}${kg}`;
+  const box = part.boxInches === null ? "" : `, ${String(part.boxInches)} Zoll`;
+  return `${amount}${name}${kg}${box}`;
 }
 
 export function fromOwn(own: OwnWorkout): Workout {

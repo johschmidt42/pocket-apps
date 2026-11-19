@@ -366,6 +366,27 @@ export function isWeighted(exercise: ExerciseId): boolean {
   return WEIGHTED.has(exercise);
 }
 
+/** The exercises with a box. Their height is in inches, also in kg mode: gyms use inches. */
+const WITH_BOX: ReadonlySet<ExerciseId> = new Set<ExerciseId>([
+  "box-jump",
+  "box-jump-over",
+  "burpee-box-jump",
+  "burpee-box-jump-over",
+  "box-step-over",
+  "step-up",
+]);
+
+/** True if the exercise uses a box. Then the form asks for its height in inches. */
+export function hasBox(exercise: ExerciseId): boolean {
+  return WITH_BOX.has(exercise);
+}
+
+/** The usual box heights in inches. 24 is Rx for men in most workouts, 30 in some. */
+export const BOX_HEIGHTS = [12, 16, 20, 24, 30] as const;
+
+/** The box height of a new part. */
+export const DEFAULT_BOX_INCHES = 24;
+
 /** The exercises sorted by name, for pickers. */
 export function exercisesByName(): { id: ExerciseId; name: string }[] {
   return EXERCISE_IDS.map((id) => ({ id, name: EXERCISE_NAMES[id] })).sort((a, b) =>

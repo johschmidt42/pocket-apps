@@ -14,12 +14,18 @@ describe("units in workout texts", () => {
   it("keeps the words between the two values", () => {
     expect(showUnits("1600 m run (1 mile)", "metric")).toBe("1600 m run");
     expect(showUnits("1600 m run (1 mile)", "imperial")).toBe("1 mile run");
-    expect(showUnits("30 box jumps, 61/51 cm (24/20 in)", "imperial")).toBe(
-      "30 box jumps, 24/20 in",
-    );
+    expect(showUnits("Monti: 51 cm (20 in) box", "imperial")).toBe("Monti: 20 Zoll box");
     expect(showUnits("Kettlebell, 32/24 kg (2/1.5 pood)", "imperial")).toBe(
       "Kettlebell, 2/1.5 pood",
     );
+  });
+
+  it("shows a box height always in inches, with the German word", () => {
+    for (const system of ["metric", "imperial"] as const) {
+      expect(showUnits("30 box jumps, 61/51 cm (24/20 in)", system)).toBe(
+        "30 box jumps, 24/20 Zoll",
+      );
+    }
   });
 
   it("handles nested pairs and lines without a pair", () => {

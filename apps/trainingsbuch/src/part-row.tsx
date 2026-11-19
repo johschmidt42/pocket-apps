@@ -7,7 +7,14 @@ import { DragHandle } from "@pocket-apps/ui/drag-handle";
 import { X } from "lucide-react";
 import type { ComponentProps } from "react";
 import { ExerciseIcon } from "./exercise-icon.tsx";
-import { EXERCISE_NAMES, isWeighted, unitsOf, UNIT_LABELS } from "./exercises.ts";
+import {
+  BOX_HEIGHTS,
+  EXERCISE_NAMES,
+  hasBox,
+  isWeighted,
+  unitsOf,
+  UNIT_LABELS,
+} from "./exercises.ts";
 import { amountInputId, type PartDraft } from "./parts.ts";
 
 export type PartRowProps = {
@@ -19,7 +26,16 @@ export type PartRowProps = {
   onRemove: () => void;
 };
 
-/** One exercise of an own workout: amount, unit and weight. */
+/** The usual box heights, plus another height of the part (for example 36 from the AI). */
+function boxChoices(current: string): number[] {
+  const inches = Number(current);
+  const usual: readonly number[] = BOX_HEIGHTS;
+  return current === "" || usual.includes(inches)
+    ? [...usual]
+    : [...usual, inches].sort((a, b) => a - b);
+}
+
+/** One exercise of an own workout: amount, unit, weight and box height. */
 export function PartRow({ draft, handleProps, invalid, onChange, onRemove }: PartRowProps) {
   const name = EXERCISE_NAMES[draft.exercise];
   const units = unitsOf(draft.exercise);
@@ -97,6 +113,29 @@ export function PartRow({ draft, handleProps, invalid, onChange, onRemove }: Par
                 onChange({ ...draft, kg: event.target.value });
               }}
             />
+          </div>
+        )}
+        {hasBox(draft.exercise) && (
+          <div className="flex w-32 flex-col gap-1">
+            <Label htmlFor={`${prefix}-box`} className="text-xs text-muted-foreground">
+              Box (Zoll)
+            </Label>
+            <NativeSelect
+              id={`${prefix}-box`}
+              className="w-full"
+              value={draft.box}
+              aria-invalid={invalid}
+              onChange={(event) => {
+                onChange({ ...draft, box: event.target.value });
+              }}
+            >
+              {draft.box === "" && <NativeSelectOption value="">Bitte wählen</NativeSelectOption>}
+              {boxChoices(draft.box).map((inches) => (
+                <NativeSelectOption key={inches} value={String(inches)}>
+                  {`${String(inches)} Zoll`}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
           </div>
         )}
       </div>

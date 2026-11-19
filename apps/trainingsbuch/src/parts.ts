@@ -1,7 +1,9 @@
 import { parseNumber } from "@pocket-apps/core/numbers";
 import { decimalInput } from "./decimal.ts";
 import {
+  DEFAULT_BOX_INCHES,
   EXERCISE_NAMES,
+  hasBox,
   isWeighted,
   unitsOf,
   UNIT_LABELS,
@@ -18,6 +20,8 @@ export type PartDraft = {
   amount: string;
   unit: Unit;
   kg: string;
+  /** The box height in inches, or "" if the user did not choose one yet. */
+  box: string;
 };
 
 function optionalInput(value: number | null): string {
@@ -31,7 +35,14 @@ export function amountInputId(id: string): string {
 
 /** A new, empty row for the exercise, with its default unit. */
 export function newPartDraft(exercise: ExerciseId, id: string): PartDraft {
-  return { id, exercise, amount: "", unit: unitsOf(exercise)[0] ?? "reps", kg: "" };
+  return {
+    id,
+    exercise,
+    amount: "",
+    unit: unitsOf(exercise)[0] ?? "reps",
+    kg: "",
+    box: hasBox(exercise) ? String(DEFAULT_BOX_INCHES) : "",
+  };
 }
 
 export function draftFromPart(part: Part): PartDraft {
@@ -41,13 +52,15 @@ export function draftFromPart(part: Part): PartDraft {
     amount: optionalInput(part.amount),
     unit: part.unit,
     kg: optionalInput(part.kg),
+    box: part.boxInches === null ? "" : String(part.boxInches),
   };
 }
 
 export type PartCheck = { kind: "ok"; part: Part } | { kind: "error"; message: string };
 
 /**
- * The part from the inputs, or a German error message. Both inputs are optional.
+ * The part from the inputs, or a German error message. Amount and weight are optional. An
+ * exercise with a box needs its height.
  * Reps and calories are whole numbers. Meters and seconds can have decimals.
  */
 export function partFromDraft(draft: PartDraft): PartCheck {
@@ -75,8 +88,16 @@ export function partFromDraft(draft: PartDraft): PartCheck {
       return { kind: "error", message: `${name}: Bitte das Gewicht in kg eingeben, z. B. 42,5.` };
     }
   }
+  let boxInches: number | null = null;
+  if (hasBox(draft.exercise)) {
+    boxInches = Number(draft.box);
+    // The select gives only whole numbers. An empty choice is 0.
+    if (!Number.isInteger(boxInches) || boxInches <= 0) {
+      return { kind: "error", message: `${name}: Bitte die Boxhöhe in Zoll wählen.` };
+    }
+  }
   return {
     kind: "ok",
-    part: { id: draft.id, exercise: draft.exercise, amount, unit: draft.unit, kg },
+    part: { id: draft.id, exercise: draft.exercise, amount, unit: draft.unit, kg, boxInches },
   };
 }

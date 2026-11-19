@@ -19,7 +19,7 @@ const OWN: OwnWorkout = {
   scoreType: "time-or-reps",
   timeCapMinutes: 12,
   rounds: null,
-  parts: [{ id: "p1", exercise: "wall-ball", amount: 50, unit: "reps", kg: 9 }],
+  parts: [{ id: "p1", exercise: "wall-ball", amount: 50, unit: "reps", kg: 9, boxInches: null }],
   notes: "Ruhig angehen",
 };
 
@@ -62,10 +62,10 @@ const NEW_WORKOUT: NonNullable<AiDraft["newWorkout"]> = {
   timeCapMinutes: 12,
   rounds: 3,
   parts: [
-    { exercise: "wall-ball", amount: 10, unit: "reps", kg: 9 },
-    { exercise: "row", amount: 15, unit: "cal", kg: null },
+    { exercise: "wall-ball", amount: 10, unit: "reps", kg: 9, boxInches: null },
+    { exercise: "row", amount: 15, unit: "cal", kg: null, boxInches: null },
     // An exercise without a weight loses the kg.
-    { exercise: "double-under", amount: 20, unit: "reps", kg: 5 },
+    { exercise: "double-under", amount: 20, unit: "reps", kg: 5, boxInches: null },
   ],
   notes: "",
 };
@@ -165,9 +165,9 @@ describe("check of a draft", () => {
       // An AMRAP has no rounds.
       rounds: null,
       parts: [
-        { exercise: "wall-ball", amount: 10, unit: "reps", kg: 9 },
-        { exercise: "row", amount: 15, unit: "cal", kg: null },
-        { exercise: "double-under", amount: 20, unit: "reps", kg: null },
+        { exercise: "wall-ball", amount: 10, unit: "reps", kg: 9, boxInches: null },
+        { exercise: "row", amount: 15, unit: "cal", kg: null, boxInches: null },
+        { exercise: "double-under", amount: 20, unit: "reps", kg: null, boxInches: null },
       ],
     });
     expect(made.category).toBe("own");
@@ -201,14 +201,21 @@ describe("check of a draft", () => {
     expect(bad({ name: " " })).toBe("The new workout needs a name.");
     expect(bad({ name: "fran" })).toBe('The name "fran" is taken. Choose another name.');
     expect(bad({ parts: [] })).toBe("The new workout needs at least one exercise.");
-    expect(bad({ parts: [{ exercise: "row", amount: 10, unit: "reps", kg: null }] })).toBe(
-      "row takes only these units: m, cal.",
-    );
-    expect(bad({ parts: [{ exercise: "burpee", amount: 0, unit: "reps", kg: null }] })).toBe(
-      "The amount of burpee must be more than 0, or null.",
-    );
-    expect(bad({ parts: [{ exercise: "thruster", amount: 21, unit: "reps", kg: -1 }] })).toBe(
-      "The load of thruster must be more than 0 kg, or null.",
+    expect(
+      bad({ parts: [{ exercise: "row", amount: 10, unit: "reps", kg: null, boxInches: null }] }),
+    ).toBe("row takes only these units: m, cal.");
+    expect(
+      bad({ parts: [{ exercise: "burpee", amount: 0, unit: "reps", kg: null, boxInches: null }] }),
+    ).toBe("The amount of burpee must be more than 0, or null.");
+    expect(
+      bad({ parts: [{ exercise: "thruster", amount: 21, unit: "reps", kg: -1, boxInches: null }] }),
+    ).toBe("The load of thruster must be more than 0 kg, or null.");
+    expect(
+      bad({
+        parts: [{ exercise: "box-jump", amount: 10, unit: "reps", kg: null, boxInches: null }],
+      }),
+    ).toBe(
+      "box-jump needs boxInches: the box height in inches, for example 24 or 30. Ask the user if the input does not say it.",
     );
     expect(bad({ scoreType: "time-or-reps", timeCapMinutes: null })).toContain(
       "needs timeCapMinutes",

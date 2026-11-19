@@ -14,8 +14,8 @@ const OWN: OwnWorkout = {
   timeCapMinutes: 12,
   rounds: null,
   parts: [
-    { id: "p1", exercise: "wall-ball", amount: 50, unit: "reps", kg: 9 },
-    { id: "p2", exercise: "burpee", amount: 50, unit: "reps", kg: null },
+    { id: "p1", exercise: "wall-ball", amount: 50, unit: "reps", kg: 9, boxInches: null },
+    { id: "p2", exercise: "burpee", amount: 50, unit: "reps", kg: null, boxInches: null },
   ],
   notes: "",
 };
@@ -42,7 +42,7 @@ async function openApp(data?: TestData) {
     folder.files.set(FILE, {
       text: JSON.stringify({
         app: "trainingsbuch",
-        schemaVersion: 1,
+        schemaVersion: 2,
         savedWith: "1.0",
         savedAt: "2026-11-17T12:00:00.000Z",
         data,
@@ -309,6 +309,52 @@ describe("Trainingsbuch", () => {
     expect(within(chart).getByText("Scaled")).toBeInTheDocument();
   });
 
+  it("asks for the box height in inches, also for a workout from before version 4", async () => {
+    // A data file of schema version 1: its parts have no box height.
+    const folder = createMemoryFolder();
+    const part = { id: "p1", exercise: "box-jump", amount: 10, unit: "reps", kg: null };
+    const workout = { ...OWN, name: "Box Chipper", parts: [part] };
+    folder.files.set(FILE, {
+      text: JSON.stringify({
+        app: "trainingsbuch",
+        schemaVersion: 1,
+        savedWith: "3.1",
+        savedAt: "2026-11-19T12:00:00.000Z",
+        data: { workouts: [workout], results: [], units: "metric" },
+      }),
+      lastModified: 1,
+    });
+    const user = userEvent.setup();
+    render(<App folderHost={createMemoryFolderHost({ saved: folder })} />);
+    await user.click(await screen.findByRole("button", { name: /^Box Chipper/ }));
+    const plan = screen.getByRole("region", { name: "Ablauf" });
+    const lines = () =>
+      within(within(plan).getAllByRole("list")[0]!)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent);
+    expect(lines()).toEqual(["10 ×Box Jump"]);
+
+    await user.click(screen.getByRole("button", { name: "Box Chipper bearbeiten" }));
+    const dialog = screen.getByRole("dialog", { name: "Workout bearbeiten" });
+    expect(within(dialog).getByLabelText("Box (Zoll)")).toHaveValue("");
+    await user.click(within(dialog).getByRole("button", { name: "Speichern" }));
+    expect(
+      within(dialog).getByText("Box Jump: Bitte die Boxhöhe in Zoll wählen."),
+    ).toBeInTheDocument();
+
+    await user.selectOptions(within(dialog).getByLabelText("Box (Zoll)"), "30");
+    await user.click(within(dialog).getByRole("button", { name: "Speichern" }));
+    expect(lines()).toEqual(["10 ×Box Jump, 30 Zoll"]);
+
+    // A new box exercise starts with 24 inches.
+    await user.click(screen.getByRole("button", { name: "Box Chipper bearbeiten" }));
+    const again = screen.getByRole("dialog", { name: "Workout bearbeiten" });
+    await user.selectOptions(within(again).getByLabelText("Übung hinzufügen"), "box-step-over");
+    expect(within(again).getAllByLabelText("Box (Zoll)")[1]).toHaveValue("24");
+    await waitForSave();
+    expect(savedData(folder).workouts[0]?.parts[0]?.boxInches).toBe(30);
+  });
+
   it("adds an own workout with exercises, amounts and weights", async () => {
     const { folder, user } = await openApp();
 
@@ -382,13 +428,21 @@ describe("Trainingsbuch", () => {
         timeCapMinutes: 12,
         rounds: 3,
         parts: [
-          { id: expect.any(String) as string, exercise: "row", amount: 15, unit: "cal", kg: null },
+          {
+            id: expect.any(String) as string,
+            exercise: "row",
+            amount: 15,
+            unit: "cal",
+            kg: null,
+            boxInches: null,
+          },
           {
             id: expect.any(String) as string,
             exercise: "thruster",
             amount: 21,
             unit: "reps",
             kg: 42.5,
+            boxInches: null,
           },
         ],
         notes: "Ohne Pause",

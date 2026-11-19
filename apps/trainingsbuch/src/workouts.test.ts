@@ -28,9 +28,9 @@ const OWN: OwnWorkout = {
   timeCapMinutes: null,
   rounds: 5,
   parts: [
-    { id: "p1", exercise: "back-squat", amount: 5, unit: "reps", kg: 102.5 },
-    { id: "p2", exercise: "row", amount: 500, unit: "m", kg: null },
-    { id: "p3", exercise: "back-squat", amount: null, unit: "reps", kg: null },
+    { id: "p1", exercise: "back-squat", amount: 5, unit: "reps", kg: 102.5, boxInches: null },
+    { id: "p2", exercise: "row", amount: 500, unit: "m", kg: null, boxInches: null },
+    { id: "p3", exercise: "back-squat", amount: null, unit: "reps", kg: null, boxInches: null },
   ],
   notes: "\n  steigern  ",
 };
@@ -194,12 +194,18 @@ describe("changes", () => {
 
 describe("text for the screens", () => {
   it("writes a part as one line", () => {
-    const part = { id: "p", amount: null, kg: null } as const;
+    const part = { id: "p", amount: null, kg: null, boxInches: null } as const;
     expect(partLine({ ...part, exercise: "bike", unit: "cal", amount: 20 })).toBe("20 cal Bike");
     expect(partLine({ ...part, exercise: "l-sit", unit: "s", amount: 30 })).toBe("30 s L-Sit");
-    expect(partLine({ ...part, exercise: "thruster", unit: "reps", kg: 42.5 })).toBe(
-      "Thruster, 42,5 kg",
-    );
+    expect(
+      partLine({ ...part, exercise: "thruster", unit: "reps", kg: 42.5, boxInches: null }),
+    ).toBe("Thruster, 42,5 kg");
+    expect(
+      partLine({ ...part, exercise: "box-jump", unit: "reps", amount: 10, boxInches: 30 }),
+    ).toBe("10 × Box Jump, 30 Zoll");
+    expect(
+      partLine({ ...part, exercise: "step-up", unit: "reps", amount: 50, kg: 20, boxInches: 20 }),
+    ).toBe("50 × Step-up, 20 kg, 20 Zoll");
   });
 
   it("names the format of a workout", () => {
