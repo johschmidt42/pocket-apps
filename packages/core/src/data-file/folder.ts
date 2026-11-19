@@ -1,12 +1,19 @@
 /** A file in the data folder: its text and the time of its last change (ms). */
 export type FileSnapshot = { text: string; lastModified: number };
 
+/** Where the data lives: a folder on this computer, or the app folder in OneDrive. */
+export type StorageKind = "local" | "onedrive";
+
 /** The data folder that the person picked. Paths use "/" between folder names. */
 export type DataFolder = {
   readonly name: string;
+  readonly kind: StorageKind;
   /** The access state without a dialog. */
   queryAccess: () => Promise<PermissionState>;
-  /** Asks the person for access. Needs a click (user activation). */
+  /**
+   * Asks the person for access. Needs a click (user activation).
+   * For OneDrive, the page goes to the Microsoft login and the promise does not end.
+   */
   requestAccess: () => Promise<PermissionState>;
   /** The file, or `null` if it does not exist. */
   read: (path: string) => Promise<FileSnapshot | null>;
@@ -25,10 +32,13 @@ export type DataFolder = {
 
 /** Finds and remembers the data folder. Tests use a fake (see `testing.ts`). */
 export type FolderHost = {
-  /** True if the browser can open a folder (Chrome, Edge). */
-  isSupported: () => boolean;
+  /** The kinds of storage that this browser can use. "local" needs Chrome or Edge on a computer. */
+  kinds: () => readonly StorageKind[];
   /** The folder from an earlier visit, or `null`. */
   loadSaved: () => Promise<DataFolder | null>;
-  /** Lets the person pick a folder and remembers it. `null` if the person cancels. */
-  pick: () => Promise<DataFolder | null>;
+  /**
+   * Lets the person pick a folder of this kind and remembers it. `null` if the person cancels.
+   * For OneDrive, the page goes to the Microsoft login and the promise does not end.
+   */
+  pick: (kind: StorageKind) => Promise<DataFolder | null>;
 };

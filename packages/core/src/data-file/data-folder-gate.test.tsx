@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { DataFolderGate } from "./data-folder-gate.tsx";
@@ -23,12 +23,36 @@ function setup(host: FolderHost, optional = false) {
 }
 
 describe("DataFolderGate", () => {
-  it("asks for Chrome or Edge when the browser cannot open a folder", () => {
-    setup(createMemoryFolderHost({ supported: false }));
+  it("explains when the browser offers no storage at all", () => {
+    setup(createMemoryFolderHost({ kinds: [] }));
 
     expect(
-      screen.getByRole("heading", { level: 2, name: "Bitte Chrome oder Edge verwenden" }),
+      screen.getByRole("heading", { level: 2, name: "Dieser Browser kann keine Daten speichern" }),
     ).toBeInTheDocument();
+  });
+
+  it("offers both places in Chrome and Edge", async () => {
+    setup(createMemoryFolderHost());
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Wo sollen deine Daten liegen?" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: "Ordner auf diesem Computer" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "OneDrive" })).toBeInTheDocument();
+    expect(screen.getByText(/dieselben Daten auf all deinen Geräten/)).toBeInTheDocument();
+  });
+
+  it("offers only OneDrive in browsers without a folder dialog", async () => {
+    const host = createMemoryFolderHost({ kinds: ["onedrive"] });
+    const { user } = setup(host);
+
+    await user.click(await screen.findByRole("button", { name: "Mit OneDrive verbinden" }));
+
+    expect(host.pickedKind).toBe("onedrive");
+    expect(screen.queryByRole("button", { name: "Ordner wählen …" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Ordner auf diesem Computer")).not.toBeInTheDocument();
   });
 
   it("shows the app at once when the remembered folder has access", async () => {
@@ -46,13 +70,16 @@ describe("DataFolderGate", () => {
     // The person cancels the dialog.
     await user.click(pickButton);
 
-    expect(screen.getByRole("heading", { level: 2, name: "Datenordner wählen" })).toBeVisible();
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Wo sollen deine Daten liegen?" }),
+    ).toBeVisible();
 
     host.nextPick = createMemoryFolder("Daten");
     await user.click(pickButton);
 
     expect(await screen.findByText("Ordner: Daten")).toBeInTheDocument();
     expect(host.saved?.name).toBe("Daten");
+    expect(host.pickedKind).toBe("local");
   });
 
   it("shows an error when the folder dialog fails", async () => {
@@ -108,7 +135,12 @@ describe("DataFolderGate", () => {
     const other = createMemoryFolder("Neu");
     other.access = "prompt";
     host.nextPick = other;
-    await user.click(screen.getByRole("button", { name: "Anderen Ordner wählen …" }));
+    await user.click(screen.getByRole("button", { name: "Anderen Speicherort wählen …" }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Speicherort wählen" })).getByRole("button", {
+        name: "Ordner wählen …",
+      }),
+    );
 
     expect(await screen.findByText(/Ordner „Neu“ wieder bearbeiten/)).toBeInTheDocument();
     expect(screen.queryByText(/hat den Zugriff abgelehnt/)).not.toBeInTheDocument();
@@ -116,6 +148,21 @@ describe("DataFolderGate", () => {
     await user.click(screen.getByRole("button", { name: "Zugriff erlauben" }));
 
     expect(await screen.findByText("Ordner: Neu")).toBeInTheDocument();
+  });
+
+  it("asks for a new OneDrive login when it expired", async () => {
+    const folder = createMemoryFolder("OneDrive", "onedrive");
+    folder.access = "prompt";
+    const { user } = setup(createMemoryFolderHost({ saved: folder }));
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Bei OneDrive anmelden" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Deine Daten bleiben in OneDrive.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Anmelden" }));
+
+    expect(await screen.findByText("Ordner: OneDrive")).toBeInTheDocument();
   });
 
   it("shows the denied text at once when the browser blocks the folder", async () => {
@@ -159,8 +206,24 @@ describe("DataFolderGate", () => {
 
     host.nextPick = createMemoryFolder("Neu");
     await user.click(screen.getByRole("button", { name: "Wechseln" }));
+    const dialog = screen.getByRole("dialog", { name: "Speicherort wählen" });
+    await user.click(within(dialog).getByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByText("Ordner: Neu")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("keeps the folder when the person closes the choice", async () => {
+    const host = createMemoryFolderHost({ saved: createMemoryFolder("Alt") });
+    const { user } = setup(host);
+    await screen.findByText("Ordner: Alt");
+
+    await user.click(screen.getByRole("button", { name: "Wechseln" }));
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(host.pickedKind).toBeNull();
+    expect(screen.getByText("Ordner: Alt")).toBeInTheDocument();
   });
 
   it("keeps the app and shows an error when the change fails", async () => {
@@ -170,6 +233,7 @@ describe("DataFolderGate", () => {
 
     host.pick = () => Promise.reject(new Error("blocked"));
     await user.click(screen.getByRole("button", { name: "Wechseln" }));
+    await user.click(screen.getByRole("button", { name: "Mit OneDrive verbinden" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("blocked");
     expect(screen.getByText("Ordner: Alt")).toBeInTheDocument();
@@ -178,16 +242,20 @@ describe("DataFolderGate", () => {
 
 describe("DataFolderGate with an optional folder", () => {
   it("shows a notice and the app in other browsers", () => {
-    setup(createMemoryFolderHost({ supported: false }), true);
+    setup(createMemoryFolderHost({ kinds: [] }), true);
 
-    expect(screen.getByText(/funktionieren nur in Chrome und Edge/)).toBeInTheDocument();
+    expect(
+      screen.getByText("Apps mit Daten funktionieren in diesem Browser nicht."),
+    ).toBeInTheDocument();
     expect(screen.getByText("Ordner: keiner")).toBeInTheDocument();
   });
 
   it("shows the task as a section above the app", async () => {
     setup(createMemoryFolderHost(), true);
 
-    expect(await screen.findByRole("region", { name: "Datenordner wählen" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "Wo sollen deine Daten liegen?" }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("main")).not.toBeInTheDocument();
     expect(screen.getByText("Ordner: keiner")).toBeInTheDocument();
   });

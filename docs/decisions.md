@@ -3,6 +3,20 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-19: OneDrive as a second storage for the data (core)
+
+- **Context:** The data folder works only in Chrome and Edge on a computer (File System Access API). The project owner wants to use the apps on a phone and in all browsers, for example `trainingsbuch` in the gym. The data must stay with the user, without a server of ours.
+- **Decision:** On the first visit, the user picks the storage: "Wo sollen deine Daten liegen?". "Ordner auf diesem Computer" shows only in browsers with the folder dialog. "OneDrive" shows in all browsers. Its text says that the user sees the same data on all devices. The choice is for all apps of the web address, like the folder before. "Speicherort wechseln" opens the same choice. The data does not move to the new storage.
+- **Decision:** OneDrive is one more `DataFolder` (`onedrive-folder.ts`). The store, the conflict check and the apps do not change. Later, Dropbox and Google Drive come in the same way, always in the folder `/Apps/Pocket Apps`.
+- **Decision:** The app registration "Pocket Apps" in the Entra tenant of the project owner has the platform "SPA" and only the scope `Files.ReadWrite.AppFolder`: the apps see only `/Apps/Pocket Apps`, but in this folder all files, also the files of the OneDrive desktop program. The login is OAuth 2.0 with PKCE in the browser, without a secret and without a server. The tokens stay in IndexedDB, like the folder handle.
+- **Decision:** The login always comes back to the start page of the site. The start page ends the login and goes back to the page of the app. Then the registration needs one address per web address (dev server, `pnpm serve`, GitHub Pages), and a new app needs no change of the registration.
+- **Decision:** The Content Security Policy of each stateful app allows the Microsoft login, Microsoft Graph and the download servers of OneDrive (`STORAGE_ORIGINS`). `pocketApp.network` stays about the app itself: an app with `"network": false` can keep its data in OneDrive. The launcher card of such an app still shows "Nutzt keine Online-Dienste".
+- **Consequence:** Microsoft gives a browser app a refresh token for 24 hours only. A new refresh token keeps the end time of the first one. Thus the user clicks "Anmelden" once a day, also with daily use. Microsoft usually remembers the account, so the user does not type the password again. If the login ends while an app is open, a save fails, and the change that is not saved is lost after the new login. The browser warns before the page leaves.
+- **Consequence:** Each read and each save goes over the internet. The prototype measured 0.5–1 s per request: about 1 s to open an app and about 1.3 s for a save in the background. A save with `If-Match` in one request could save one round trip later.
+- **Consequence:** Without internet, an app with OneDrive cannot load or save. The store shows the error and tries again.
+- **Rejected:** Google Drive first: a browser app gets no refresh token (one login click per hour), and the scope `drive.file` does not see the files of the desktop program. Dropbox: a good fit (long refresh tokens), it comes later. A server of our own: we would be responsible for the data of other people (GDPR), and we would run the server. A native app: costs for the App Store, and the data still needs a cloud for the sync.
+- **Changes:** "Apps on GitHub Pages, data in a local folder (like draw.io)": the apps are no longer only for Chrome and Edge.
+
 ## 2026-11-19: AGENTS.md holds rules, the modules hold their API docs
 
 - **Context:** `AGENTS.md` had grown to 460 lines. Each agent session loads all of it. About a third was API documentation: how to use `useAi()`, how the data file store works, how `useSubPage()` behaves. The same facts were also in the JSDoc. Two places for one fact can drift apart.

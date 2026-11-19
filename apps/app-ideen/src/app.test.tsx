@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 import { App } from "./app.tsx";
 
 describe("App", () => {
-  it("shows the title and needs Chrome or Edge for the data folder", () => {
+  it("shows the title and asks where the data lives", async () => {
     render(<App />);
 
-    // jsdom has no File System Access API.
+    // jsdom has no File System Access API, so only OneDrive is offered.
     expect(screen.getByRole("heading", { level: 1, name: "Test-App" })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 2, name: "Bitte Chrome oder Edge verwenden" }),
+      await screen.findByRole("heading", { level: 2, name: "Wo sollen deine Daten liegen?" }),
     ).toBeInTheDocument();
   });
 });

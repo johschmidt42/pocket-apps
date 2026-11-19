@@ -172,11 +172,12 @@ test.describe("launcher with favorites", () => {
 });
 
 test.describe("launcher in browsers without folder access", () => {
-  test("shows the apps and a notice about Chrome and Edge", async ({ page }) => {
+  test("shows the apps and offers only OneDrive", async ({ page }) => {
     await withoutFolderAccess(page);
     await page.goto(releaseUrl("index.html"));
 
-    await expect(page.getByText(/funktionieren nur in Chrome und Edge/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mit OneDrive verbinden" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ordner wählen …" })).toHaveCount(0);
     await expect(page.getByRole("main").getByRole("link")).toHaveCount(listApps().length);
     await expect(page.getByRole("button", { name: "Reihenfolge ändern" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /Favoriten/ })).toHaveCount(0);
@@ -213,10 +214,12 @@ test.describe("launcher AI settings", () => {
     );
     await withDataFolder(page);
     await page.goto(releaseUrl("index.html"));
-    // The policy allows only the own address and the AI providers.
+    // The policy allows only the own address, the AI providers and OneDrive.
     await expect(page.locator('meta[http-equiv="Content-Security-Policy"]')).toHaveAttribute(
       "content",
-      "connect-src 'self' https://api.anthropic.com https://api.openai.com",
+      "connect-src 'self' https://api.anthropic.com https://api.openai.com " +
+        "https://login.microsoftonline.com https://graph.microsoft.com https://*.1drv.com " +
+        "https://*.microsoftpersonalcontent.com https://*.sharepoint.com",
     );
 
     await page.getByRole("button", { name: "Ordner wählen …" }).click();

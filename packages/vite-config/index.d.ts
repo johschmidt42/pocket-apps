@@ -24,8 +24,8 @@ export type AppInfo = {
   /** True if the app calls external APIs (`pocketApp.connect` is not empty). */
   apis: boolean;
   /**
-   * The origins that the app may call: `pocketApp.connect`, plus the AI providers with `ai`.
-   * The build writes them into the Content Security Policy.
+   * The origins that the app may call: `pocketApp.connect`, plus the AI providers with `ai`, plus
+   * the cloud storage with `stateful`. The build writes them into the Content Security Policy.
    */
   allowedOrigins: string[];
   /** The link back to the launcher, or `null` if it is off. */
@@ -34,6 +34,9 @@ export type AppInfo = {
 
 /** The APIs of the AI providers. Every app with "ai": true may call them. */
 export declare const AI_ORIGINS: string[];
+
+/** The cloud storage for the data. Every app with "stateful": true may call it. */
+export declare const STORAGE_ORIGINS: string[];
 
 /** The repository root folder. */
 export declare const ROOT_DIR: string;

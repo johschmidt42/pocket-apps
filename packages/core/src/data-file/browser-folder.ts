@@ -1,6 +1,8 @@
-// The data folder in Chrome and Edge (File System Access API).
-// The folder handle stays in IndexedDB. Every page of the same web address can use it.
+// The data folder in the browser: a folder on this computer (File System Access API, Chrome and
+// Edge) or OneDrive. The choice stays in IndexedDB. Every page of the same web address uses it.
 import type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
+import { createOneDrive, ONEDRIVE, type OneDrive } from "./onedrive-folder.ts";
+import { FOLDER_KEY, indexedDbStore, type KeyValueStore } from "./settings-store.ts";
 
 // These functions are not in the TypeScript DOM types yet.
 declare global {
@@ -17,54 +19,6 @@ declare global {
     requestPermission?: (descriptor: { mode: "read" | "readwrite" }) => Promise<PermissionState>;
   }
 }
-
-/** A small key-value store. The default keeps the values in IndexedDB. */
-export type KeyValueStore = {
-  get: (key: string) => Promise<unknown>;
-  set: (key: string, value: unknown) => Promise<void>;
-};
-
-const FOLDER_KEY = "data-folder";
-
-function failure(error: DOMException | null): Error {
-  return error ?? new Error("IndexedDB failed.");
-}
-
-function inSettingsStore<T>(
-  action: (store: IDBObjectStore) => IDBRequest<T>,
-  mode: IDBTransactionMode,
-) {
-  return new Promise<T>((resolve, reject) => {
-    const open = indexedDB.open("pocket-apps", 1);
-    open.onupgradeneeded = () => {
-      open.result.createObjectStore("settings");
-    };
-    open.onerror = () => {
-      reject(failure(open.error));
-    };
-    open.onsuccess = () => {
-      const db = open.result;
-      const transaction = db.transaction("settings", mode);
-      const result = action(transaction.objectStore("settings"));
-      transaction.oncomplete = () => {
-        db.close();
-        resolve(result.result);
-      };
-      transaction.onerror = () => {
-        db.close();
-        reject(failure(transaction.error));
-      };
-    };
-  });
-}
-
-/** The key-value store in IndexedDB (database "pocket-apps", store "settings"). */
-export const indexedDbStore: KeyValueStore = {
-  get: (key) => inSettingsStore((store) => store.get(key), "readonly"),
-  set: async (key, value) => {
-    await inSettingsStore((store) => store.put(value, key), "readwrite");
-  },
-};
 
 function isDirectoryHandle(value: unknown): value is FileSystemDirectoryHandle {
   return (
@@ -112,6 +66,7 @@ export function wrapDirectory(root: FileSystemDirectoryHandle): DataFolder {
 
   return {
     name: root.name,
+    kind: "local",
     queryAccess: async () => (await root.queryPermission?.({ mode: "readwrite" })) ?? "granted",
     requestAccess: async () => (await root.requestPermission?.({ mode: "readwrite" })) ?? "granted",
     read: async (path): Promise<FileSnapshot | null> => {
@@ -140,15 +95,28 @@ export function wrapDirectory(root: FileSystemDirectoryHandle): DataFolder {
   };
 }
 
-/** The folder host of the browser. `storage` is only for tests. */
-export function createBrowserFolderHost(storage: KeyValueStore = indexedDbStore): FolderHost {
+/**
+ * The folder host of the browser: a folder on this computer (Chrome and Edge) or OneDrive (all
+ * browsers). `storage` and `oneDrive` are only for tests.
+ */
+export function createBrowserFolderHost(
+  storage: KeyValueStore = indexedDbStore,
+  oneDrive: OneDrive = createOneDrive({ store: storage }),
+): FolderHost {
   return {
-    isSupported: () => typeof window.showDirectoryPicker === "function",
+    kinds: () => [
+      ...(typeof window.showDirectoryPicker === "function" ? (["local"] as const) : []),
+      // The login needs Web Crypto. Browsers have it on https and on localhost.
+      ...(typeof crypto.subtle === "object" ? (["onedrive"] as const) : []),
+    ],
     loadSaved: async () => {
+      await oneDrive.finishLogin();
       const saved = await storage.get(FOLDER_KEY);
+      if (saved === ONEDRIVE) return oneDrive.folder;
       return isDirectoryHandle(saved) ? wrapDirectory(saved) : null;
     },
-    pick: async () => {
+    pick: async (kind) => {
+      if (kind === "onedrive") return oneDrive.startLogin(true);
       if (!window.showDirectoryPicker) return null;
       try {
         const handle = await window.showDirectoryPicker({
@@ -156,6 +124,7 @@ export function createBrowserFolderHost(storage: KeyValueStore = indexedDbStore)
           mode: "readwrite",
         });
         await storage.set(FOLDER_KEY, handle);
+        await oneDrive.forget();
         return wrapDirectory(handle);
       } catch (error) {
         if (isAbort(error)) return null;

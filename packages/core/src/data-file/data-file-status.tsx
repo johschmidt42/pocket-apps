@@ -59,7 +59,7 @@ export function DataFileStatus(props: DataFileStatusProps) {
             disabled={props.save !== "saved"}
             onClick={props.onChangeFolder}
           >
-            Ordner wechseln
+            Speicherort wechseln
           </Button>
         </div>
         {props.save === "failed" && (

@@ -2,7 +2,7 @@
 // the cloud copy of the folder (for example Google Drive), not in its version history and not
 // in shared folders. The user types the key once per computer and per web address.
 // See "AI settings for all apps" in docs/decisions.md.
-import { indexedDbStore, type KeyValueStore } from "../data-file/browser-folder.ts";
+import { indexedDbStore, type KeyValueStore } from "../data-file/settings-store.ts";
 import { AI_PROVIDERS, noAiKeys, type AiKeys, type AiProvider } from "./settings.ts";
 
 function storeKey(provider: AiProvider): string {

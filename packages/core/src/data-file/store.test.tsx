@@ -82,12 +82,12 @@ describe("data folder", () => {
     expect(screen.getByText("Pocket Apps Daten / demo/demo.json")).toBeInTheDocument();
   });
 
-  it("uses the folder of the browser by default", () => {
+  it("uses the folder of the browser by default", async () => {
     setup();
 
-    // jsdom has no File System Access API.
+    // jsdom has no File System Access API, so only OneDrive is offered.
     expect(
-      screen.getByRole("heading", { level: 2, name: "Bitte Chrome oder Edge verwenden" }),
+      await screen.findByRole("heading", { level: 2, name: "Wo sollen deine Daten liegen?" }),
     ).toBeInTheDocument();
   });
 });
@@ -432,7 +432,8 @@ describe("change folder", () => {
     const user = setup(host);
     await screen.findByRole("button", { name: "Zähler 0" });
 
-    await user.click(screen.getByRole("button", { name: "Ordner wechseln" }));
+    await user.click(screen.getByRole("button", { name: "Speicherort wechseln" }));
+    await user.click(screen.getByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 9" })).toBeInTheDocument();
     expect(screen.getByText("Andere Daten / demo/demo.json")).toBeInTheDocument();
@@ -447,7 +448,7 @@ describe("change folder", () => {
     await user.click(await screen.findByRole("button", { name: "Zähler 0" }));
     await screen.findByRole("alert");
 
-    expect(screen.getByRole("button", { name: "Ordner wechseln" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Speicherort wechseln" })).toBeDisabled();
   });
 });
 
@@ -477,7 +478,9 @@ describe("optional folder", () => {
     await user.click(await screen.findByRole("button", { name: "ohne Ordner 0" }));
 
     expect(screen.getByRole("button", { name: "ohne Ordner 0" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Datenordner wählen" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Wo sollen deine Daten liegen?" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -488,7 +491,8 @@ describe("broken file", () => {
     host.nextPick = createMemoryFolder("Neu");
     const user = setup(host);
 
-    await user.click(await screen.findByRole("button", { name: "Anderen Ordner wählen …" }));
+    await user.click(await screen.findByRole("button", { name: "Anderen Speicherort wählen …" }));
+    await user.click(screen.getByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
     expect(screen.getByText("Neu / demo/demo.json")).toBeInTheDocument();

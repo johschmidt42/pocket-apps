@@ -96,11 +96,11 @@ beforeEach(() => {
 });
 
 describe("App", () => {
-  it("needs Chrome or Edge for the data folder", () => {
+  it("asks where the data lives", async () => {
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { level: 2, name: "Bitte Chrome oder Edge verwenden" }),
+      await screen.findByRole("heading", { level: 2, name: "Wo sollen deine Daten liegen?" }),
     ).toBeInTheDocument();
   });
 

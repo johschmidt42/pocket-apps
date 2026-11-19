@@ -1,4 +1,4 @@
-import type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
+import type { DataFolder, FileSnapshot, FolderHost, StorageKind } from "./folder.ts";
 
 export type MemoryFolder = DataFolder & {
   /** All text files by path. */
@@ -20,15 +20,21 @@ export type MemoryFolderHost = FolderHost & {
   saved: MemoryFolder | null;
   /** The folder that the next `pick()` returns. `null` = the person cancels. */
   nextPick: MemoryFolder | null;
-  /** False = a browser without folder access. */
-  supported: boolean;
+  /** The kinds of storage that the browser offers. Default: both. Firefox: only "onedrive". */
+  supportedKinds: StorageKind[];
+  /** The kind of the last `pick()`, or `null`. */
+  pickedKind: StorageKind | null;
 };
 
 /** An in-memory data folder. Use it in tests instead of mocks. */
-export function createMemoryFolder(name = "Pocket Apps Daten"): MemoryFolder {
+export function createMemoryFolder(
+  name = "Pocket Apps Daten",
+  kind: StorageKind = "local",
+): MemoryFolder {
   let clock = 1000;
   const folder: MemoryFolder = {
     name,
+    kind,
     files: new Map(),
     blobs: new Map(),
     access: "granted",
@@ -69,17 +75,22 @@ export function createMemoryFolder(name = "Pocket Apps Daten"): MemoryFolder {
   return folder;
 }
 
-/** An in-memory folder host. `saved` = a folder from an earlier visit. */
+/**
+ * An in-memory folder host. `saved` = a folder from an earlier visit. `kinds` = the kinds of
+ * storage that the browser offers (default: both).
+ */
 export function createMemoryFolderHost(
-  options: { saved?: MemoryFolder | null; supported?: boolean } = {},
+  options: { saved?: MemoryFolder | null; kinds?: StorageKind[] } = {},
 ): MemoryFolderHost {
   const host: MemoryFolderHost = {
     saved: options.saved ?? null,
     nextPick: null,
-    supported: options.supported ?? true,
-    isSupported: () => host.supported,
+    supportedKinds: options.kinds ?? ["local", "onedrive"],
+    pickedKind: null,
+    kinds: () => host.supportedKinds,
     loadSaved: () => Promise.resolve(host.saved),
-    pick: () => {
+    pick: (kind) => {
+      host.pickedKind = kind;
       const picked = host.nextPick;
       if (picked) host.saved = picked;
       return Promise.resolve(picked);

@@ -8,10 +8,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@pocket-apps/ui/components/card";
-import { FolderOpen, KeyRound } from "lucide-react";
-import { Fragment, type ReactNode } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@pocket-apps/ui/components/dialog";
+import { KeyRound, LogIn, Repeat } from "lucide-react";
+import { Fragment, useState, type ReactNode } from "react";
 import type { DataFolder, FolderHost } from "./folder.ts";
 import { LoadingStatus } from "./loading-status.tsx";
+import { StorageChoice } from "./storage-choice.tsx";
 import { useDataFolder } from "./use-data-folder.ts";
 
 const TITLE_ID = "data-folder-title";
@@ -56,26 +64,30 @@ export type DataFolderGateProps = {
    * True: the gate always shows the app. Without a folder, it shows the task above the app and gives `null`.
    */
   optional?: boolean;
-  /** Renders the app. `changeFolder` lets the person pick another folder. */
+  /** Renders the app. `changeFolder` lets the person pick another place for the data. */
   children: (folder: DataFolder | null, changeFolder: () => void) => ReactNode;
 };
 
 /**
- * Shows what the person must do for the data folder: use Chrome or Edge, pick a folder, or allow access.
+ * Shows what the person must do for the data: pick where the data lives, or allow access again.
  * Shows the app when the folder is ready (or always, if the folder is optional).
  */
 export function DataFolderGate({ host, optional = false, children }: DataFolderGateProps) {
   const { state, error, pickCount, pick, grant } = useDataFolder(host);
-  const changeFolder = () => void pick();
+  const [choosing, setChoosing] = useState(false);
+  const changeFolder = () => {
+    setChoosing(true);
+  };
+  const kinds = host.kinds();
   const errorAlert = error && (
     <Alert variant="destructive">
       <AlertDescription>{error}</AlertDescription>
     </Alert>
   );
-  const pickButton = (label: string, primary: boolean) => (
-    <Button variant={primary ? "default" : "outline"} onClick={changeFolder}>
-      <FolderOpen data-icon="inline-start" />
-      {label}
+  const changeButton = (
+    <Button variant="outline" onClick={changeFolder}>
+      <Repeat data-icon="inline-start" />
+      Anderen Speicherort wählen …
     </Button>
   );
   const withoutFolder = (task: ReactNode) => (
@@ -85,80 +97,120 @@ export function DataFolderGate({ host, optional = false, children }: DataFolderG
     </>
   );
 
-  switch (state.status) {
-    case "checking":
-      return <LoadingStatus />;
-    case "unsupported":
-      return optional ? (
-        withoutFolder(
-          // A static note, not an alert: screen readers must not announce it at each visit.
-          <aside
-            aria-label="Hinweis"
-            className="mx-auto max-w-3xl px-4 pt-4 text-sm text-muted-foreground"
-          >
-            <p>Apps mit Daten funktionieren nur in Chrome und Edge am Computer.</p>
-          </aside>,
-        )
-      ) : (
-        <TaskCard title="Bitte Chrome oder Edge verwenden" optional={false}>
-          <CardContent>
-            <CardDescription>
-              Pocket Apps speichern deine Daten in einem Ordner auf deinem Rechner. Das können nur
-              Chrome und Edge am Computer. Öffne diese Seite bitte in Chrome oder Edge.
-            </CardDescription>
-          </CardContent>
-        </TaskCard>
-      );
-    case "missing":
-      return withoutFolder(
-        <TaskCard title="Datenordner wählen" optional={optional}>
-          <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <p>
-              Deine Daten liegen in einem Ordner auf deinem Rechner, zum Beispiel „Pocket Apps
-              Daten“. Lege ihn gern in deinem Google-Drive- oder OneDrive-Ordner an. Dann hast du
-              automatisch ein Backup.
-            </p>
-            <p>Chrome fragt danach, ob die Seite den Ordner bearbeiten darf. Erlaube es.</p>
-            {errorAlert}
-          </CardContent>
-          <CardFooter>{pickButton("Ordner wählen …", true)}</CardFooter>
-        </TaskCard>,
-      );
-    case "locked": {
-      const { folder } = state;
-      return withoutFolder(
-        <TaskCard title="Zugriff auf deinen Datenordner" optional={optional}>
-          <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <p>
-              Chrome fragt, ob diese Seite den Ordner „{folder.name}“ wieder bearbeiten darf. Wähle
-              „Bei jedem Besuch erlauben“. Dann fragt Chrome nicht wieder.
-            </p>
-            {state.denied && (
-              <p>Chrome hat den Zugriff abgelehnt. Erlaube ihn oder wähle einen anderen Ordner.</p>
-            )}
-            {errorAlert}
-          </CardContent>
-          <CardFooter className="flex-wrap gap-2">
-            <Button onClick={() => void grant(folder)}>
-              <KeyRound data-icon="inline-start" />
-              Zugriff erlauben
-            </Button>
-            {pickButton("Anderen Ordner wählen …", false)}
-          </CardFooter>
-        </TaskCard>,
-      );
-    }
-    case "ready":
-      return (
-        <>
-          {errorAlert && (
-            <section aria-label="Datenordner" className="mx-auto max-w-3xl px-4 pt-4">
+  function content(): ReactNode {
+    switch (state.status) {
+      case "checking":
+        return <LoadingStatus />;
+      case "unsupported":
+        return optional ? (
+          withoutFolder(
+            // A static note, not an alert: screen readers must not announce it at each visit.
+            <aside
+              aria-label="Hinweis"
+              className="mx-auto max-w-3xl px-4 pt-4 text-sm text-muted-foreground"
+            >
+              <p>Apps mit Daten funktionieren in diesem Browser nicht.</p>
+            </aside>,
+          )
+        ) : (
+          <TaskCard title="Dieser Browser kann keine Daten speichern" optional={false}>
+            <CardContent>
+              <CardDescription>
+                Öffne diese Seite bitte in einem aktuellen Browser, zum Beispiel Chrome, Edge,
+                Firefox oder Safari.
+              </CardDescription>
+            </CardContent>
+          </TaskCard>
+        );
+      case "missing":
+        return withoutFolder(
+          <TaskCard title="Wo sollen deine Daten liegen?" optional={optional}>
+            <CardContent className="flex flex-col gap-3">
+              <StorageChoice kinds={kinds} onPick={(kind) => void pick(kind)} />
               {errorAlert}
-            </section>
-          )}
-          {/* A new key for each picked folder: the app starts fresh and cannot save old data into it. */}
-          <Fragment key={pickCount}>{children(state.folder, changeFolder)}</Fragment>
-        </>
-      );
+            </CardContent>
+          </TaskCard>,
+        );
+      case "locked": {
+        const { folder } = state;
+        return withoutFolder(
+          folder.kind === "onedrive" ? (
+            <TaskCard title="Bei OneDrive anmelden" optional={optional}>
+              <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <p>
+                  Deine Anmeldung bei OneDrive ist abgelaufen. Microsoft erlaubt eine Anmeldung für
+                  24 Stunden. Melde dich wieder an.
+                </p>
+                <p>Deine Daten bleiben in OneDrive.</p>
+                {errorAlert}
+              </CardContent>
+              <CardFooter className="flex-wrap gap-2">
+                <Button onClick={() => void grant(folder)}>
+                  <LogIn data-icon="inline-start" />
+                  Anmelden
+                </Button>
+                {changeButton}
+              </CardFooter>
+            </TaskCard>
+          ) : (
+            <TaskCard title="Zugriff auf deinen Datenordner" optional={optional}>
+              <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <p>
+                  Chrome fragt, ob diese Seite den Ordner „{folder.name}“ wieder bearbeiten darf.
+                  Wähle „Bei jedem Besuch erlauben“. Dann fragt Chrome nicht wieder.
+                </p>
+                {state.denied && (
+                  <p>
+                    Chrome hat den Zugriff abgelehnt. Erlaube ihn oder wähle einen anderen
+                    Speicherort.
+                  </p>
+                )}
+                {errorAlert}
+              </CardContent>
+              <CardFooter className="flex-wrap gap-2">
+                <Button onClick={() => void grant(folder)}>
+                  <KeyRound data-icon="inline-start" />
+                  Zugriff erlauben
+                </Button>
+                {changeButton}
+              </CardFooter>
+            </TaskCard>
+          ),
+        );
+      }
+      case "ready":
+        return (
+          <>
+            {errorAlert && (
+              <section aria-label="Datenordner" className="mx-auto max-w-3xl px-4 pt-4">
+                {errorAlert}
+              </section>
+            )}
+            {/* A new key for each picked folder: the app starts fresh and cannot save old data into it. */}
+            <Fragment key={pickCount}>{children(state.folder, changeFolder)}</Fragment>
+          </>
+        );
+    }
   }
+
+  return (
+    <>
+      {content()}
+      <Dialog open={choosing} onOpenChange={setChoosing}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Speicherort wählen</DialogTitle>
+            <DialogDescription>Wo sollen deine Daten liegen?</DialogDescription>
+          </DialogHeader>
+          <StorageChoice
+            kinds={kinds}
+            onPick={(kind) => {
+              setChoosing(false);
+              void pick(kind);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

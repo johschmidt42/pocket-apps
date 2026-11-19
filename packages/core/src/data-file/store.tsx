@@ -280,7 +280,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
                 Erneut laden
               </Button>
               <Button size="sm" variant="outline" onClick={changeFolder}>
-                Anderen Ordner wählen …
+                Anderen Speicherort wählen …
               </Button>
               {/* A broken file is the case where the raw data helps most. */}
               <RawDataButton

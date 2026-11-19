@@ -1,6 +1,6 @@
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
-import type { KeyValueStore } from "../data-file/browser-folder.ts";
+import type { KeyValueStore } from "../data-file/settings-store.ts";
 import { readAiKeys, writeAiKeys } from "./ai-keys.ts";
 
 describe("AI keys in the browser", () => {

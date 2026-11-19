@@ -6,7 +6,9 @@ export type DataFileErrorCode =
   | "missing-migration"
   | "invalid-data"
   | "invalid-file-name"
-  | "move-failed";
+  | "move-failed"
+  | "onedrive-login"
+  | "onedrive-failed";
 
 /** An error that the user can understand. The message is in German. */
 export class DataFileError extends Error {

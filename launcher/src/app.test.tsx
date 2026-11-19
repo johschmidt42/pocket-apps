@@ -21,10 +21,10 @@ const SCHULJAHR_APP = testAppInfo({
 });
 
 describe("Launcher", () => {
-  it("shows a card with a link for every app", () => {
+  it("shows a card with a link for every app", async () => {
     render(<App apps={[...apps, SCHULJAHR_APP]} />);
 
-    expect(screen.getByRole("link", { name: "Zinsrechner" })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: "Zinsrechner" })).toHaveAttribute(
       "href",
       "./zinsrechner.html",
     );
@@ -78,7 +78,7 @@ describe("Launcher", () => {
     const user = userEvent.setup();
     render(<App apps={apps} />);
 
-    await user.type(screen.getByLabelText("Apps durchsuchen"), "ideen");
+    await user.type(await screen.findByLabelText("Apps durchsuchen"), "ideen");
 
     expect(screen.getByRole("link", { name: "App-Ideen" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Zinsrechner" })).not.toBeInTheDocument();
@@ -88,40 +88,47 @@ describe("Launcher", () => {
     const user = userEvent.setup();
     render(<App apps={apps} />);
 
-    await user.type(screen.getByLabelText("Apps durchsuchen"), "xyz");
+    await user.type(await screen.findByLabelText("Apps durchsuchen"), "xyz");
 
     expect(screen.getByText("Keine App passt zu „xyz“.")).toBeInTheDocument();
   });
 
-  it("uses the app list from the build by default", () => {
+  it("uses the app list from the build by default", async () => {
     render(<App />);
 
     // The test config sets __POCKET_APPS__ to one app: "Test-App".
-    expect(screen.getAllByRole("link", { name: "Test-App" })).toHaveLength(1);
+    expect(await screen.findAllByRole("link", { name: "Test-App" })).toHaveLength(1);
   });
 
-  it("shows a notice in browsers without folder access", () => {
+  it("offers only OneDrive in browsers without folder access", async () => {
     render(<App apps={apps} />);
 
     // jsdom has no File System Access API.
-    expect(screen.getByText(/funktionieren nur in Chrome und Edge/)).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Mit OneDrive verbinden" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ordner wählen …" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Reihenfolge ändern" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Favoriten/ })).not.toBeInTheDocument();
   });
 
-  it("asks for the data folder above the apps on the first visit", async () => {
+  it("asks where the data lives above the apps on the first visit", async () => {
     const host = createMemoryFolderHost();
     host.nextPick = createMemoryFolder();
     const user = userEvent.setup();
     render(<App apps={apps} folderHost={host} />);
 
-    expect(await screen.findByRole("region", { name: "Datenordner wählen" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "Wo sollen deine Daten liegen?" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Zinsrechner" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Reihenfolge ändern" })).toBeInTheDocument();
-    expect(screen.queryByRole("region", { name: "Datenordner wählen" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "Wo sollen deine Daten liegen?" }),
+    ).not.toBeInTheDocument();
   });
 });
 

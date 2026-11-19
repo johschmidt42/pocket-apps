@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { errorText } from "../error-text.ts";
-import type { DataFolder, FolderHost } from "./folder.ts";
+import type { DataFolder, FolderHost, StorageKind } from "./folder.ts";
 
 export type FolderState =
   | { status: "checking" }
@@ -19,10 +19,13 @@ function folderErrorMessage(error: unknown): string {
   return `Der Datenordner ist nicht verfügbar: ${errorText(error)}`;
 }
 
-/** Finds the remembered data folder and its access state. Offers pick (also to change the folder) and grant. */
+/**
+ * Finds the remembered data folder and its access state. Offers pick (also to change the folder)
+ * and grant.
+ */
 export function useDataFolder(host: FolderHost) {
   const [state, setState] = useState<FolderState>(() =>
-    host.isSupported() ? { status: "checking" } : { status: "unsupported" },
+    host.kinds().length > 0 ? { status: "checking" } : { status: "unsupported" },
   );
   const [error, setError] = useState<string | null>(null);
   // Counts the picked folders. A new number gives the app a fresh start with the new folder.
@@ -52,10 +55,10 @@ export function useDataFolder(host: FolderHost) {
     };
   }, [host, state.status]);
 
-  async function pick(): Promise<void> {
+  async function pick(kind: StorageKind): Promise<void> {
     setError(null);
     try {
-      const folder = await host.pick();
+      const folder = await host.pick(kind);
       if (!folder) return;
       setState(stateFor(folder, await folder.queryAccess()));
       setPickCount((count) => count + 1);

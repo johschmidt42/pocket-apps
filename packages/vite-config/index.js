@@ -15,6 +15,19 @@ export const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", ".."
 /** The APIs of the AI providers. Every app with "ai": true may call them. */
 export const AI_ORIGINS = ["https://api.anthropic.com", "https://api.openai.com"];
 
+/**
+ * The cloud storage that the user can pick for the data. Every app with "stateful": true may
+ * call it. OneDrive: the Microsoft login, Microsoft Graph, and the servers of the file downloads
+ * (Graph sends a download to them): personal accounts and work accounts (SharePoint).
+ */
+export const STORAGE_ORIGINS = [
+  "https://login.microsoftonline.com",
+  "https://graph.microsoft.com",
+  "https://*.1drv.com",
+  "https://*.microsoftpersonalcontent.com",
+  "https://*.sharepoint.com",
+];
+
 const backLinkSchema = z.object({ href: z.string().min(1), label: z.string().min(1) });
 
 const repoConfigSchema = z.object({
@@ -105,7 +118,11 @@ export function readAppInfo(appDir) {
     network: pocketApp.network,
     ai: pocketApp.ai === true,
     apis: (pocketApp.connect ?? []).length > 0,
-    allowedOrigins: [...(pocketApp.connect ?? []), ...(pocketApp.ai === true ? AI_ORIGINS : [])],
+    allowedOrigins: [
+      ...(pocketApp.connect ?? []),
+      ...(pocketApp.ai === true ? AI_ORIGINS : []),
+      ...(pocketApp.stateful ? STORAGE_ORIGINS : []),
+    ],
     backLink: showBackLink ? { href: backLink.href, label: backLink.label } : null,
   };
 }

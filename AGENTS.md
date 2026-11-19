@@ -3,16 +3,19 @@
 ## Purpose
 
 pocket-apps is a monorepo of small personal apps ("home-cooked software").
-Each app builds into **one self-contained HTML file**. GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/` in Chrome or Edge. There is no server for user data.
-Apps that keep data store it in a **data folder** on the user's computer. The user picks this folder once. Each app has its own JSON file in it. No user data goes to a server.
+Each app builds into **one self-contained HTML file**. GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/`. There is no server for user data.
+Apps that keep data store it in a **data folder**: a folder on the user's computer (Chrome and Edge) or the app folder in the user's OneDrive (all browsers, also on a phone). The user picks the storage once. Each app has its own JSON file in it. No user data goes to a server of ours.
 Most apps use no online services. An app that needs an external API declares this in its `package.json`.
 
 ## Terms
 
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
-- **Launcher:** the start page `release/index.html`. It shows a card for each app, with the version and icons for the data file, the internet and the AI (see `launcher/src/app-card.tsx`). It is also the place to pick the data folder. With a folder, the user can change the order of the apps and mark favorites. The launcher keeps them in `launcher/launcher.json` in the data folder. The code is in `launcher/`.
+- **Launcher:** the start page `release/index.html`. It shows a card for each app, with the version and icons for the data file, the internet and the AI (see `launcher/src/app-card.tsx`). It is also the place to pick the storage. With a folder, the user can change the order of the apps and mark favorites. The launcher keeps them in `launcher/launcher.json` in the data folder. The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
-- **Data folder:** the folder that the user picks once, for example "Pocket Apps Daten". It can be in a OneDrive or Google Drive folder. The apps use the File System Access API. Thus only Chrome and Edge on a computer can use it.
+- **Storage:** where the data folder is. The user picks it once per browser and web address, on the screen "Wo sollen deine Daten liegen?". There are two kinds:
+  - `local`: a folder on this computer, for example "Pocket Apps Daten". The apps use the File System Access API. Thus only Chrome and Edge on a computer offer it.
+  - `onedrive`: the app folder `/Apps/Pocket Apps` in the OneDrive of the user, over Microsoft Graph. All browsers offer it. The user sees the same data on all devices. Later: Dropbox and Google Drive, also in `/Apps/Pocket Apps`.
+- **Data folder:** the folder of the storage that holds the app folders: the picked local folder, or `/Apps/Pocket Apps` in OneDrive. The code calls it `DataFolder`.
 - **App folder:** the folder of one app in the data folder: `<app>/`, for example `app-ideen/`. It holds the data file, its backups and the extra files of the app. The store creates it.
 - **Data file:** the JSON file of one app in its app folder: `<app>/<app>.json`, for example `app-ideen/app-ideen.json`.
 - **AI settings:** the AI provider and the model for all apps, in `ai/ai.json` in the data folder. The API key of the provider is not in this file. It stays in the browser (IndexedDB). See "AI features".
@@ -118,7 +121,7 @@ Each app declares its info in its `package.json`:
 - The build validates `package.json` and `pocket-apps.config.json` with zod. A wrong or missing field stops the build with a message.
 - The build makes this info available as `__POCKET_APP__`. Do not write the title or the version by hand anywhere else.
 - The build also writes the title into `<title>`. It writes name and version into the meta tags `pocket-app-name` and `pocket-app-version`.
-- The build writes a Content Security Policy as the first tag in `<head>`: `connect-src 'self'`, the origins in `pocketApp.connect` and, with `"ai": true`, the AI providers. The page code can call only these addresses.
+- The build writes a Content Security Policy as the first tag in `<head>`: `connect-src 'self'`, the origins in `pocketApp.connect`, with `"ai": true` the AI providers, and with `"stateful": true` OneDrive (`STORAGE_ORIGINS` in `packages/vite-config`). The page code can call only these addresses.
 - Every app shows `AppHeader` from `@pocket-apps/core/app-shell` at the top. It holds the back link, the `<h1>`, the version and the theme switch.
 - A stateless app renders `<AppHeader app={__POCKET_APP__} />` itself.
 - A stateful app gets the header from `DataFileProvider`. Pass `{ app: __POCKET_APP__ }` to `createDataFileStore()`.
@@ -136,6 +139,7 @@ Each app declares its info in its `package.json`:
 
 - Set `pocketApp.network` to `true` only if the app needs an external API. List the origin of each API in `pocketApp.connect`, for example `"https://openholidaysapi.org"`. The Content Security Policy blocks all other addresses. An app with `"network": false` has no `connect` list. The dev server has no policy: a blocked address shows only in the built file (`pnpm build`, `pnpm serve`).
 - In apps with `"network": false` (and in the launcher, if it has `"network": false`), ESLint forbids `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource` and `@pocket-apps/core/fetch-json`.
+- `pocketApp.network` is about the app, not about the storage. An app with `"network": false` can keep its data in OneDrive: `packages/core` sends these requests.
 - For JSON requests, use `fetchJson(url)` from `@pocket-apps/core/fetch-json`. Validate its `json` with zod. Give `App` the optional prop `fetchJson` (type `FetchJson`), so that unit tests can give a fake. See `apps/schuljahr/src/app.tsx`.
 - An app with `"network": true` must start without internet. Catch each failed request. Show a clear German message. Do not log the failure with `console.error`.
 - Use only APIs that allow requests from the origin `https://johschmidt42.github.io` (CORS). Test the API from that origin before you build the app.
@@ -275,7 +279,7 @@ Browser tests:
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.
 - `e2e/launcher.spec.ts` tests the launcher.
 - Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. See `e2e/app-ideen.spec.ts`.
-- Use the helpers in `e2e/helpers.ts`. `withDataFolder(page)` before `page.goto()` gives a data folder in the private file system of the browser (OPFS). `withoutFolderAccess(page)` acts like Firefox or Safari. `writeDataFile()` and `readDataFile()` change and read files in the folder after `page.goto()`.
+- Use the helpers in `e2e/helpers.ts`. `withDataFolder(page)` before `page.goto()` gives a data folder in the private file system of the browser (OPFS). `withoutFolderAccess(page)` acts like Firefox or Safari: the app offers only OneDrive. `e2e/onedrive.spec.ts` fakes the Microsoft login and OneDrive with `page.route()`. `writeDataFile()` and `readDataFile()` change and read files in the folder after `page.goto()`.
 - In browser tests of a sub-page, use `page.goBack()` and `page.goForward()`.
 - The browser tests have no internet. Answer the requests to an API or an AI provider with `page.route()`. See `e2e/kursverlauf.spec.ts` and `e2e/launcher.spec.ts`.
 
@@ -363,4 +367,4 @@ The checks depend on the size of the change:
 - A small change to the layout or the styles also needs a look at the UI in Chrome.
 - `CD - Release` publishes only after all CI pipelines pass. Thus a small change cannot reach GitHub Pages without the browser tests.
 - To look at the UI, run `pnpm build` and `pnpm serve`. Open `http://localhost:4173/pocket-apps/` in Chrome. Look at the apps in light and dark mode.
-- For changes to a stateful app or to `packages/core/src/data-file/`, also test with a real folder in Chrome: pick a folder, change data, reload, and look at the file.
+- For changes to a stateful app or to `packages/core/src/data-file/`, also test with a real folder in Chrome: pick a folder, change data, reload, and look at the file. For changes to the storage, also test with OneDrive at `http://localhost:4173/pocket-apps/` (`pnpm serve`).
