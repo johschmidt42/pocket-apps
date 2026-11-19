@@ -23,7 +23,12 @@ export default defineConfig({
     ],
     coverage: {
       provider: "v8",
-      include: ["packages/core/src/**", "apps/*/src/**", "launcher/src/**"],
+      // Only code: the README files next to the code are not modules.
+      include: [
+        "packages/core/src/**/*.{ts,tsx}",
+        "apps/*/src/**/*.{ts,tsx}",
+        "launcher/src/**/*.{ts,tsx}",
+      ],
       exclude: ["**/*.test.*", "**/main.tsx", "**/*.d.ts"],
       thresholds: {
         // Shared logic and data schemas: every line, every branch.
