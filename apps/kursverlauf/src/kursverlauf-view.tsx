@@ -87,14 +87,15 @@ export function KursverlaufView({ fetchJson, gapMs }: KursverlaufViewProps) {
           variant="outline"
           spacing={0}
           aria-label="Zeitraum"
-          className="flex-wrap"
+          // On a phone: five equal fields in one row, not four and "Max" alone in a second row.
+          className="grid w-full grid-cols-5 sm:flex sm:w-auto"
           value={range}
           onValueChange={(value) => {
             if (isRange(value)) setRange(value);
           }}
         >
           {RANGES.map((value) => (
-            <ToggleGroupItem key={value} value={value}>
+            <ToggleGroupItem key={value} value={value} className="px-1 text-xs sm:px-3 sm:text-sm">
               {RANGE_LABELS[value]}
             </ToggleGroupItem>
           ))}

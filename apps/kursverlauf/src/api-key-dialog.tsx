@@ -22,7 +22,7 @@ export function ApiKeyDialog({ open, apiKey, onSave, onClose }: ApiKeyDialogProp
         if (!next) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>API-Key ändern</DialogTitle>
         </DialogHeader>

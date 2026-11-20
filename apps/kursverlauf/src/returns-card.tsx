@@ -126,13 +126,17 @@ export function ReturnsCard({ series, today }: { series: readonly ReturnsSeries[
               <TableRow>
                 <TableHead>Jahr</TableHead>
                 {perEtf.map((item) => (
-                  <TableHead key={item.id} className="max-w-40 text-right whitespace-normal">
+                  // On a phone, a long name gets at most three lines, so that the columns fit.
+                  <TableHead
+                    key={item.id}
+                    className="max-w-24 text-right text-xs whitespace-normal sm:max-w-40 sm:text-sm"
+                  >
                     <span className="inline-flex items-center gap-1.5">
                       <span
                         aria-hidden="true"
                         className={`size-2 shrink-0 rounded-full ${etfColor(item.index).swatchClass}`}
                       />
-                      {item.name}
+                      <span className="line-clamp-3 sm:line-clamp-none">{item.name}</span>
                     </span>
                   </TableHead>
                 ))}

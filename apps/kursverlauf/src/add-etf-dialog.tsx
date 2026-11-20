@@ -35,7 +35,7 @@ export function AddEtfDialog({ open, existing, fetchJson, onAdd, onClose }: AddE
         if (!next) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>ETF hinzufügen</DialogTitle>
           <DialogDescription>
