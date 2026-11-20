@@ -1,9 +1,11 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
   type DragEvent,
   type KeyboardEvent,
+  type MouseEvent,
   type PointerEvent,
 } from "react";
 import { flushSync } from "react-dom";
@@ -69,22 +71,31 @@ const LINE_BEFORE =
 const LINE_AFTER =
   "after:absolute after:inset-x-0 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-primary";
 
+/** The top and the height of a row on the screen (px). */
+export type RowBox = { top: number; height: number };
+
+function middle(row: RowBox): number {
+  return row.top + row.height / 2;
+}
+
 /** "before" if the mouse is in the upper half of the row, else "after". */
-export function dropPosition(clientY: number, row: { top: number; height: number }): DropPosition {
-  return clientY < row.top + row.height / 2 ? "before" : "after";
+export function dropPosition(clientY: number, row: RowBox): DropPosition {
+  return clientY < middle(row) ? "before" : "after";
 }
 
 /**
- * The step of a row under a finger at `y`: -1 if the finger is above the middle of the row
- * before, 1 if it is below the middle of the row after, else `null`.
+ * The step of a row that a finger drags. `dragged` is the place where the row would be if it
+ * moved with the finger. -1 if its top is above the middle of the row before, 1 if its bottom
+ * is below the middle of the row after, else `null`. A tall row thus needs the same finger move
+ * in both directions.
  */
 export function stepToward(
-  y: number,
-  before: { top: number; height: number } | null,
-  after: { top: number; height: number } | null,
+  dragged: RowBox,
+  before: RowBox | null,
+  after: RowBox | null,
 ): Direction | null {
-  if (before && y < before.top + before.height / 2) return -1;
-  if (after && y > after.top + after.height / 2) return 1;
+  if (before && dragged.top < middle(before)) return -1;
+  if (after && dragged.top + dragged.height > middle(after)) return 1;
   return null;
 }
 
@@ -138,15 +149,23 @@ export function dragHandleId(id: string): string {
   return `drag-${id}`;
 }
 
-type DragState = {
-  draggedId: string;
-  target: { id: string; position: DropPosition } | null;
-  /** `true` for a finger or a pen: the row moves at once, and no line shows. */
-  touch: boolean;
-};
+/** A mouse drags with a line at the target. A finger moves the row at once. */
+type DragState =
+  | { kind: "mouse"; draggedId: string; target: { id: string; position: DropPosition } | null }
+  | { kind: "touch"; draggedId: string };
 
-/** A drag with a finger: the row, the last place of the finger and the frame of the scroll. */
-type TouchDrag = { id: string; row: HTMLElement; y: number; frame: number };
+/**
+ * A drag with a finger: the row, the last place of the finger, the place of the finger in the
+ * row at the start, the frame of the scroll, and the function that ends the drag.
+ */
+type TouchDrag = {
+  id: string;
+  row: HTMLElement;
+  y: number;
+  grab: number;
+  frame: number;
+  stop: () => void;
+};
 
 export type DragSortActions = {
   /** The user dropped `draggedId` before or after `targetId`. */
@@ -161,69 +180,86 @@ export type DragSortActions = {
  * be children of the same element. Each list has its own state. Thus a row of another list
  * cannot be dropped here. The arrow keys on a handle move its row one step.
  *
- * A mouse uses the drag API of the browser. A finger or a pen uses pointer events: each time
- * the finger passes the middle of the next row, `onStep` moves the row one step. Near the top
- * or the bottom of the scroll area, the list scrolls.
+ * A mouse uses the drag API of the browser. A finger or a pen uses pointer events: when the
+ * row, moved with the finger, passes the middle of the next row, `onStep` moves it one step.
+ * Near the top or the bottom of the scroll area, the list scrolls.
  */
 export function useDragSort({ onDrop, onStep }: DragSortActions) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const touchDrag = useRef<TouchDrag | null>(null);
-  // A drag with a finger calls `onStep` from listeners of the window. They need the functions
-  // of the latest render: the order of the list changes with each step.
-  const actions = useRef({ onDrop, onStep });
+  // A drag with a finger calls `onStep` from listeners of the window. They need the function
+  // of the latest render: some apps compute the new order from the list of the render.
+  const latestStep = useRef(onStep);
   useLayoutEffect(() => {
-    actions.current = { onDrop, onStep };
+    latestStep.current = onStep;
   });
+  // The listeners of the window and the scroll end with the list, also during a drag.
+  useEffect(
+    () => () => {
+      touchDrag.current?.stop();
+    },
+    [],
+  );
 
-  /** Moves the row step by step until it is under the finger. */
-  function follow(session: TouchDrag): void {
+  /** Moves the dragged row step by step until it is under the finger. */
+  function stepUnderFinger(touch: TouchDrag): void {
     // At most one step per row: the finger cannot pass more rows than the list has.
-    for (let steps = rowsOf(session.row).length; steps > 0; steps -= 1) {
-      const current = rowsOf(session.row);
-      const index = current.indexOf(session.row);
-      const before = current[index - 1]?.getBoundingClientRect() ?? null;
-      const after = current[index + 1]?.getBoundingClientRect() ?? null;
-      const direction = stepToward(session.y, before, after);
+    for (let steps = rowsOf(touch.row).length; steps > 0; steps -= 1) {
+      const rows = rowsOf(touch.row);
+      const index = rows.indexOf(touch.row);
+      const dragged = { top: touch.y - touch.grab, height: touch.row.offsetHeight };
+      const before = rows[index - 1]?.getBoundingClientRect() ?? null;
+      const after = rows[index + 1]?.getBoundingClientRect() ?? null;
+      const direction = stepToward(dragged, before, after);
       if (direction === null) return;
       flushSync(() => {
-        actions.current.onStep(session.id, direction);
+        latestStep.current(touch.id, direction);
       });
       // The app did not move the row, for example at the edge of a group.
-      if (rowsOf(session.row).indexOf(session.row) === index) return;
+      if (rowsOf(touch.row).indexOf(touch.row) === index) return;
     }
   }
 
   function startTouch(id: string, row: HTMLElement, pointerId: number, y: number): void {
-    const session: TouchDrag = { id, row, y, frame: 0 };
-    touchDrag.current = session;
     const scroll = () => {
       const area = scrollArea(row);
-      const speed = scrollSpeed(session.y, area.top, area.bottom);
+      const speed = scrollSpeed(touch.y, area.top, area.bottom);
       if (speed !== 0) {
         area.element.scrollBy(0, speed);
-        follow(session);
+        stepUnderFinger(touch);
       }
-      session.frame = window.requestAnimationFrame(scroll);
+      touch.frame = window.requestAnimationFrame(scroll);
     };
     const move = (event: globalThis.PointerEvent) => {
       if (event.pointerId !== pointerId) return;
-      session.y = event.clientY;
-      follow(session);
+      touch.y = event.clientY;
+      stepUnderFinger(touch);
     };
     const end = (event: globalThis.PointerEvent) => {
       if (event.pointerId !== pointerId) return;
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
-      window.cancelAnimationFrame(session.frame);
-      touchDrag.current = null;
+      touch.stop();
       setDrag(null);
     };
+    const touch: TouchDrag = {
+      id,
+      row,
+      y,
+      grab: y - row.getBoundingClientRect().top,
+      frame: 0,
+      stop: () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", end);
+        window.removeEventListener("pointercancel", end);
+        window.cancelAnimationFrame(touch.frame);
+        touchDrag.current = null;
+      },
+    };
+    touchDrag.current = touch;
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
-    session.frame = window.requestAnimationFrame(scroll);
-    setDrag({ draggedId: id, target: null, touch: true });
+    touch.frame = window.requestAnimationFrame(scroll);
+    setDrag({ kind: "touch", draggedId: id });
     // A short buzz on Android, like the lift of a row in a native app. iOS has no vibration.
     if ("vibrate" in navigator) navigator.vibrate(10);
   }
@@ -231,10 +267,13 @@ export function useDragSort({ onDrop, onStep }: DragSortActions) {
   function handleProps(id: string) {
     return {
       id: dragHandleId(id),
-      draggable: true,
+      // During a drag with a finger, a long press must not start the drag of the browser: it
+      // would cancel the pointer events.
+      draggable: drag?.kind !== "touch",
       onPointerDown: (event: PointerEvent<HTMLElement>) => {
-        // A mouse uses the drag API of the browser (`onDragStart`).
+        // A mouse uses the drag API of the browser (`onDragStart`). One finger at a time.
         if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
+        if (!event.isPrimary || touchDrag.current) return;
         const row = event.currentTarget.closest<HTMLElement>(`[${ROW_ATTRIBUTE}]`);
         if (!row) return;
         // No text selection and no drag of the browser.
@@ -256,11 +295,15 @@ export function useDragSort({ onDrop, onStep }: DragSortActions) {
         }
         // Chrome takes the drag image after this handler. The row fades only after that.
         window.setTimeout(() => {
-          setDrag({ draggedId: id, target: null, touch: false });
+          setDrag({ kind: "mouse", draggedId: id, target: null });
         }, 0);
       },
       onDragEnd: () => {
         setDrag(null);
+      },
+      // No menu of the browser after a long press during a drag.
+      onContextMenu: (event: MouseEvent<HTMLElement>) => {
+        if (touchDrag.current) event.preventDefault();
       },
       onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
         const direction = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : null;
@@ -280,7 +323,7 @@ export function useDragSort({ onDrop, onStep }: DragSortActions) {
       [ROW_ATTRIBUTE]: "",
       onDragOver: (event: DragEvent<HTMLElement>) => {
         // A row of another list: let the event go on to that list.
-        if (!drag) return;
+        if (drag?.kind !== "mouse") return;
         event.preventDefault();
         event.stopPropagation();
         event.dataTransfer.dropEffect = "move";
@@ -301,19 +344,19 @@ export function useDragSort({ onDrop, onStep }: DragSortActions) {
   function listProps() {
     return {
       onDragOver: (event: DragEvent<HTMLElement>) => {
-        if (!drag) return;
+        if (drag?.kind !== "mouse") return;
         event.preventDefault();
         event.stopPropagation();
         event.dataTransfer.dropEffect = "move";
       },
       onDragLeave: (event: DragEvent<HTMLElement>) => {
-        if (!drag?.target) return;
+        if (drag?.kind !== "mouse" || !drag.target) return;
         const next = event.relatedTarget;
         if (next instanceof Node && event.currentTarget.contains(next)) return;
         setDrag({ ...drag, target: null });
       },
       onDrop: (event: DragEvent<HTMLElement>) => {
-        if (!drag) return;
+        if (drag?.kind !== "mouse") return;
         event.preventDefault();
         event.stopPropagation();
         if (drag.target) onDrop(drag.draggedId, drag.target.id, drag.target.position);
@@ -328,14 +371,18 @@ export function useDragSort({ onDrop, onStep }: DragSortActions) {
    */
   function rowClass(id: string): string {
     if (!drag) return "relative";
-    if (drag.touch) {
-      return drag.draggedId === id
-        ? "relative z-10 rounded-lg bg-background shadow-lg ring-2 ring-primary/40"
-        : "relative";
+    switch (drag.kind) {
+      case "touch":
+        return drag.draggedId === id
+          ? "relative z-10 rounded-lg bg-background shadow-lg"
+          : "relative";
+      case "mouse":
+        if (drag.draggedId === id) return "relative opacity-40";
+        if (drag.target?.id !== id) return "relative";
+        return drag.target.position === "before"
+          ? `relative ${LINE_BEFORE}`
+          : `relative ${LINE_AFTER}`;
     }
-    if (drag.draggedId === id) return "relative opacity-40";
-    if (drag.target?.id !== id) return "relative";
-    return drag.target.position === "before" ? `relative ${LINE_BEFORE}` : `relative ${LINE_AFTER}`;
   }
 
   return { handleProps, rowProps, listProps, rowClass };

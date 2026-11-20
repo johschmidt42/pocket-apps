@@ -311,6 +311,40 @@ test.describe("lebenslauf in Chrome and Edge", () => {
     await expect(cv(page).getByRole("heading", { level: 2, name: "Projects" })).toBeVisible();
   });
 
+  test("moves an entry up with a finger, and the sections stay", async ({ page, pageErrors }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openWithFolder(page);
+    await page.getByRole("button", { name: "Beispiel laden" }).click();
+    const before = await savedFile(page);
+    const grip = page.getByRole("button", { name: "„Cloud Migration“ verschieben" });
+    await grip.scrollIntoViewIfNeeded();
+    const box = await grip.boundingBox();
+    if (!box) throw new Error("The grip has no size.");
+
+    // A real touch of Chrome: it gives pointer events with the pointer type "touch".
+    const cdp = await page.context().newCDPSession(page);
+    const x = box.x + box.width / 2;
+    const start = box.y + box.height / 2;
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x, y: start }],
+    });
+    for (const y of [start - 20, start - 40, start - 60]) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+
+    const entries = page
+      .getByRole("list", { name: "Einträge von „Projects“" })
+      .getByRole("listitem");
+    await expect(entries.first()).toContainText("Cloud Migration");
+    const after = await savedFile(page);
+    expect(after.data.variants[0]?.sections.map((section) => section.title)).toEqual(
+      before.data.variants[0]?.sections.map((section) => section.title),
+    );
+    expect(pageErrors).toEqual([]);
+  });
+
   test("fits a phone, also with a long entry", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 780 });
     await openWithFolder(page);

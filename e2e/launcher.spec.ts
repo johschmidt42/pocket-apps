@@ -171,6 +171,8 @@ test.describe("launcher on a phone", () => {
         touchPoints: type === "touchEnd" ? [] : [{ x: box.x + box.width / 2, y }],
       });
     await touch("touchStart", box.y + box.height / 2);
+    // Like a long press: the drag of the browser must not take over.
+    await page.waitForTimeout(800);
     for (let y = box.y + box.height / 2; y < 690; y += 40) await touch("touchMove", y);
     await touch("touchMove", 690);
     // The finger stays at the bottom edge: the list scrolls until the app is the last one.

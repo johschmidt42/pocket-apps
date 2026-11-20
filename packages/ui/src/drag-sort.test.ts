@@ -55,16 +55,21 @@ describe("stepToward", () => {
   const before = { top: 0, height: 40 };
   const after = { top: 100, height: 40 };
 
-  it("moves up above the middle of the row before, and down below the middle of the row after", () => {
-    expect(stepToward(19, before, after)).toBe(-1);
-    expect(stepToward(121, before, after)).toBe(1);
+  it("moves up when the top passes the middle of the row before", () => {
+    expect(stepToward({ top: 19, height: 40 }, before, after)).toBe(-1);
+    expect(stepToward({ top: 20, height: 40 }, before, after)).toBeNull();
   });
 
-  it("stays between the two middles and at the edges of the list", () => {
-    expect(stepToward(20, before, after)).toBeNull();
-    expect(stepToward(120, before, after)).toBeNull();
-    expect(stepToward(0, null, after)).toBeNull();
-    expect(stepToward(500, before, null)).toBeNull();
+  it("moves down when the bottom passes the middle of the row after", () => {
+    expect(stepToward({ top: 81, height: 40 }, before, after)).toBe(1);
+    expect(stepToward({ top: 80, height: 40 }, before, after)).toBeNull();
+    // A tall row: its bottom counts, not the place of the finger.
+    expect(stepToward({ top: 30, height: 100 }, before, after)).toBe(1);
+  });
+
+  it("stays at the edges of the list", () => {
+    expect(stepToward({ top: -50, height: 40 }, null, after)).toBeNull();
+    expect(stepToward({ top: 500, height: 40 }, before, null)).toBeNull();
   });
 });
 
