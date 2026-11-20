@@ -32,7 +32,7 @@ export function EventDialog({ state, onSave, onClose }: EventDialogProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         {state.kind !== "closed" && (
           <EventForm
             key={state.kind === "edit" ? state.event.id : "new"}
