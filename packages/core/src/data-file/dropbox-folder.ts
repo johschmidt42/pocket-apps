@@ -14,7 +14,7 @@ export const DROPBOX: CloudProvider = {
   kind: "dropbox",
   name: "Dropbox",
   company: "Dropbox",
-  clientId: "DROPBOX_APP_KEY",
+  clientId: "pv0wm263lwajq14",
   authorizeUrl: "https://www.dropbox.com/oauth2/authorize",
   tokenUrl: "https://api.dropboxapi.com/oauth2/token",
   // "offline" gives a refresh token. Without it, the login would end after 4 hours.
