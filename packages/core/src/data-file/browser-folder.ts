@@ -1,7 +1,14 @@
 // The data folder in the browser: a folder on this computer (File System Access API, Chrome and
 // Edge) or OneDrive. The choice stays in IndexedDB. Every page of the same web address uses it.
-import type { DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
-import { createOneDrive, ONEDRIVE_CHOICE, type OneDrive } from "./onedrive-folder.ts";
+import {
+  createCloudSession,
+  finishCloudLogin,
+  type CloudDeps,
+  type CloudProvider,
+} from "./cloud-login.ts";
+import { createDropboxFolder, DROPBOX } from "./dropbox-folder.ts";
+import type { CloudKind, DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
+import { createOneDriveFolder, ONEDRIVE } from "./onedrive-folder.ts";
 import { FOLDER_KEY, indexedDbStore, type KeyValueStore } from "./settings-store.ts";
 
 // These functions are not in the TypeScript DOM types yet.
@@ -95,35 +102,82 @@ export function wrapDirectory(root: FileSystemDirectoryHandle): DataFolder {
   };
 }
 
+/** One cloud storage: its data folder, its login and its tokens. */
+export type CloudStorage = {
+  folder: DataFolder;
+  startLogin: (options: { chooseAccount: boolean }) => Promise<never>;
+  forget: () => Promise<void>;
+};
+
+/** All cloud storages, in the order of the choice. */
+export type CloudStorages = {
+  storages: Record<CloudKind, CloudStorage>;
+  /** Ends a login when a provider sent the person back (see `finishCloudLogin`). */
+  finishLogin: () => Promise<void>;
+};
+
+const PROVIDERS: Record<
+  CloudKind,
+  { provider: CloudProvider; folder: typeof createOneDriveFolder }
+> = {
+  onedrive: { provider: ONEDRIVE, folder: createOneDriveFolder },
+  dropbox: { provider: DROPBOX, folder: createDropboxFolder },
+};
+
+/** The cloud storages of the browser. `overrides` is only for tests. */
+export function createCloudStorages(overrides: Partial<CloudDeps> = {}): CloudStorages {
+  const entries = Object.values(PROVIDERS);
+  const storage = ({ provider, folder }: (typeof entries)[number]): CloudStorage => {
+    const session = createCloudSession(provider, overrides);
+    return { folder: folder(session), startLogin: session.startLogin, forget: session.forget };
+  };
+  return {
+    storages: { onedrive: storage(PROVIDERS.onedrive), dropbox: storage(PROVIDERS.dropbox) },
+    finishLogin: () =>
+      finishCloudLogin(
+        entries.map((entry) => entry.provider),
+        overrides,
+      ),
+  };
+}
+
+function isCloudKind(value: unknown): value is CloudKind {
+  return value === "onedrive" || value === "dropbox";
+}
+
 /**
- * The folder host of the browser: a folder on this computer (Chrome and Edge) or OneDrive (all
- * browsers). `storage` and `oneDrive` are only for tests.
+ * The folder host of the browser: a folder on this computer (Chrome and Edge) or a cloud storage
+ * (all browsers). `storage` and `clouds` are only for tests.
  */
 export function createBrowserFolderHost(
   storage: KeyValueStore = indexedDbStore,
-  oneDrive: OneDrive = createOneDrive({ store: storage }),
+  clouds: CloudStorages = createCloudStorages({ store: storage }),
 ): FolderHost {
+  async function forgetClouds(): Promise<void> {
+    await Promise.all(Object.values(clouds.storages).map((cloud) => cloud.forget()));
+  }
+
   return {
     kinds: () => [
       ...(typeof window.showDirectoryPicker === "function" ? (["local"] as const) : []),
       // The login needs Web Crypto. Browsers have it on https and on localhost.
-      ...(typeof crypto.subtle === "object" ? (["onedrive"] as const) : []),
+      ...(typeof crypto.subtle === "object" ? (["onedrive", "dropbox"] as const) : []),
     ],
     loadSaved: async () => {
       // A failed or cancelled login keeps the earlier choice. Only without one, the person sees
       // the error next to the choice.
-      const login = await oneDrive.finishLogin().then(
+      const login = await clouds.finishLogin().then(
         () => null,
         (error: unknown) => ({ error }),
       );
       const saved = await storage.get(FOLDER_KEY);
-      if (saved === ONEDRIVE_CHOICE) return oneDrive.folder;
+      if (isCloudKind(saved)) return clouds.storages[saved].folder;
       if (isDirectoryHandle(saved)) return wrapDirectory(saved);
       if (login) throw login.error;
       return null;
     },
     pick: async (kind) => {
-      if (kind === "onedrive") return oneDrive.startLogin({ chooseAccount: true });
+      if (kind !== "local") return clouds.storages[kind].startLogin({ chooseAccount: true });
       if (!window.showDirectoryPicker) return null;
       try {
         const handle = await window.showDirectoryPicker({
@@ -131,7 +185,7 @@ export function createBrowserFolderHost(
           mode: "readwrite",
         });
         await storage.set(FOLDER_KEY, handle);
-        await oneDrive.forget();
+        await forgetClouds();
         return wrapDirectory(handle);
       } catch (error) {
         if (isAbort(error)) return null;

@@ -20,6 +20,7 @@ import { Fragment, useState, type ReactNode } from "react";
 import type { DataFolder, FolderHost } from "./folder.ts";
 import { LoadingStatus } from "./loading-status.tsx";
 import { StorageChoice } from "./storage-choice.tsx";
+import { EXPIRED_LOGIN_TEXTS, STORAGE_TEXTS } from "./storage-kinds.ts";
 import { useDataFolder } from "./use-data-folder.ts";
 
 const TITLE_ID = "data-folder-title";
@@ -134,14 +135,14 @@ export function DataFolderGate({ host, optional = false, children }: DataFolderG
       case "locked": {
         const { folder } = state;
         return withoutFolder(
-          folder.kind === "onedrive" ? (
-            <TaskCard title="Bei OneDrive anmelden" optional={optional}>
+          folder.kind !== "local" ? (
+            <TaskCard
+              title={`Bei ${STORAGE_TEXTS[folder.kind].title} anmelden`}
+              optional={optional}
+            >
               <CardContent className="flex flex-col gap-2 text-sm text-muted-foreground">
-                <p>
-                  Deine Anmeldung bei OneDrive gilt nicht mehr. Microsoft erlaubt eine Anmeldung für
-                  24 Stunden. Melde dich wieder an.
-                </p>
-                <p>Deine Daten bleiben in OneDrive.</p>
+                <p>{EXPIRED_LOGIN_TEXTS[folder.kind]}</p>
+                <p>Deine Daten bleiben in {STORAGE_TEXTS[folder.kind].title}.</p>
                 {errorAlert}
               </CardContent>
               <CardFooter className="flex-wrap gap-2">

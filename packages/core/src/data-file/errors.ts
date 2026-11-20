@@ -7,8 +7,8 @@ export type DataFileErrorCode =
   | "invalid-data"
   | "invalid-file-name"
   | "move-failed"
-  | "onedrive-login"
-  | "onedrive-failed";
+  | "cloud-login"
+  | "cloud-failed";
 
 /** An error that the user can understand. The message is in German. */
 export class DataFileError extends Error {

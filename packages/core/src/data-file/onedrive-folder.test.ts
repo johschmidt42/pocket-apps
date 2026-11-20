@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DataFileError } from "./errors.ts";
-import { createOneDrive, type OneDriveDeps } from "./onedrive-folder.ts";
+import { createCloudSession, finishCloudLogin, type CloudDeps } from "./cloud-login.ts";
+import { createOneDriveFolder, ONEDRIVE } from "./onedrive-folder.ts";
 import type { KeyValueStore } from "./settings-store.ts";
 
 const APP_ROOT = "https://graph.microsoft.com/v1.0/me/drive/special/approot:/";
@@ -84,7 +85,7 @@ function setup(options: { address?: string; tokens?: unknown } = {}) {
   const replaceAddress = vi.fn((url: string) => {
     page.address = url;
   });
-  const deps: Partial<OneDriveDeps> = {
+  const deps: Partial<CloudDeps> = {
     store,
     session: window.sessionStorage,
     fetch: server.fetch,
@@ -93,7 +94,14 @@ function setup(options: { address?: string; tokens?: unknown } = {}) {
     replaceAddress,
     now: () => 1_000_000,
   };
-  return { server, store, page, go, replaceAddress, oneDrive: createOneDrive(deps) };
+  const session = createCloudSession(ONEDRIVE, deps);
+  const oneDrive = {
+    folder: createOneDriveFolder(session),
+    startLogin: session.startLogin,
+    forget: session.forget,
+    finishLogin: () => finishCloudLogin([ONEDRIVE], deps),
+  };
+  return { server, store, page, go, replaceAddress, oneDrive };
 }
 
 const VALID_TOKENS = { accessToken: "access", refreshToken: "refresh", expiresAt: 9_999_999 };
@@ -302,7 +310,7 @@ describe("the OneDrive login", () => {
     });
 
     const url = new URL(String(go.mock.calls[0]?.[0]));
-    const login = JSON.parse(window.sessionStorage.getItem("pocket-apps-onedrive-login") ?? "") as {
+    const login = JSON.parse(window.sessionStorage.getItem("pocket-apps-cloud-login") ?? "") as {
       state: string;
       returnTo: string;
     };
@@ -347,8 +355,8 @@ describe("the OneDrive login", () => {
       address: `${START_PAGE}?code=abc&state=s1`,
     });
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: APP_PAGE }),
     );
 
     let ended = false;
@@ -374,14 +382,14 @@ describe("the OneDrive login", () => {
       refreshToken: "refresh",
       expiresAt: 1_000_000 + 3_600_000,
     });
-    expect(window.sessionStorage.getItem("pocket-apps-onedrive-login")).toBeNull();
+    expect(window.sessionStorage.getItem("pocket-apps-cloud-login")).toBeNull();
   });
 
   it("stays on the page when the login started there", async () => {
     const { oneDrive, go, store } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: START_PAGE }),
     );
 
     await oneDrive.finishLogin();
@@ -393,8 +401,8 @@ describe("the OneDrive login", () => {
   it("rejects an answer that does not fit the login", async () => {
     const { oneDrive, server } = setup({ address: `${START_PAGE}?code=abc&state=other` });
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: START_PAGE }),
     );
 
     await expect(oneDrive.finishLogin()).rejects.toThrow(/passt nicht zu deiner Anmeldung/);
@@ -403,7 +411,7 @@ describe("the OneDrive login", () => {
 
   it("rejects an answer without a saved login", async () => {
     const { oneDrive } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
-    window.sessionStorage.setItem("pocket-apps-onedrive-login", "not json");
+    window.sessionStorage.setItem("pocket-apps-cloud-login", "not json");
 
     await expect(oneDrive.finishLogin()).rejects.toThrow(/passt nicht zu deiner Anmeldung/);
   });
@@ -412,11 +420,30 @@ describe("the OneDrive login", () => {
     const { oneDrive, replaceAddress } = setup({
       address: `${START_PAGE}?error=access_denied&error_description=cancel`,
     });
+    window.sessionStorage.setItem(
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: START_PAGE }),
+    );
 
     await expect(oneDrive.finishLogin()).rejects.toThrow(
       "Du hast die Anmeldung bei OneDrive abgebrochen.",
     );
     expect(replaceAddress).toHaveBeenCalledWith(START_PAGE);
+  });
+
+  it("names no storage without a saved login, and knows no other provider", async () => {
+    const cancelled = setup({ address: `${START_PAGE}?error=access_denied` });
+    await expect(cancelled.oneDrive.finishLogin()).rejects.toThrow(
+      "Du hast die Anmeldung bei dem Speicherdienst abgebrochen.",
+    );
+
+    const other = setup({ address: `${START_PAGE}?code=abc&state=s1` });
+    window.sessionStorage.setItem(
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "box", verifier: "v1", state: "s1", returnTo: START_PAGE }),
+    );
+    await expect(other.oneDrive.finishLogin()).rejects.toThrow(/passt nicht zu deiner Anmeldung/);
+    expect(other.server.requests).toHaveLength(0);
   });
 
   it("shows the description of other login errors", async () => {
@@ -433,8 +460,8 @@ describe("the OneDrive login", () => {
     const { oneDrive, server, store } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
     server.tokenStatus = 400;
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: START_PAGE }),
     );
 
     await expect(oneDrive.finishLogin()).rejects.toThrow(
@@ -447,8 +474,8 @@ describe("the OneDrive login", () => {
     const { oneDrive, server } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
     server.tokenBody = { access_token: "a" };
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: START_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: START_PAGE }),
     );
 
     await expect(oneDrive.finishLogin()).rejects.toThrow(
@@ -459,8 +486,8 @@ describe("the OneDrive login", () => {
   it("goes back to the app after a failed login, and the app shows the error", async () => {
     const start = setup({ address: `${START_PAGE}?error=access_denied` });
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: APP_PAGE }),
     );
 
     void start.oneDrive.finishLogin();
@@ -479,8 +506,8 @@ describe("the OneDrive login", () => {
   it("passes on errors that are not German errors, and stays on the page", async () => {
     const { oneDrive, store, go } = setup({ address: `${START_PAGE}?code=abc&state=s1` });
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: APP_PAGE }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({ provider: "onedrive", verifier: "v1", state: "s1", returnTo: APP_PAGE }),
     );
     store.set = () => Promise.reject(new Error("IndexedDB full"));
 
@@ -493,14 +520,19 @@ describe("the default browser functions", () => {
   it("use the address and the history of the window", async () => {
     window.history.replaceState(null, "", "/?code=abc&state=s1#fran");
     window.sessionStorage.setItem(
-      "pocket-apps-onedrive-login",
-      JSON.stringify({ verifier: "v1", state: "s1", returnTo: window.location.href }),
+      "pocket-apps-cloud-login",
+      JSON.stringify({
+        provider: "onedrive",
+        verifier: "v1",
+        state: "s1",
+        returnTo: window.location.href,
+      }),
     );
     const server = fakeServer();
     vi.stubGlobal("fetch", server.fetch);
     const store = memoryStore();
 
-    await createOneDrive({ store }).finishLogin();
+    await finishCloudLogin([ONEDRIVE], { store });
 
     expect(window.location.search).toBe("");
     expect(window.location.hash).toBe("#fran");
@@ -515,7 +547,9 @@ describe("the default browser functions", () => {
       assign,
     } as unknown as Location);
 
-    void createOneDrive({ store: memoryStore() }).startLogin({ chooseAccount: false });
+    void createCloudSession(ONEDRIVE, { store: memoryStore() }).startLogin({
+      chooseAccount: false,
+    });
     await vi.waitFor(() => {
       expect(assign).toHaveBeenCalled();
     });

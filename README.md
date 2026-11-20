@@ -7,7 +7,7 @@
 [![CI - E2E](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-e2e.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/ci-e2e.yml)
 [![CD - Release](https://github.com/johschmidt42/pocket-apps/actions/workflows/cd-release.yml/badge.svg?branch=main)](https://github.com/johschmidt42/pocket-apps/actions/workflows/cd-release.yml)
 
-Small personal apps for the browser. Open them at **https://johschmidt42.github.io/pocket-apps/**. Each app is one HTML file. Your data stays in a folder on your computer or in your own OneDrive. No server of ours gets it.
+Small personal apps for the browser. Open them at **https://johschmidt42.github.io/pocket-apps/**. Each app is one HTML file. Your data stays in a folder on your computer, or in your own OneDrive or Dropbox. No server of ours gets it.
 
 ## For users
 
@@ -20,7 +20,7 @@ Small personal apps for the browser. Open them at **https://johschmidt42.github.
 Each card shows the app version (for example `1.0`) and two icons. Move the mouse over an icon to see what it means:
 
 - Disk icon: the app keeps your data in a file in your data folder. A crossed-out disk: the app keeps nothing.
-- Globe: the app uses an online service. A crossed-out Wi-Fi symbol: the app itself uses no online service. If you keep your data in OneDrive, the app sends your data only there.
+- Globe: the app uses an online service. A crossed-out Wi-Fi symbol: the app itself uses no online service. If you keep your data in OneDrive or Dropbox, the app sends your data only there.
 - Sparkles: the app has AI features. They use your own API key. See "Set up the AI".
 
 The header shows the app version, for example `1.0`. The moon button switches to dark mode. The sun button switches back to light mode.
@@ -29,8 +29,8 @@ The header shows the app version, for example `1.0`. The moon button switches to
 
 Some apps keep data, for example a list of ideas. All these apps use one data folder. On the start page or in an app that keeps data, find "Wo sollen deine Daten liegen?". You choose once per browser. All apps in this browser then use your choice.
 
-- On a phone, in Firefox and in Safari, the page offers only OneDrive.
-- In Chrome and Edge on a computer, the page offers OneDrive and a folder on this computer.
+- On a phone, in Firefox and in Safari, the page offers OneDrive and Dropbox.
+- In Chrome and Edge on a computer, the page also offers a folder on this computer.
 
 **OneDrive:** you see the same data on all your devices. You need a Microsoft account. It is free.
 
@@ -40,6 +40,12 @@ Some apps keep data, for example a list of ideas. All these apps use one data fo
 4. Microsoft allows a login of a browser app for 24 hours. Thus, about once a day, the app shows "Bei OneDrive anmelden". Click "Anmelden". Microsoft usually knows your account, so you do not type your password again.
 
 Do not delete the folder `Apps/Pocket Apps` and do not replace it with another folder. OneDrive knows it by an internal ID, not by its name. To bring your data into it, move the app folders (for example `app-ideen/`) into it.
+
+**Dropbox:** you see the same data on all your devices. You need a Dropbox account. It is free.
+
+1. Click "Mit Dropbox verbinden".
+2. Log in with your Dropbox account and allow the access. The apps use only the folder `Apps/Pocket Apps` in your Dropbox. They cannot see your other files. This folder is your data folder.
+3. Do this once in each browser on each device. The login stays. You log in again only if you remove the access in your Dropbox account.
 
 **A folder on this computer:** only this computer has the data.
 
@@ -64,11 +70,11 @@ More tips:
 
 - To change the order of the apps on the start page, click "Reihenfolge ändern". The button is there only after you picked your data folder on the start page. Drag each app by the grip at its left side (⋮⋮) to a new place. With the keyboard: move the focus to a grip and press the arrow key up or down. The app moves at once, without another key. The start page saves the new order at once in the file `launcher/launcher.json` (the folder `launcher` in your data folder). "Fertig" only closes the view.
 - To mark an app as a favorite, click the star on its card. The star is there only when the start page has your data folder. A filled star shows a favorite. The start page shows your favorite apps first, under "Favoriten". The other apps come under "Weitere Apps". Both sections use your order of the apps. To remove a favorite, click the star again. The start page keeps the favorites in `launcher/launcher.json` in your data folder.
-- To use another folder or OneDrive, click "Speicherort wechseln" in the bar under the header. The data does not move with it. To take your data with you, copy the app folders (for example `app-ideen/`) into the new data folder before you change, for example into `Apps/Pocket Apps` on onedrive.com.
-- To end the access of the apps to OneDrive, click "Speicherort wechseln" and select a folder on this computer. Then this browser forgets the login. To remove the access for all devices, go to your Microsoft account and remove "Pocket Apps" from the apps with access.
+- To use another folder or OneDrive, click "Speicherort wechseln" in the bar under the header. The data does not move with it. To take your data with you, copy the app folders (for example `app-ideen/`) into the new data folder before you change, for example into `Apps/Pocket Apps` on onedrive.com or dropbox.com.
+- To end the access of the apps to OneDrive or Dropbox, click "Speicherort wechseln" and select a folder on this computer. Then this browser forgets the login. To remove the access for all devices, remove "Pocket Apps" from the apps with access in your Microsoft account or in the settings of your Dropbox ("Connected apps").
 - With a folder on this computer: when you open an app later, the app can show "Zugriff auf deinen Datenordner". Click "Zugriff erlauben" in the app. Then a Chrome window opens. Select "Bei jedem Besuch erlauben" in it. Then Chrome does not ask again.
-- On a second device, pick OneDrive, or on a second computer the same synced folder. Then both use the same data. Use the apps on one device at a time.
-- With OneDrive, the apps need the internet to open and to save your data. Without internet, the app shows an error and tries again.
+- On a second device, pick the same cloud storage, or on a second computer the same synced folder. Then both use the same data. Use the apps on one device at a time.
+- With OneDrive or Dropbox, the apps need the internet to open and to save your data. Without internet, the app shows an error and tries again.
 - If the OneDrive login ends while an app is open, the app cannot save. It shows an error. Reload the page and log in again. A change that the app could not save is then lost. The browser warns you before the reload.
 - Do you have a data file from an earlier version of Pocket Apps (before the data folder), for example `app-ideen.json`? Put it into the data folder before you open the app, but only if the app has no folder there yet (for example `app-ideen/`). The app then moves the file into its folder and opens it.
 
@@ -85,7 +91,7 @@ Apps with AI features use your own API key of Claude (Anthropic) or OpenAI. The 
 Where the app keeps the setup:
 
 - The provider and the model are in the file `ai/ai.json` in your data folder. Your other computers get them with the folder.
-- The API key stays in this browser. It is not in the data folder, thus not in OneDrive and not in Google Drive. In another browser or on another device, also on your phone, type the key once more.
+- The API key stays in this browser. It is not in the data folder, thus not in OneDrive, Dropbox or Google Drive. In another browser or on another device, also on your phone, type the key once more.
 - "Key entfernen" in the same dialog removes the key only from this browser.
 
 The apps block requests to servers that they do not need. This makes it harder for a faulty page on johschmidt42.github.io to send your key away, but not impossible. Thus set the spend limit.

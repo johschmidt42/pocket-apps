@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-20: Dropbox as a third storage, one login for all cloud storages (core)
+
+- **Context:** The project owner wants Google Drive as a storage. Google gives a browser app without a server no refresh token (a login about every hour), and its narrow scope `drive.file` does not see the files of the Drive desktop program (see the prototype of 2026-11-09). The project owner chose Dropbox first.
+- **Decision:** Dropbox is a third storage kind. The Dropbox app "Pocket Apps" has the access type "App folder": the apps see only `/Apps/Pocket Apps`, but in it all files, also those of the Dropbox desktop program. The login asks for `token_access_type=offline`: Dropbox gives a refresh token without an end. Thus the user logs in once per browser, not once a day as with OneDrive.
+- **Decision:** The login of all cloud storages is in `cloud-login.ts` (OAuth 2.0 with PKCE, tokens, refresh, the way back over the start page). Each provider gives only a `CloudProvider` with its addresses and fields, and a `DataFolder` for the files. The texts of each storage kind are in `storage-kinds.ts`. A new cloud storage (for example Google Drive later) adds a provider, a folder and its texts. The tokens of OneDrive keep their key, so OneDrive users do not log in again.
+- **Decision:** A Dropbox write uses the state of the last check, like `If-Match` at OneDrive: `update` with the revision, `add` for a file that did not exist, `overwrite` for a file without a check (an image). A change in between gives a conflict, not a lost change.
+- **Consequence:** The Content Security Policy of each stateful app also allows `api.dropboxapi.com` and `content.dropboxapi.com`. All stateful apps and the launcher get a new minor version.
+
 ## 2026-11-20: Longer time limit for the tests of the whole trainingsbuch app
 
 - **Context:** `CI - Test` failed for version 4.0: ten tests of `trainingsbuch` ran longer than the default limit of 5 s. A run again passed. These tests render the whole app with the list of all 359 workouts. On a computer, the slowest test takes about 1.4 s. On the GitHub runners, it takes up to five times as long, and the time changes from run to run.

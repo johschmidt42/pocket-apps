@@ -177,7 +177,7 @@ test.describe("app-ideen in Chrome and Edge", () => {
 });
 
 test.describe("app-ideen in browsers without folder access", () => {
-  test("offers only OneDrive", async ({ page, pageErrors }) => {
+  test("offers only the cloud storages", async ({ page, pageErrors }) => {
     await withoutFolderAccess(page);
     await page.goto(releaseUrl("app-ideen.html"));
 
@@ -185,6 +185,7 @@ test.describe("app-ideen in browsers without folder access", () => {
       page.getByRole("heading", { level: 2, name: "Wo sollen deine Daten liegen?" }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Mit OneDrive verbinden" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mit Dropbox verbinden" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Ordner wählen …" })).toHaveCount(0);
     expect(pageErrors).toEqual([]);
   });

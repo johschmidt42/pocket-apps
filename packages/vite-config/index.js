@@ -16,9 +16,11 @@ export const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", ".."
 export const AI_ORIGINS = ["https://api.anthropic.com", "https://api.openai.com"];
 
 /**
- * The cloud storage that the user can pick for the data. Every app with "stateful": true may
- * call it. OneDrive: the Microsoft login, Microsoft Graph, and the servers of the file downloads
- * (Graph sends a download to them): personal accounts and work accounts (SharePoint).
+ * The cloud storages that the user can pick for the data. Every app with "stateful": true may
+ * call them.
+ * - OneDrive: the Microsoft login, Microsoft Graph, and the servers of the file downloads (Graph
+ *   sends a download to them): personal accounts and work accounts (SharePoint).
+ * - Dropbox: the API (with the token endpoint) and the server for the file contents.
  */
 export const STORAGE_ORIGINS = [
   "https://login.microsoftonline.com",
@@ -26,6 +28,8 @@ export const STORAGE_ORIGINS = [
   "https://*.1drv.com",
   "https://*.microsoftpersonalcontent.com",
   "https://*.sharepoint.com",
+  "https://api.dropboxapi.com",
+  "https://content.dropboxapi.com",
 ];
 
 const backLinkSchema = z.object({ href: z.string().min(1), label: z.string().min(1) });

@@ -172,11 +172,12 @@ test.describe("launcher with favorites", () => {
 });
 
 test.describe("launcher in browsers without folder access", () => {
-  test("shows the apps and offers only OneDrive", async ({ page }) => {
+  test("shows the apps and offers only the cloud storages", async ({ page }) => {
     await withoutFolderAccess(page);
     await page.goto(releaseUrl("index.html"));
 
     await expect(page.getByRole("button", { name: "Mit OneDrive verbinden" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Mit Dropbox verbinden" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Ordner wählen …" })).toHaveCount(0);
     await expect(page.getByRole("main").getByRole("link")).toHaveCount(listApps().length);
     await expect(page.getByRole("button", { name: "Reihenfolge ändern" })).toHaveCount(0);
@@ -219,7 +220,8 @@ test.describe("launcher AI settings", () => {
       "content",
       "connect-src 'self' https://api.anthropic.com https://api.openai.com " +
         "https://login.microsoftonline.com https://graph.microsoft.com https://*.1drv.com " +
-        "https://*.microsoftpersonalcontent.com https://*.sharepoint.com",
+        "https://*.microsoftpersonalcontent.com https://*.sharepoint.com " +
+        "https://api.dropboxapi.com https://content.dropboxapi.com",
     );
 
     await page.getByRole("button", { name: "Ordner wählen …" }).click();

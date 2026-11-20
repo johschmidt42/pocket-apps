@@ -20,7 +20,7 @@ export type MemoryFolderHost = FolderHost & {
   saved: MemoryFolder | null;
   /** The folder that the next `pick()` returns. `null` = the person cancels. */
   nextPick: MemoryFolder | null;
-  /** The kinds of storage that the browser offers. Default: both. Firefox: only "onedrive". */
+  /** The kinds of storage that the browser offers. Default: all. Firefox: only the cloud storages. */
   supportedKinds: StorageKind[];
   /** The kind of the last `pick()`, or `null`. */
   pickedKind: StorageKind | null;
@@ -77,7 +77,7 @@ export function createMemoryFolder(
 
 /**
  * An in-memory folder host. `saved` = a folder from an earlier visit. `kinds` = the kinds of
- * storage that the browser offers (default: both).
+ * storage that the browser offers (default: all).
  */
 export function createMemoryFolderHost(
   options: { saved?: MemoryFolder | null; kinds?: StorageKind[] } = {},
@@ -85,7 +85,7 @@ export function createMemoryFolderHost(
   const host: MemoryFolderHost = {
     saved: options.saved ?? null,
     nextPick: null,
-    supportedKinds: options.kinds ?? ["local", "onedrive"],
+    supportedKinds: options.kinds ?? ["local", "onedrive", "dropbox"],
     pickedKind: null,
     kinds: () => host.supportedKinds,
     loadSaved: () => Promise.resolve(host.saved),

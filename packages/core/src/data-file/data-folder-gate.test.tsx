@@ -31,7 +31,7 @@ describe("DataFolderGate", () => {
     ).toBeInTheDocument();
   });
 
-  it("offers both places in Chrome and Edge", async () => {
+  it("offers all places in Chrome and Edge", async () => {
     setup(createMemoryFolderHost());
 
     expect(
@@ -41,7 +41,9 @@ describe("DataFolderGate", () => {
       screen.getByRole("heading", { level: 3, name: "Ordner auf diesem Computer" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "OneDrive" })).toBeInTheDocument();
-    expect(screen.getByText(/dieselben Daten auf all deinen Geräten/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 3, name: "Dropbox" })).toBeInTheDocument();
+    // Each cloud storage says that all devices see the same data.
+    expect(screen.getAllByText(/dieselben Daten auf all deinen Geräten/)).toHaveLength(2);
   });
 
   it("offers only OneDrive in browsers without a folder dialog", async () => {
@@ -163,6 +165,17 @@ describe("DataFolderGate", () => {
     await user.click(screen.getByRole("button", { name: "Anmelden" }));
 
     expect(await screen.findByText("Ordner: OneDrive")).toBeInTheDocument();
+  });
+
+  it("asks for a new Dropbox login when it ended", async () => {
+    const folder = createMemoryFolder("Dropbox", "dropbox");
+    folder.access = "prompt";
+    setup(createMemoryFolderHost({ saved: folder }));
+
+    expect(
+      await screen.findByRole("heading", { level: 2, name: "Bei Dropbox anmelden" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Deine Daten bleiben in Dropbox.")).toBeInTheDocument();
   });
 
   it("shows the denied text at once when the browser blocks the folder", async () => {

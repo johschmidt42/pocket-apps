@@ -1,8 +1,7 @@
 import { IDBFactory } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
-import { createBrowserFolderHost, wrapDirectory } from "./browser-folder.ts";
-import type { DataFolder } from "./folder.ts";
-import type { OneDrive } from "./onedrive-folder.ts";
+import { createBrowserFolderHost, wrapDirectory, type CloudStorages } from "./browser-folder.ts";
+import type { CloudKind, DataFolder } from "./folder.ts";
 import { indexedDbStore, type KeyValueStore } from "./settings-store.ts";
 
 // A small in-memory stand-in for the directory handles of Chrome. jsdom has none.
@@ -141,78 +140,94 @@ describe("wrapDirectory", () => {
   });
 });
 
-/** A stand-in for OneDrive. `finishLogin` can mark OneDrive as the picked storage. */
-function fakeOneDrive(
+/** Stand-ins for the cloud storages. `finishLogin` can make OneDrive the picked storage. */
+function fakeClouds(
   store: KeyValueStore,
   login: "none" | "done" | "failed" = "none",
-): OneDrive & { forgotten: boolean } {
-  const fake = {
-    forgotten: false,
-    folder: { name: "OneDrive", kind: "onedrive" } as DataFolder,
+): CloudStorages & { forgotten: CloudKind[] } {
+  const forgotten: CloudKind[] = [];
+  const storage = (kind: CloudKind, name: string) => ({
+    folder: { name, kind } as DataFolder,
     startLogin: vi.fn(() => new Promise<never>(() => undefined)),
+    forget: () => {
+      forgotten.push(kind);
+      return Promise.resolve();
+    },
+  });
+  return {
+    forgotten,
+    storages: { onedrive: storage("onedrive", "OneDrive"), dropbox: storage("dropbox", "Dropbox") },
     finishLogin: async () => {
       if (login === "failed") throw new Error("Du hast die Anmeldung bei OneDrive abgebrochen.");
       if (login === "done") await store.set("data-folder", "onedrive");
     },
-    forget: () => {
-      fake.forgotten = true;
-      return Promise.resolve();
-    },
   };
-  return fake;
 }
 
 describe("createBrowserFolderHost", () => {
   it("offers a local folder only in browsers with a folder dialog", () => {
     const store = memoryStore();
-    const host = createBrowserFolderHost(store, fakeOneDrive(store));
+    const host = createBrowserFolderHost(store, fakeClouds(store));
 
-    expect(host.kinds()).toEqual(["onedrive"]);
+    expect(host.kinds()).toEqual(["onedrive", "dropbox"]);
 
     vi.stubGlobal("showDirectoryPicker", () => Promise.resolve(fakeDirectory("Daten")));
 
-    expect(host.kinds()).toEqual(["local", "onedrive"]);
+    expect(host.kinds()).toEqual(["local", "onedrive", "dropbox"]);
   });
 
-  it("offers OneDrive only with Web Crypto", () => {
+  it("offers the cloud storages only with Web Crypto", () => {
     const store = memoryStore();
     vi.stubGlobal("crypto", {});
 
-    expect(createBrowserFolderHost(store, fakeOneDrive(store)).kinds()).toEqual([]);
+    expect(createBrowserFolderHost(store, fakeClouds(store)).kinds()).toEqual([]);
   });
 
   it("gives no local folder without a folder dialog", async () => {
     const store = memoryStore();
 
-    expect(await createBrowserFolderHost(store, fakeOneDrive(store)).pick("local")).toBeNull();
+    expect(await createBrowserFolderHost(store, fakeClouds(store)).pick("local")).toBeNull();
   });
 
-  it("remembers the picked folder and forgets the OneDrive login", async () => {
+  it("remembers the picked folder and forgets the logins of the cloud storages", async () => {
     const store = memoryStore();
-    const oneDrive = fakeOneDrive(store);
+    const clouds = fakeClouds(store);
     const picker = vi.fn(() => Promise.resolve(fakeDirectory("Daten")));
     vi.stubGlobal("showDirectoryPicker", picker);
-    const host = createBrowserFolderHost(store, oneDrive);
+    const host = createBrowserFolderHost(store, clouds);
 
     expect(await host.loadSaved()).toBeNull();
     expect((await host.pick("local"))?.name).toBe("Daten");
     expect(picker).toHaveBeenCalledWith({ id: "pocket-apps-data", mode: "readwrite" });
-    expect(oneDrive.forgotten).toBe(true);
+    expect(clouds.forgotten).toEqual(["onedrive", "dropbox"]);
     expect((await host.loadSaved())?.kind).toBe("local");
   });
 
-  it("starts the OneDrive login when the person picks OneDrive", () => {
+  it("starts the login of the cloud storage that the person picks", () => {
     const store = memoryStore();
-    const oneDrive = fakeOneDrive(store);
+    const clouds = fakeClouds(store);
+    const host = createBrowserFolderHost(store, clouds);
 
-    void createBrowserFolderHost(store, oneDrive).pick("onedrive");
+    void host.pick("onedrive");
+    void host.pick("dropbox");
 
-    expect(oneDrive.startLogin).toHaveBeenCalledWith({ chooseAccount: true });
+    expect(clouds.storages.onedrive.startLogin).toHaveBeenCalledWith({ chooseAccount: true });
+    expect(clouds.storages.dropbox.startLogin).toHaveBeenCalledWith({ chooseAccount: true });
+  });
+
+  it("gives the saved cloud storage", async () => {
+    const store = memoryStore();
+    store.values.set("data-folder", "dropbox");
+
+    expect(await createBrowserFolderHost(store, fakeClouds(store)).loadSaved()).toMatchObject({
+      name: "Dropbox",
+      kind: "dropbox",
+    });
   });
 
   it("gives OneDrive after a finished login and on later visits", async () => {
     const store = memoryStore();
-    const host = createBrowserFolderHost(store, fakeOneDrive(store, "done"));
+    const host = createBrowserFolderHost(store, fakeClouds(store, "done"));
 
     expect(await host.loadSaved()).toMatchObject({ name: "OneDrive", kind: "onedrive" });
     expect(store.values.get("data-folder")).toBe("onedrive");
@@ -220,7 +235,7 @@ describe("createBrowserFolderHost", () => {
 
   it("keeps the earlier choice after a failed login", async () => {
     const store = memoryStore();
-    const host = createBrowserFolderHost(store, fakeOneDrive(store, "failed"));
+    const host = createBrowserFolderHost(store, fakeClouds(store, "failed"));
 
     await expect(host.loadSaved()).rejects.toThrow("abgebrochen");
 
@@ -233,7 +248,7 @@ describe("createBrowserFolderHost", () => {
 
   it("ignores saved values that are not a folder", async () => {
     const store = memoryStore();
-    const host = createBrowserFolderHost(store, fakeOneDrive(store));
+    const host = createBrowserFolderHost(store, fakeClouds(store));
 
     for (const value of ["Daten", null, {}, { kind: "file" }, { kind: "directory" }]) {
       store.values.set("data-folder", value);
@@ -247,19 +262,19 @@ describe("createBrowserFolderHost", () => {
       Promise.reject(new DOMException("Cancel", "AbortError")),
     );
 
-    expect(await createBrowserFolderHost(store, fakeOneDrive(store)).pick("local")).toBeNull();
+    expect(await createBrowserFolderHost(store, fakeClouds(store)).pick("local")).toBeNull();
   });
 
   it("passes on other dialog errors", async () => {
     const store = memoryStore();
     vi.stubGlobal("showDirectoryPicker", () => Promise.reject(new Error("blocked")));
 
-    await expect(createBrowserFolderHost(store, fakeOneDrive(store)).pick("local")).rejects.toThrow(
+    await expect(createBrowserFolderHost(store, fakeClouds(store)).pick("local")).rejects.toThrow(
       "blocked",
     );
   });
 
-  it("uses IndexedDB and the real OneDrive by default", async () => {
+  it("uses IndexedDB and the real cloud storages by default", async () => {
     vi.stubGlobal("indexedDB", new IDBFactory());
 
     expect(await createBrowserFolderHost().loadSaved()).toBeNull();

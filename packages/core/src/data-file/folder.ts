@@ -1,8 +1,11 @@
 /** A file in the data folder: its text and the time of its last change (ms). */
 export type FileSnapshot = { text: string; lastModified: number };
 
-/** Where the data lives: a folder on this computer, or the app folder in OneDrive. */
-export type StorageKind = "local" | "onedrive";
+/** Where the data lives: a folder on this computer, or the app folder in a cloud storage. */
+export type StorageKind = "local" | CloudKind;
+
+/** The cloud storages. Each has the app folder `/Apps/Pocket Apps`. */
+export type CloudKind = "onedrive" | "dropbox";
 
 /** The data folder that the person picked. Paths use "/" between folder names. */
 export type DataFolder = {
