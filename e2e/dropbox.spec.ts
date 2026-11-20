@@ -46,8 +46,16 @@ async function fakeDropbox(page: Page) {
         : notFound(route, "path/not_found/");
     }
     if (endpoint === "files/download") {
+      // Like Dropbox: the metadata is in a header, and the page may read it.
       return file
-        ? route.fulfill({ headers: CORS, body: file.text })
+        ? route.fulfill({
+            headers: {
+              ...CORS,
+              "Access-Control-Expose-Headers": "Dropbox-API-Result",
+              "Dropbox-API-Result": JSON.stringify({ server_modified: file.time, rev: file.rev }),
+            },
+            body: file.text,
+          })
         : notFound(route, "path/not_found/");
     }
     // files/upload

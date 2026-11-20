@@ -2,9 +2,9 @@
 // over the Dropbox API. The login is in `cloud-login.ts`. Dropbox gives a refresh token without an
 // end, so the person logs in only once per browser.
 import { z } from "zod";
-import { failOnConflict, readTimeThenText } from "./cloud-folder.ts";
+import { failOnConflict } from "./cloud-folder.ts";
 import type { CloudProvider, CloudSession } from "./cloud-login.ts";
-import { checkThenWrite, type DataFolder, type WriteResult } from "./folder.ts";
+import { checkThenWrite, type DataFolder, type FileSnapshot, type WriteResult } from "./folder.ts";
 
 const API = "https://api.dropboxapi.com/2";
 const CONTENT = "https://content.dropboxapi.com/2";
@@ -34,6 +34,15 @@ const errorSchema = z.object({ error_summary: z.string() });
 /** A path in the app folder: "/trainingsbuch/trainingsbuch.json". */
 function dropboxPath(path: string): string {
   return `/${path}`;
+}
+
+/** The JSON in a text, or `null` if the text is missing or not JSON. */
+function parseJson(text: string | null): unknown {
+  try {
+    return JSON.parse(text ?? "");
+  } catch {
+    return null;
+  }
 }
 
 /** JSON for the header `Dropbox-API-Arg`. A header takes only ASCII, so other characters are escaped. */
@@ -76,8 +85,8 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
    * Dropbox gives the time only in whole seconds. A new revision in the same second as the known
    * one gets a later time, so that the conflict check of the store sees the change.
    */
-  async function timeOf(path: string, response: Response): Promise<number> {
-    const metadata = metadataSchema.safeParse(await response.json().catch(() => null));
+  function timeOf(path: string, body: unknown): number {
+    const metadata = metadataSchema.safeParse(body);
     if (!metadata.success) throw session.failure("Dropbox hat eine unerwartete Antwort geschickt.");
     const { rev } = metadata.data;
     const known = checked.get(path);
@@ -101,16 +110,34 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
       checked.set(path, null);
       return null;
     }
-    return timeOf(path, response);
+    return timeOf(path, parseJson(await response.text()));
   }
 
-  async function readBlob(path: string): Promise<Blob | null> {
-    const { response, error } = await call(
+  function download(path: string) {
+    return call(
       `${CONTENT}/files/download`,
       { headers: { "Dropbox-API-Arg": apiArg({ path: dropboxPath(path) }) } },
       "path/not_found",
     );
+  }
+
+  async function readBlob(path: string): Promise<Blob | null> {
+    const { response, error } = await download(path);
     return error === null ? response.blob() : null;
+  }
+
+  /**
+   * Reads a file in one request. The download gives the metadata in the header
+   * `Dropbox-API-Result`, so the text and the revision come from the same answer.
+   */
+  async function read(path: string): Promise<FileSnapshot | null> {
+    const { response, error } = await download(path);
+    if (error !== null) {
+      checked.set(path, null);
+      return null;
+    }
+    const time = timeOf(path, parseJson(response.headers.get("Dropbox-API-Result")));
+    return { text: await response.text(), lastModified: time };
   }
 
   /**
@@ -141,7 +168,7 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
       },
       "path/conflict",
     );
-    return error === null ? timeOf(path, response) : "changed";
+    return error === null ? timeOf(path, parseJson(await response.text())) : "changed";
   }
 
   /** The time of the last check, `null` for a file that did not exist, `undefined` without a check. */
@@ -159,7 +186,7 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     requestAccess: () => session.startLogin({ chooseAccount: false }),
     lastModified,
     readBlob,
-    read: (path) => readTimeThenText(path, lastModified, readBlob),
+    read,
     write: failOnConflict(session, upload),
     // The upload checks the revision itself. Only if the store expects another time than the last
     // check (for example after a look at the raw file), the folder checks the time first.

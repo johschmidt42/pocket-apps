@@ -3,11 +3,12 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
-## 2026-11-20: Save in one request where the provider checks the version (core)
+## 2026-11-20: Read and save in one request where the provider allows it (core)
 
-- **Context:** Before each save, the store got the time of the last change of the data file and then wrote it: two requests. A measurement in Chrome: the check takes about 0.23 s with Dropbox and 0.5 s with OneDrive. The write already sends the version of the last check (revision, eTag).
+- **Context:** Before each save, the store got the time of the last change of the data file and then wrote it: two requests. A read was two requests too. A measurement in Chrome: the check takes about 0.23 s with Dropbox and 0.5 s with OneDrive. The write already sends the version of the last check (revision, eTag).
 - **Decision:** `DataFolder` has `writeIfUnchanged(path, text, expected)`. It gives the new time or `"changed"`. The store saves the data file only with it. The conflict check is now part of each folder.
 - **Decision:** Dropbox writes in one request: `upload` with `update` and the revision (or `add` for a new file) and `strict_conflict`. The Dropbox API documents that this gives a conflict if the file changed. If the store expects another time than the last check of the folder, Dropbox checks the time first.
+- **Decision:** A Dropbox read is one request too: `download` gives the metadata in the header `Dropbox-API-Result` (route style "download" in the API spec), and Dropbox exposes this header to the page (CORS). Before, a read was `get_metadata` and then `download`: about 0.4 s more at each start. The text and the revision now come from the same answer, so the safe order of the read is no longer needed.
 - **Decision:** OneDrive keeps the check before the write. Microsoft documents `If-Match` with 412 only for upload sessions (`createUploadSession`), not for the simple upload (`PUT …/content`). Questions on Microsoft Q&A about this have no answer from Microsoft. An upload session needs two requests or more, so it saves no time. The risk of a lost change is worth more than 0.5 s.
 - **Decision:** The local folder keeps the check too: the File System Access API has no write on a condition.
 - **Consequence:** A conflict during a save now shows "Nicht gespeichert: Konflikt" at once, also when the other device wrote between the check and the write. Before, the user saw an error first and the conflict after the next try. All stateful apps and the launcher get a new minor version.

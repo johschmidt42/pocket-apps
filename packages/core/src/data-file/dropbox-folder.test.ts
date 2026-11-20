@@ -62,7 +62,9 @@ function fakeDropbox() {
           : conflict("path/not_found/..");
       }
       if (url === `${CONTENT}/files/download`) {
-        return file ? new Response(file.text) : conflict("path/not_found/..");
+        if (!file) return conflict("path/not_found/..");
+        const result = JSON.stringify({ server_modified: file.time, rev: file.rev });
+        return new Response(file.text, { headers: { "Dropbox-API-Result": result } });
       }
       if (url === `${API}/files/delete_v2`) {
         if (!file) return conflict("path_lookup/not_found/..");
@@ -122,13 +124,14 @@ describe("the Dropbox folder", () => {
     expect(await folder.readBlob("app-ideen/foto.jpg")).toBeNull();
 
     const time = await folder.write("app-ideen/app-ideen.json", "{}");
+    server.requests.length = 0;
 
+    // One request: the download gives the metadata in a header.
     expect(await folder.read("app-ideen/app-ideen.json")).toEqual({
       text: "{}",
       lastModified: time,
     });
-    expect(server.requests.at(-2)?.url).toBe(`${API}/files/get_metadata`);
-    expect(server.requests.at(-1)?.url).toBe(`${CONTENT}/files/download`);
+    expect(server.requests.map((request) => request.url)).toEqual([`${CONTENT}/files/download`]);
     expect(argOf(server.requests.at(-1))).toEqual({ path: "/app-ideen/app-ideen.json" });
     expect(new Headers(server.requests.at(-1)?.init?.headers).get("Authorization")).toBe(
       "Bearer access",
@@ -234,6 +237,22 @@ describe("the Dropbox folder", () => {
     expect(server.requests.map((request) => request.url)).toEqual([`${API}/files/get_metadata`]);
   });
 
+  it("reads the text and the revision from the same answer", async () => {
+    const { folder, server } = setup();
+    const time = await folder.write("a.json", "eins");
+    server.files.set("/a.json", { text: "fremd", rev: "rev-other", time: "2026-11-20T11:00:00Z" });
+
+    const file = await folder.read("a.json");
+
+    expect(file?.text).toBe("fremd");
+    expect(file?.lastModified).toBeGreaterThan(time);
+    // The next save writes on top of the version that the app read.
+    expect(await folder.writeIfUnchanged("a.json", "zwei", file?.lastModified ?? null)).toEqual(
+      expect.any(Number),
+    );
+    expect(argOf(server.requests.at(-1))).toMatchObject({ mode: { update: "rev-other" } });
+  });
+
   it("escapes other characters than ASCII in the header", async () => {
     const { folder, server } = setup();
 
@@ -264,6 +283,11 @@ describe("the Dropbox folder", () => {
     );
     server.answer = new Response("not json");
     await expect(folder.lastModified("a.json")).rejects.toThrow(
+      "Dropbox hat eine unerwartete Antwort geschickt.",
+    );
+    // A download without the header of the metadata.
+    server.answer = new Response("{}");
+    await expect(folder.read("a.json")).rejects.toThrow(
       "Dropbox hat eine unerwartete Antwort geschickt.",
     );
   });

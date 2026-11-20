@@ -47,7 +47,7 @@ The code of each kind is a `DataFolder`. Its JSDoc in `folder.ts` gives each fun
 
 - `browser-folder.ts`: `createBrowserFolderHost()` is the real `FolderHost`. `kinds()` gives the kinds that this browser offers. `loadSaved()` ends a login that comes back and gives the saved choice. `pick(kind)` lets the user pick. A local folder is `wrapDirectory()` in the same file. `PROVIDERS` lists the cloud storages.
 - `cloud-login.ts`: the login of all cloud storages (see "Login of the cloud storages").
-- `onedrive-folder.ts`, `dropbox-folder.ts`: the `CloudProvider` and the `DataFolder` of each cloud storage. `cloud-folder.ts` has the parts that they share: the read in the safe order and the error of a conflict in `write()`.
+- `onedrive-folder.ts`, `dropbox-folder.ts`: the `CloudProvider` and the `DataFolder` of each cloud storage. `cloud-folder.ts` has the parts that they can share: the read in the safe order (OneDrive) and the error of a conflict in `write()`.
 - `settings-store.ts`: the key-value store in IndexedDB (database `pocket-apps`, store `settings`). The key `data-folder` holds the choice: a directory handle, or the text of a `CloudKind`. The key `<kind>-tokens` holds the tokens of a cloud storage.
 - `storage-kinds.ts`: the texts of each kind in the choice and on the screen of an expired login. `storage-choice.tsx` shows the choice. `data-folder-gate.tsx` shows it on the first visit and in the dialog "Speicherort wählen".
 - `STORAGE_ORIGINS` in `packages/vite-config/index.js`: the origins that the page code calls (`connect-src`): the token endpoint, the API and the server of the file contents. The login page of a provider is a page change, not a request, so it needs no entry.
@@ -97,7 +97,7 @@ For example Google Drive:
 
 - The login asks for `token_access_type=offline`. Then Dropbox gives a refresh token without an end. A refresh gives no new refresh token: the old one stays. The user logs in once per browser.
 - A file that does not exist gives an error answer (409, "path/not_found"). Chrome writes it to the console. This is normal.
-- A read gets the metadata first (`get_metadata`), then the content (`download`).
+- A read is one request (`download`). The answer gives the metadata (revision, time) in the header `Dropbox-API-Result`, so the text and the revision come from the same version of the file. Dropbox lets the page read this header (`Access-Control-Expose-Headers`).
 - A write (`upload`) uses the state of the last check: `update` with the revision, `add` for a file that did not exist, or `overwrite` for a file without a check. A change in between gives 409 "path/conflict". The Dropbox API documents this (`WriteMode` and `strict_conflict` in `files.stone` of `dropbox/dropbox-api-spec`). Thus `writeIfUnchanged()` saves the data file in one request.
 - Dropbox gives the time of a change only in whole seconds. If a check finds a new revision with the same time, the folder gives a time 1 ms later. Then the conflict check of the store also sees a change of another device in the same second.
 - The login does not ask for the password again (`chooseAccountFields` is empty): Dropbox has no list of accounts. To use another account, the person logs out on dropbox.com.

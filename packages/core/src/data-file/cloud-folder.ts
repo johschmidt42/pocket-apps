@@ -1,4 +1,4 @@
-// The parts that the data folders of all cloud storages share.
+// The parts that the data folders of the cloud storages can share.
 import type { CloudSession } from "./cloud-login.ts";
 import type { DataFolder, FileSnapshot, WriteResult } from "./folder.ts";
 
