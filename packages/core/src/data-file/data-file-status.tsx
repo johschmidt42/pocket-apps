@@ -52,7 +52,7 @@ export function DataFileStatus(props: DataFileStatusProps) {
               <RawDataButton
                 size="sm"
                 variant="link"
-                className="h-6 min-w-0 px-0 font-medium text-foreground sm:h-8"
+                className="h-6 min-w-0 px-0 font-medium text-foreground sm:h-8 pointer-coarse:h-8"
                 label={`${place}: Rohdaten ansehen`}
                 hint="Rohdaten ansehen"
                 fileName={props.fileName}

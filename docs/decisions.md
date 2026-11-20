@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-20: A check of all apps on a phone
+
+- **Context:** The project owner found the status line too small on a phone. A check of all apps at 360 px (touch, with real data) found more: the Lebenslauf was 1841 px wide, the tabs of Fixkosten covered the text below them, the range choice of Kursverlauf put "Max" alone in a second row, and the rows of Fixkosten put the amount and the buttons in different places.
+- **Decision:** Three rules in `AGENTS.md` ("UI"): `grid-cols-1` for a grid with one column, `pointer-coarse:` for small controls, and a grid for a row of choices on a phone. `pointer-coarse:` changes only touch screens, so the layout for the mouse stays the same. The small `DragHandle` and the name in the status line use it.
+- **Decision:** Charts that need more room than a phone gives (the Sankey of Fixkosten, the table of returns with three or more ETFs) still scroll sideways. A short text tells it where nothing else shows it.
+- **Open:** The sort with drag and drop uses the drag API of the browser. Chrome on Android supports it with touch. Firefox on Android does not. For iOS, the sources do not agree. The project owner tests it on a phone. If it does not work, `useDragSort()` gets pointer events.
+- **Consequence:** A browser test of the Lebenslauf checks the width at 360 px with a long entry. All stateful apps, the launcher and Attraktor get a new minor version.
+
 ## 2026-11-20: Dropbox first in the choice, the icon of the storage in the status line (core)
 
 - **Context:** The project owner compared OneDrive and Dropbox in Chrome. Dropbox loads in about 0.8 s, OneDrive in up to 2.9 s. A Dropbox login holds without an end, a OneDrive login for 24 hours. On a phone, the status line was too small, and it did not show which storage the app uses.

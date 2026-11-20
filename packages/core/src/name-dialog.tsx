@@ -39,7 +39,7 @@ export function NameDialog({ request, texts, onSave, onClose }: NameDialogProps)
   return (
     // The dialog has no trigger. Thus it calls onOpenChange only to close.
     <Dialog open={request !== null} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         {request && <NameForm request={request} texts={texts} onSave={onSave} />}
       </DialogContent>
     </Dialog>

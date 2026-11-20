@@ -188,6 +188,9 @@ Read `packages/core/src/ai/README.md` before you write or change an AI feature. 
 - For a file dialog, use `FileButton` or `FolderButton` from `packages/core`. Apps use no own `<input type="file">`.
 - To take a photo, show `CameraButton` ("Foto aufnehmen") next to a `FileButton` ("Foto wählen"). `CameraButton` shows only on phones and tablets. See `apps/trainingsbuch/src/ai-entry-dialog.tsx`.
 - Make layouts work in narrow windows (320 px). Write classes for small screens first. Add `sm:` and `md:` classes only for larger screens.
+- Give a grid with one column on a phone the class `grid-cols-1`. Without it, the column is as wide as its widest content, and a long text without a break makes the page wider than the screen.
+- On a touch screen, each control needs at least 32 px for a finger. A smaller button (`size="xs"`, `"icon-xs"`) gets `pointer-coarse:size-8` or `pointer-coarse:h-8`. A mouse keeps the small size.
+- A row of choices (tabs, toggle groups) does not wrap on a phone with one item alone in a second row. Use a grid, for example `grid w-full grid-cols-2 sm:flex sm:w-fit`.
 
 ### HTML and accessibility
 
