@@ -111,7 +111,7 @@ export function WorkoutList({
               type="search"
               className="pl-9"
               value={search}
-              placeholder="Suchen, z. B. Fran oder Thruster"
+              placeholder="z. B. Fran, Thruster"
               onChange={(event) => {
                 onSearch(event.target.value);
               }}
