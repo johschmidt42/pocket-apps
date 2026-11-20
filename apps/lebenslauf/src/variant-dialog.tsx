@@ -30,7 +30,9 @@ export function VariantDialog({ open, onSave, onClose }: VariantDialogProps) {
   return (
     // The dialog has no trigger. Thus it calls onOpenChange only to close.
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>{open && <VariantForm onSave={onSave} />}</DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+        {open && <VariantForm onSave={onSave} />}
+      </DialogContent>
     </Dialog>
   );
 }

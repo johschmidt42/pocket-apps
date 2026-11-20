@@ -101,7 +101,7 @@ export function SectionCard(props: SectionCardProps) {
                   <DragHandle small name={`„${entry.title}“`} {...sort.handleProps(entry.id)} />
                   <Button
                     variant="ghost"
-                    className="h-auto min-w-0 flex-1 flex-col items-start gap-0 rounded-md px-2 py-1.5 text-left hover:bg-transparent"
+                    className="h-auto min-w-0 flex-1 shrink flex-col items-start gap-0 rounded-md px-2 py-1.5 text-left hover:bg-transparent"
                     onClick={() => {
                       props.onEditEntry(entry.id);
                     }}

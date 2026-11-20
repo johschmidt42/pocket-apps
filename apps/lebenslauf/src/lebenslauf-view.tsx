@@ -282,7 +282,7 @@ export function LebenslaufView({ preparePhoto }: LebenslaufViewProps) {
         <ToggleGroupItem value="preview">Vorschau</ToggleGroupItem>
       </ToggleGroup>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,40rem)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,40rem)_minmax(0,1fr)]">
         <div
           className={
             pane === "edit" ? "flex flex-col gap-4" : "hidden lg:flex lg:flex-col lg:gap-4"

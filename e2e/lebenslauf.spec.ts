@@ -311,6 +311,24 @@ test.describe("lebenslauf in Chrome and Edge", () => {
     await expect(cv(page).getByRole("heading", { level: 2, name: "Projects" })).toBeVisible();
   });
 
+  test("fits a phone, also with a long entry", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await openWithFolder(page);
+    await page.getByRole("button", { name: "Beispiel laden" }).click();
+    // A list row with many values: its line in the editor is longer than the screen.
+    await page.getByRole("button", { name: "Eintrag hinzufügen" }).nth(3).click();
+    await page.getByLabel("Label").fill("Lange Liste");
+    await page
+      .getByLabel("Werte")
+      .fill(
+        Array.from({ length: 12 }, (_, index) => `AZ-${String(900 + index)}: Azure`).join("\n"),
+      );
+    await page.getByRole("button", { name: "Speichern" }).click();
+
+    await expect(page.getByRole("button", { name: /^Lange Liste/ })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(360);
+  });
+
   test("keeps a photo per variant as a JPEG file in the data folder", async ({
     page,
     pageErrors,
