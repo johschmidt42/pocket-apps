@@ -8,6 +8,9 @@ export type StorageKind = "local" | CloudKind;
 export const CLOUD_KINDS = ["onedrive", "dropbox"] as const;
 export type CloudKind = (typeof CLOUD_KINDS)[number];
 
+/** The result of a write on a condition: the new time, or `"changed"` if the file changed elsewhere. */
+export type WriteResult = number | "changed";
+
 /** The data folder that the person picked. Paths use "/" between folder names. */
 export type DataFolder = {
   readonly name: string;
@@ -39,7 +42,7 @@ export type DataFolder = {
     path: string,
     content: string,
     expected: number | null,
-  ) => Promise<number | "changed">;
+  ) => Promise<WriteResult>;
   /** Deletes a file. Does nothing if the file does not exist. */
   remove: (path: string) => Promise<void>;
 };
@@ -63,7 +66,7 @@ export type FolderHost = {
  */
 export function checkThenWrite(
   lastModified: DataFolder["lastModified"],
-  write: (path: string, content: string) => Promise<number | "changed">,
+  write: (path: string, content: string) => Promise<WriteResult>,
 ): DataFolder["writeIfUnchanged"] {
   return async (path, content, expected) =>
     (await lastModified(path)) === expected ? write(path, content) : "changed";

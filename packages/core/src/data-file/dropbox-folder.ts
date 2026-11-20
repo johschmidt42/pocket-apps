@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { failOnConflict, readTimeThenText } from "./cloud-folder.ts";
 import type { CloudProvider, CloudSession } from "./cloud-login.ts";
-import { checkThenWrite, type DataFolder } from "./folder.ts";
+import { checkThenWrite, type DataFolder, type WriteResult } from "./folder.ts";
 
 const API = "https://api.dropboxapi.com/2";
 const CONTENT = "https://content.dropboxapi.com/2";
@@ -59,12 +59,15 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     return body.success ? body.data.error_summary : "";
   }
 
-  /** A request to the Dropbox API. Throws a German error for all failures except `allowed` (409). */
-  async function call(url: string, init: RequestInit, allowed: string) {
+  /**
+   * A request to the Dropbox API. `allowedError` is the start of an error summary (409) that is a
+   * normal answer, for example "path/not_found". Other failures are German errors.
+   */
+  async function call(url: string, init: RequestInit, allowedError: string) {
     const response = await session.request(url, { method: "POST", ...init });
     if (response.ok) return { response, error: null };
     const error = await errorOf(response);
-    if (error?.startsWith(allowed)) return { response, error };
+    if (error?.startsWith(allowedError)) return { response, error };
     throw session.failure(`Dropbox hat mit dem Fehler ${String(response.status)} geantwortet.`);
   }
 
@@ -115,7 +118,7 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
    * that did not exist, or `overwrite` for a file without a check (for example an image).
    * Dropbox documents that `update` and `add` give a conflict if the file changed.
    */
-  async function upload(path: string, content: string | Blob): Promise<number | "changed"> {
+  async function upload(path: string, content: string | Blob): Promise<WriteResult> {
     const state = checked.get(path);
     const mode =
       state === undefined
@@ -147,6 +150,8 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     return state === undefined ? undefined : (state?.time ?? null);
   }
 
+  const checkFirst = checkThenWrite(lastModified, upload);
+
   return {
     name: "Dropbox",
     kind: "dropbox",
@@ -159,9 +164,7 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     // The upload checks the revision itself. Only if the store expects another time than the last
     // check (for example after a look at the raw file), the folder checks the time first.
     writeIfUnchanged: (path, content, expected) =>
-      checkedTime(path) === expected
-        ? upload(path, content)
-        : checkThenWrite(lastModified, upload)(path, content, expected),
+      checkedTime(path) === expected ? upload(path, content) : checkFirst(path, content, expected),
     async remove(path) {
       checked.delete(path);
       await call(

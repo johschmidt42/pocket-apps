@@ -1,10 +1,10 @@
 // The parts that the data folders of all cloud storages share.
 import type { CloudSession } from "./cloud-login.ts";
-import type { DataFolder, FileSnapshot } from "./folder.ts";
+import type { DataFolder, FileSnapshot, WriteResult } from "./folder.ts";
 
 /** The message when `write()` finds that the file changed after the last check. */
-export const CHANGED_ELSEWHERE =
-  "Die Datei hat sich gerade woanders geändert. Die App prüft sie gleich noch einmal.";
+const CHANGED_ELSEWHERE =
+  "Die Datei hat sich gerade woanders geändert. Lade die Seite neu und versuche es noch einmal.";
 
 /**
  * Reads a file of a cloud storage: first the time, then the text. If the file changes in between,
@@ -28,7 +28,7 @@ export async function readTimeThenText(
  */
 export function failOnConflict(
   session: CloudSession,
-  upload: (path: string, content: string | Blob) => Promise<number | "changed">,
+  upload: (path: string, content: string | Blob) => Promise<WriteResult>,
 ): DataFolder["write"] {
   return async (path, content) => {
     const time = await upload(path, content);

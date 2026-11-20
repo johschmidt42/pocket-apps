@@ -217,6 +217,11 @@ describe("the OneDrive folder", () => {
     await expect(oneDrive.folder.write("a.json", "{}")).rejects.toThrow(
       "OneDrive hat mit dem Fehler 503 geantwortet.",
     );
+    // 412 is a normal answer only for an upload with `If-Match`.
+    server.graphStatus = 412;
+    await expect(oneDrive.folder.readBlob("a.json")).rejects.toThrow(
+      "OneDrive hat mit dem Fehler 412 geantwortet.",
+    );
 
     server.offline = true;
     await expect(oneDrive.folder.remove("a.json")).rejects.toThrow(
