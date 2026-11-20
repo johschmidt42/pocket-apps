@@ -3,12 +3,24 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-20: Sort with a finger (ui)
+
+- **Context:** The project owner tested the sort on an Android phone. The drag API of the browser needs a long press, shows a blurred picture under the finger and does not scroll the page. It did not feel like the sort in the apps of a phone. Firefox on Android does not support it with touch at all.
+- **Decision:** `useDragSort()` has two ways. A mouse keeps the drag API of the browser (line, drop). A finger or a pen (`pointerType` "touch" or "pen") uses pointer events: the drag starts at once on the grip, without a long press. The row lifts with a shadow. Each time the finger passes the middle of the next row, the hook calls `onStep()`, the same action as an arrow key. Thus the row stays under the finger, and the other rows move aside. No line shows. A short vibration on Android marks the start.
+- **Decision:** Near the top or the bottom edge of the scroll area (64 px), the list scrolls, faster near the edge. The scroll area is the nearest parent with a scroll bar, for example a dialog, or the page.
+- **Decision:** The grip has `touch-action: none` (`touch-none`): a finger on the grip moves the row and does not scroll the page. A finger on the rest of the row still scrolls.
+- **Why not dnd-kit:** It moves the rows with an inline `style` (`transform`), and `AGENTS.md` forbids inline `style` (see "Drag and drop with a grip handle"). The steps through `onStep()` need no inline `style`: React moves the row in the DOM.
+- **Decision:** The listeners of the window call the `onStep()` of the latest render (a ref): some apps compute the new order from the list of the render, for example the launcher.
+- **Rule:** The rows of one list are children of the same element (`AGENTS.md`). The hook finds the neighbors of a row among its siblings.
+- **Tests:** The unit tests check the pure functions `stepToward()` and `scrollSpeed()`. `e2e/launcher.spec.ts` moves an app with a real touch of Chrome (`Input.dispatchTouchEvent`) to the end of the list, past the bottom edge of the window. Without the new code, this test fails.
+- **Consequence:** The launcher, app-ideen, lebenslauf and trainingsbuch get a new minor version.
+
 ## 2026-11-20: A check of all apps on a phone
 
 - **Context:** The project owner found the status line too small on a phone. A check of all apps at 360 px (touch, with real data) found more: the Lebenslauf was 1841 px wide, the tabs of Fixkosten covered the text below them, the range choice of Kursverlauf put "Max" alone in a second row, and the rows of Fixkosten put the amount and the buttons in different places.
 - **Decision:** Three rules in `AGENTS.md` ("UI"): `grid-cols-1` for a grid with one column, `pointer-coarse:` for small controls, and a grid for a row of choices on a phone. `pointer-coarse:` changes only touch screens, so the layout for the mouse stays the same. The small `DragHandle` and the name in the status line use it.
 - **Decision:** Charts that need more room than a phone gives (the Sankey of Fixkosten, the table of returns with three or more ETFs) still scroll sideways. A short text tells it where nothing else shows it.
-- **Open:** The sort with drag and drop uses the drag API of the browser. Chrome on Android supports it with touch. Firefox on Android does not. For iOS, the sources do not agree. The project owner tests it on a phone. If it does not work, `useDragSort()` gets pointer events.
+- **Update:** The sort with the drag API of the browser did not feel right on a phone. A finger now uses pointer events (see "Sort with a finger").
 - **Consequence:** A browser test of the Lebenslauf checks the width at 360 px with a long entry. All stateful apps, the launcher and Attraktor get a new minor version.
 
 ## 2026-11-20: Dropbox first in the choice, the icon of the storage in the status line (core)

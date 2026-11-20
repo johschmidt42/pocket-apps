@@ -143,6 +143,51 @@ test.describe("launcher with the data folder", () => {
   });
 });
 
+test.describe("launcher on a phone", () => {
+  test.use({ viewport: { width: 390, height: 700 }, isMobile: true, hasTouch: true });
+
+  test("moves an app with a finger, and the list scrolls at the bottom edge", async ({
+    page,
+    pageErrors,
+  }) => {
+    const apps = listApps();
+    const first = apps[0];
+    const last = apps.at(-1);
+    if (!first || !last || apps.length < 2) throw new Error("This test needs two apps.");
+    await withDataFolder(page);
+    await page.goto(releaseUrl("index.html"));
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+    await page.getByRole("button", { name: "Reihenfolge ändern" }).click();
+    const grips = page.getByRole("button", { name: / verschieben$/ });
+    const grip = page.getByRole("button", { name: `${first.title} verschieben` });
+    const box = await grip.boundingBox();
+    if (!box) throw new Error("The grip has no size.");
+
+    // A real touch of Chrome: it gives pointer events with the pointer type "touch".
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: "touchStart" | "touchMove" | "touchEnd", y: number) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x: box.x + box.width / 2, y }],
+      });
+    await touch("touchStart", box.y + box.height / 2);
+    for (let y = box.y + box.height / 2; y < 690; y += 40) await touch("touchMove", y);
+    await touch("touchMove", 690);
+    // The finger stays at the bottom edge: the list scrolls until the app is the last one.
+    await expect(grips.last()).toHaveAccessibleName(`${first.title} verschieben`);
+    await touch("touchEnd", 690);
+    await page.getByRole("button", { name: "Fertig" }).click();
+
+    await expect(page.getByRole("status")).toHaveText("Gespeichert");
+    const saved = JSON.parse((await readDataFile(page, "launcher/launcher.json")) ?? "") as {
+      data: { order: string[] };
+    };
+    expect(saved.data.order.at(-1)).toBe(first.name);
+    expect(saved.data.order[0]).not.toBe(first.name);
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 test.describe("launcher with favorites", () => {
   test("shows a favorite first and keeps it after a reload", async ({ page, pageErrors }) => {
     const last = listApps().at(-1);

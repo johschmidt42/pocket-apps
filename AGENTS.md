@@ -182,7 +182,7 @@ Read `packages/core/src/ai/README.md` before you write or change an AI feature. 
 - Write full class names. Never build class names from strings (`` `text-${size}` ``).
 - Use icons only from `lucide-react`.
 - Show the hand cursor on everything that the user can click. `globals.css` gives it to each `button`, `select` and `[role="button"]` that is not disabled. Give other clickable elements the class `cursor-pointer`, for example a `<label>` that switches a checkbox. A drag handle gets `cursor-grab active:cursor-grabbing`.
-- To let the user change the order of a list, use drag and drop with a grip at the left of each row: `useDragSort()`, `DragHandle` and `SortHint` from `packages/ui`. Do not use up/down buttons. See `apps/app-ideen/src/idea-list-view.tsx` and `launcher/src/order-editor.tsx`.
+- To let the user change the order of a list, use drag and drop with a grip at the left of each row: `useDragSort()`, `DragHandle` and `SortHint` from `packages/ui`. Do not use up/down buttons. Make the rows of one list children of the same element: a finger moves a row step by step among its siblings. See `apps/app-ideen/src/idea-list-view.tsx` and `launcher/src/order-editor.tsx`.
 - When a click shows a sub-page of the app with a button back to the main page (for example the detail of one item), use `useSubPage()` from `@pocket-apps/core/sub-page`. Then the back button of the browser closes the sub-page, and a reload shows it again. Read its JSDoc first.
 - Only a sub-page adds an entry to the browser history. Tabs, filters, a selected item in a list and dialogs do not.
 - For a file dialog, use `FileButton` or `FolderButton` from `packages/core`. Apps use no own `<input type="file">`.

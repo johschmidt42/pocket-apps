@@ -11,7 +11,8 @@ export type DragHandleProps = ComponentProps<typeof Button> & {
 };
 
 /**
- * The grip at the left of a row. On a touch screen, the small grip has the size of the normal one,
+ * The grip at the left of a row. A finger on the grip moves the row and does not scroll the
+ * page (`touch-none`). On a touch screen, the small grip has the size of the normal one,
  * so that a finger hits it. Drag it to move the row. With the keyboard focus on it,
  * the arrow keys move the row. Give it the props of `useDragSort().handleProps(id)`, and render
  * `<SortHint />` once on the page.
@@ -23,8 +24,8 @@ export function DragHandle({ name, small = false, ...props }: DragHandleProps) {
       size={small ? "icon-xs" : "icon-sm"}
       className={
         small
-          ? "cursor-grab text-muted-foreground/60 hover:text-foreground active:cursor-grabbing pointer-coarse:size-8"
-          : "cursor-grab text-muted-foreground active:cursor-grabbing"
+          ? "cursor-grab touch-none text-muted-foreground/60 select-none hover:text-foreground active:cursor-grabbing pointer-coarse:size-8"
+          : "cursor-grab touch-none text-muted-foreground select-none active:cursor-grabbing"
       }
       aria-label={`${name} verschieben`}
       aria-describedby={SORT_HINT_ID}

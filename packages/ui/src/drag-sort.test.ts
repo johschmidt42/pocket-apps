@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { dragHandleId, dropPosition, moveById, moveTo } from "./drag-sort.ts";
+import {
+  dragHandleId,
+  dropPosition,
+  moveById,
+  moveTo,
+  scrollSpeed,
+  stepToward,
+} from "./drag-sort.ts";
 
 describe("dropPosition", () => {
   it("is before in the upper half of the row and after in the lower half", () => {
@@ -41,5 +48,32 @@ describe("moveTo", () => {
     expect(moveTo(list, "x", "a", "before")).toEqual(list);
     expect(moveTo(list, "a", "x", "before")).toEqual(list);
     expect(moveTo(list, "a", "a", "after")).toEqual(list);
+  });
+});
+
+describe("stepToward", () => {
+  const before = { top: 0, height: 40 };
+  const after = { top: 100, height: 40 };
+
+  it("moves up above the middle of the row before, and down below the middle of the row after", () => {
+    expect(stepToward(19, before, after)).toBe(-1);
+    expect(stepToward(121, before, after)).toBe(1);
+  });
+
+  it("stays between the two middles and at the edges of the list", () => {
+    expect(stepToward(20, before, after)).toBeNull();
+    expect(stepToward(120, before, after)).toBeNull();
+    expect(stepToward(0, null, after)).toBeNull();
+    expect(stepToward(500, before, null)).toBeNull();
+  });
+});
+
+describe("scrollSpeed", () => {
+  it("scrolls up near the top and down near the bottom, faster near the edge", () => {
+    expect(scrollSpeed(400, 0, 800)).toBe(0);
+    expect(scrollSpeed(60, 0, 800)).toBe(-1);
+    expect(scrollSpeed(0, 0, 800)).toBe(-16);
+    expect(scrollSpeed(760, 0, 800)).toBe(6);
+    expect(scrollSpeed(900, 0, 800)).toBe(16);
   });
 });
