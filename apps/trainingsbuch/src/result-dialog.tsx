@@ -15,7 +15,7 @@ import { NativeSelect, NativeSelectOption } from "@pocket-apps/ui/components/nat
 import { Textarea } from "@pocket-apps/ui/components/textarea";
 import { useState } from "react";
 import { decimalInput } from "./decimal.ts";
-import { Field } from "./field.tsx";
+import { Field } from "@pocket-apps/ui/field";
 import { isoDay } from "./dates.ts";
 import { DIVISIONS, type Division, type Result } from "./schema.ts";
 import { inputFromScore, parseKg, scoreFromInput, type ScoreInput } from "./score.ts";

@@ -52,7 +52,7 @@ export function PurchaseListView() {
             <h2>Deine Käufe</h2>
           </CardTitle>
           <CardDescription>
-            {count === 1 ? "1 Spiel" : `${String(count)} Spiele`} ·{" "}
+            {count === 1 ? "1 Kauf" : `${String(count)} Käufe`} ·{" "}
             <span className="font-medium text-foreground tabular-nums">
               {formatEuro(totalCents(data.purchases))}
             </span>

@@ -8,6 +8,7 @@ import {
   parseAppId,
   parsePrice,
   pictureUrl,
+  priceText,
   removePurchase,
   sortPurchases,
   totalCents,
@@ -32,11 +33,20 @@ describe("sortPurchases", () => {
   it("sorts by price and by name without case", () => {
     expect(names(sortPurchases(list, "price-desc"))).toEqual(["doom", "Hades", "INSIDE"]);
     expect(names(sortPurchases(list, "price-asc"))).toEqual(["INSIDE", "doom", "Hades"]);
-    expect(names(sortPurchases(list, "name"))).toEqual(["doom", "Hades", "INSIDE"]);
+    expect(names(sortPurchases(list, "name-asc"))).toEqual(["doom", "Hades", "INSIDE"]);
+    expect(names(sortPurchases(list, "name-desc"))).toEqual(["INSIDE", "Hades", "doom"]);
+  });
+
+  it("puts the newer purchase first when two have the same name", () => {
+    const again = { ...hades, id: "h2", date: "2026-01-01" };
+    expect(sortPurchases([hades, again], "name-asc").map((purchase) => purchase.id)).toEqual([
+      "h2",
+      "h",
+    ]);
   });
 
   it("keeps the list itself", () => {
-    sortPurchases(list, "name");
+    sortPurchases(list, "name-asc");
     expect(names(list)).toEqual(["Hades", "INSIDE", "doom"]);
   });
 });
@@ -57,20 +67,32 @@ describe("money and days", () => {
     expect(parsePrice("")).toBeNull();
     expect(parsePrice("-1")).toBeNull();
     expect(parsePrice("viel")).toBeNull();
+    expect(parsePrice("1.299")).toBe(129900);
+    // More than two decimals or a number in another notation is not a price.
+    expect(parsePrice("14,999")).toBeNull();
+    expect(parsePrice("1e3")).toBeNull();
+  });
+
+  it("writes a price for the price field", () => {
+    expect(priceText(1499)).toBe("14,99");
+    expect(priceText(300)).toBe("3,00");
   });
 });
 
 describe("parseAppId", () => {
   it("reads the ID from a store link or a number", () => {
-    expect(parseAppId("https://store.steampowered.com/app/1145360/Hades/")).toBe(1145360);
-    expect(parseAppId(" 1145360 ")).toBe(1145360);
-    expect(parseAppId("")).toBeNull();
+    expect(parseAppId("https://store.steampowered.com/app/1145360/Hades/")).toEqual({
+      kind: "id",
+      id: 1145360,
+    });
+    expect(parseAppId(" 1145360 ")).toEqual({ kind: "id", id: 1145360 });
+    expect(parseAppId("")).toEqual({ kind: "empty" });
   });
 
   it("rejects other texts", () => {
-    expect(parseAppId("Hades")).toBeUndefined();
-    expect(parseAppId("0")).toBeUndefined();
-    expect(parseAppId("https://example.org/")).toBeUndefined();
+    expect(parseAppId("Hades")).toEqual({ kind: "invalid" });
+    expect(parseAppId("0")).toEqual({ kind: "invalid" });
+    expect(parseAppId("https://example.org/")).toEqual({ kind: "invalid" });
   });
 
   it("links the wide picture on the server of Steam", () => {

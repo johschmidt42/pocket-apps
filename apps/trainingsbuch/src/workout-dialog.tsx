@@ -18,7 +18,7 @@ import { Dices } from "lucide-react";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { EXERCISE_IDS, exercisesByName } from "./exercises.ts";
-import { Field } from "./field.tsx";
+import { Field } from "@pocket-apps/ui/field";
 import { PartRow } from "./part-row.tsx";
 import {
   amountInputId,

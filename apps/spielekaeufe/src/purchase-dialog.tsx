@@ -8,10 +8,11 @@ import {
   DialogTitle,
 } from "@pocket-apps/ui/components/dialog";
 import { Input } from "@pocket-apps/ui/components/input";
-import { Label } from "@pocket-apps/ui/components/label";
-import { useState, type ReactNode } from "react";
+import { Field } from "@pocket-apps/ui/field";
+import { useState } from "react";
+import { z } from "zod";
 import { GamePicture } from "./game-picture.tsx";
-import { parseAppId, parsePrice, type PurchaseInput } from "./purchases.ts";
+import { parseAppId, parsePrice, priceText, type PurchaseInput } from "./purchases.ts";
 import type { Purchase } from "./schema.ts";
 
 /** What the dialog does. */
@@ -60,24 +61,25 @@ function PurchaseForm({
 }) {
   const [name, setName] = useState(purchase?.name ?? "");
   const [date, setDate] = useState(purchase?.date ?? today);
-  const [price, setPrice] = useState(
-    purchase ? (purchase.priceCents / 100).toFixed(2).replace(".", ",") : "",
+  const [price, setPrice] = useState(purchase ? priceText(purchase.priceCents) : "");
+  const [steamText, setSteamText] = useState(
+    purchase?.appId === null || purchase === null ? "" : String(purchase.appId),
   );
-  const [steam, setSteam] = useState(purchase?.appId === null ? "" : String(purchase?.appId ?? ""));
-  const [showErrors, setShowErrors] = useState(false);
+  // The errors show only after the first try to save.
+  const [triedSave, setTriedSave] = useState(false);
 
   const priceCents = parsePrice(price);
-  const appId = parseAppId(steam);
+  const appId = parseAppId(steamText);
   const errors = {
     name: name.trim() === "" ? "Gib den Namen des Spiels ein." : null,
-    date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? null : "Gib das Datum des Kaufs ein.",
+    date: z.iso.date().safeParse(date).success ? null : "Gib das Datum des Kaufs ein.",
     price: priceCents === null ? "Gib den Preis in Euro ein, zum Beispiel 14,99." : null,
     steam:
-      appId === undefined
+      appId.kind === "invalid"
         ? "Gib einen Link aus dem Steam-Shop oder eine AppID ein, oder lass das Feld leer."
         : null,
   };
-  const shown = (error: string | null) => (showErrors ? error : null);
+  const visibleError = (error: string | null) => (triedSave ? error : null);
 
   return (
     <form
@@ -85,47 +87,51 @@ function PurchaseForm({
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (priceCents === null || appId === undefined || Object.values(errors).some(Boolean)) {
-          setShowErrors(true);
-          return;
-        }
-        onSave({ name: name.trim(), date, priceCents, appId });
+        setTriedSave(true);
+        if (errors.name !== null || errors.date !== null || priceCents === null) return;
+        if (appId.kind === "invalid") return;
+        onSave({
+          name: name.trim(),
+          date,
+          priceCents,
+          appId: appId.kind === "id" ? appId.id : null,
+        });
       }}
     >
       <DialogHeader>
         <DialogTitle>{purchase ? "Kauf bearbeiten" : "Neuer Kauf"}</DialogTitle>
         <DialogDescription>Das Bild kommt von Steam, wenn du den Link angibst.</DialogDescription>
       </DialogHeader>
-      <Field id="purchase-name" label="Spiel" error={shown(errors.name)}>
+      <Field id="purchase-name" label="Spiel" error={visibleError(errors.name)}>
         <Input
           id="purchase-name"
           value={name}
           placeholder="z. B. Hades"
-          aria-invalid={shown(errors.name) !== null}
+          aria-invalid={visibleError(errors.name) !== null}
           onChange={(event) => {
             setName(event.target.value);
           }}
         />
       </Field>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field id="purchase-date" label="Datum" error={shown(errors.date)}>
+        <Field id="purchase-date" label="Datum" error={visibleError(errors.date)}>
           <Input
             id="purchase-date"
             type="date"
             value={date}
-            aria-invalid={shown(errors.date) !== null}
+            aria-invalid={visibleError(errors.date) !== null}
             onChange={(event) => {
               setDate(event.target.value);
             }}
           />
         </Field>
-        <Field id="purchase-price" label="Preis in Euro" error={shown(errors.price)}>
+        <Field id="purchase-price" label="Preis in Euro" error={visibleError(errors.price)}>
           <Input
             id="purchase-price"
             inputMode="decimal"
             value={price}
             placeholder="z. B. 14,99"
-            aria-invalid={shown(errors.price) !== null}
+            aria-invalid={visibleError(errors.price) !== null}
             onChange={(event) => {
               setPrice(event.target.value);
             }}
@@ -135,42 +141,22 @@ function PurchaseForm({
       <Field
         id="purchase-steam"
         label="Steam-Link oder AppID (optional)"
-        error={shown(errors.steam)}
+        error={visibleError(errors.steam)}
       >
         <Input
           id="purchase-steam"
-          value={steam}
+          value={steamText}
           placeholder="https://store.steampowered.com/app/…"
-          aria-invalid={shown(errors.steam) !== null}
+          aria-invalid={visibleError(errors.steam) !== null}
           onChange={(event) => {
-            setSteam(event.target.value);
+            setSteamText(event.target.value);
           }}
         />
       </Field>
-      {appId !== undefined && appId !== null && <GamePicture appId={appId} />}
+      {appId.kind === "id" && <GamePicture appId={appId.id} />}
       <DialogFooter>
         <Button type="submit">Speichern</Button>
       </DialogFooter>
     </form>
-  );
-}
-
-function Field({
-  id,
-  label,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  error: string | null;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-    </div>
   );
 }

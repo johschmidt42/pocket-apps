@@ -52,7 +52,7 @@ describe("PurchaseListView", () => {
     await open();
 
     expect(shownNames()).toEqual(["INSIDE", "Hades", "Fe"]);
-    expect(screen.getByText("3 Spiele ·", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("3 Käufe ·", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("21,48 €")).toBeInTheDocument();
     expect(screen.getByText("10.01.2025")).toBeInTheDocument();
     expect(screen.getByText("3,99 €")).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe("PurchaseListView", () => {
     const { user } = await open([]);
 
     expect(screen.getByText(/Noch keine Käufe/)).toBeInTheDocument();
-    expect(screen.getByText("0 Spiele ·", { exact: false })).toBeInTheDocument();
+    expect(screen.getByText("0 Käufe ·", { exact: false })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Kauf" }));
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

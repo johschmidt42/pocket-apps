@@ -10,6 +10,7 @@
     "./drag-sort": "./src/drag-sort.ts",
     "./drag-handle": "./src/drag-handle.tsx",
     "./sort-hint": "./src/sort-hint.tsx",
+    "./field": "./src/field.tsx",
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"

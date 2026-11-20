@@ -1,7 +1,10 @@
-import { Label } from "@pocket-apps/ui/components/label";
+import { Label } from "./components/label.tsx";
 import type { ReactNode } from "react";
 
-/** A label, an input and an error message below it. */
+/**
+ * A label, an input and an error message below it (own code). `id` is the ID of the input.
+ * Used by trainingsbuch and spielekaeufe.
+ */
 export function Field({
   id,
   label,

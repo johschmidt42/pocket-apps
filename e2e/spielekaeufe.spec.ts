@@ -38,7 +38,7 @@ test.describe("spielekaeufe in Chrome and Edge", () => {
       }),
     );
     await page.getByRole("button", { name: "Ordner wählen …" }).click();
-    await expect(page.getByText("2 Spiele ·")).toBeVisible();
+    await expect(page.getByText("2 Käufe ·")).toBeVisible();
 
     await page.getByRole("button", { name: "Kauf" }).click();
     const dialog = page.getByRole("dialog", { name: "Neuer Kauf" });
@@ -67,7 +67,7 @@ test.describe("spielekaeufe in Chrome and Edge", () => {
     );
 
     await page.reload();
-    await expect(page.getByText("3 Spiele ·")).toBeVisible();
+    await expect(page.getByText("3 Käufe ·")).toBeVisible();
     expect(pageErrors).toEqual([]);
   });
 });
