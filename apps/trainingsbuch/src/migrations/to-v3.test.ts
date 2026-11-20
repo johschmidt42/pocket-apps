@@ -31,8 +31,28 @@ const V2_DATA = {
 };
 
 describe("toV3", () => {
-  it("shows the loads for men and keeps all other data", () => {
-    expect(toV3(V2_DATA)).toEqual({ ...V2_DATA, loadsFor: "men" });
+  it("gives each part the same value for women, shows the loads for men, keeps the rest", () => {
+    expect(toV3(V2_DATA)).toEqual({
+      ...V2_DATA,
+      workouts: [
+        {
+          ...V2_DATA.workouts[0],
+          parts: [
+            {
+              id: "p1",
+              exercise: "box-jump",
+              amount: 10,
+              unit: "reps",
+              kg: null,
+              kgWomen: null,
+              boxInches: 30,
+              boxInchesWomen: null,
+            },
+          ],
+        },
+      ],
+      loadsFor: "men",
+    });
   });
 
   it("refuses data of another shape", () => {

@@ -1,11 +1,16 @@
 import { createMemoryFolder, createMemoryFolderHost } from "@pocket-apps/core/data-file/testing";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
 import { CATALOG } from "./catalog.ts";
 import { filterByExercises } from "./exercise-filter.ts";
 import { searchWorkouts } from "./workouts.ts";
+
+// These tests render the whole app with the list of all 359 workouts. On the GitHub runners, a test
+// takes up to five times as long as on a computer, so 5 s were too little. See
+// "Longer time limit for the tests of the whole trainingsbuch app" in docs/decisions.md.
+vi.setConfig({ testTimeout: 15_000 });
 
 const ALL = CATALOG.length;
 

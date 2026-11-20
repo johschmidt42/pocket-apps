@@ -3,11 +3,18 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-20: Longer time limit for the tests of the whole trainingsbuch app
+
+- **Context:** `CI - Test` failed for version 4.0: ten tests of `trainingsbuch` ran longer than the default limit of 5 s. A run again passed. These tests render the whole app with the list of all 359 workouts. On a computer, the slowest test takes about 1.4 s. On the GitHub runners, it takes up to five times as long, and the time changes from run to run.
+- **Decision:** The three test files that render the whole app (`app.test.tsx`, `exercise-filter-dialog.test.tsx`, `ai-entry-dialog.test.tsx`) set `vi.setConfig({ testTimeout: 15_000 })`. The project owner agreed. The tests check the same things as before. Only the time limit changes, and only for these files. All other tests keep 5 s.
+- **Rejected:** A smaller catalog in the tests: the tests would no longer check the real list. A higher limit in `vitest.config.ts` for all tests: the other tests do not need it.
+
 ## 2026-11-19: Loads for men or for women (trainingsbuch)
 
 - **Context:** The built-in workouts give each load, height and distance as a pair: "43/29 kg", "24/20 Zoll". The first value is for men, the second for women. The project owner wants to switch between them.
 - **Decision:** A second switch "Männer | Frauen" next to "kg | lb" on a built-in workout. The texts then show one value: "43 kg" or "29 kg". The switch is for all built-in workouts, like "kg | lb". `showLine()` in `units.ts` does both: first the unit system, then the value of the pair.
-- **Decision:** The data file keeps the choice in `loadsFor` (schema version 3). Then it is the same on all devices. Own workouts have one load per exercise, so the switch does not show there.
+- **Decision:** The data file keeps the choice in `loadsFor` (schema version 3). Then it is the same on all devices.
+- **Decision:** Own workouts can have values for women too, for example the "Box Jump Barbell Chipper" with 52.5/35 kg and 30/24 inches. Each part has `kgWomen` and `boxInchesWomen` (schema version 3). `null` means: the same for all. The form shows "Frauen (kg)" and "Box Frauen (Zoll)" next to the values for men, with "wie Männer" as the empty choice. A new box exercise starts with 24 inches for men and 20 for women. `partLine()` writes a pair in the form of the built-in workouts ("52,5/35 kg"), so `showLine()` picks the value for both kinds of workouts. An own workout shows the switch only if one of its parts has a value for women. The AI puts the second value of a pair ("24/20 in") into the field for women.
 - **Decision:** The switch changes only the texts. For the results of the project owner, Rx stays the load for men (see "Record a result with the AI"). A user who does the loads for women saves "Scaled", or the app needs a later change.
 - **Consequence:** Version 4.0 did not reach GitHub Pages (CI failed). Thus the box heights (schema version 2) and this switch (schema version 3) come together in version 4.0.
 

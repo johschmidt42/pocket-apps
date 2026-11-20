@@ -93,7 +93,17 @@ export function formatLabel(workout: Workout): string {
 }
 
 /**
- * One part as a line: "21 × Thruster, 43 kg", "10 × Box Jump, 24 Zoll", "400 m Run" or "Burpee".
+ * A value for men and women: "43", or the pair "43/29" if the value for women is not the same.
+ * The pair has the form of the built-in workouts, so the switch "Männer | Frauen" shows one value
+ * (see `showLine()`).
+ */
+function menWomen(men: number, women: number | null, format: (value: number) => string): string {
+  return women === null ? format(men) : `${format(men)}/${format(women)}`;
+}
+
+/**
+ * One part as a line: "21 × Thruster, 43/29 kg", "10 × Box Jump, 24/20 Zoll", "400 m Run" or
+ * "Burpee".
  */
 export function partLine(part: Part): string {
   const name = EXERCISE_NAMES[part.exercise];
@@ -103,13 +113,13 @@ export function partLine(part: Part): string {
       : part.unit === "reps"
         ? `${formatDecimal(part.amount)} × `
         : `${formatDecimal(part.amount)} ${UNIT_LABELS[part.unit].short} `;
-  const kg = part.kg === null ? "" : `, ${formatDecimal(part.kg)} kg`;
+  const kg = part.kg === null ? "" : `, ${menWomen(part.kg, part.kgWomen, formatDecimal)} kg`;
   // Data from before schema version 2 has no box height. The line says so: then the user adds it.
   const box = !hasBox(part.exercise)
     ? ""
     : part.boxInches === null
       ? ", Boxhöhe fehlt"
-      : `, ${inchesText(part.boxInches)}`;
+      : `, ${inchesText(menWomen(part.boxInches, part.boxInchesWomen, String))}`;
   return `${amount}${name}${kg}${box}`;
 }
 

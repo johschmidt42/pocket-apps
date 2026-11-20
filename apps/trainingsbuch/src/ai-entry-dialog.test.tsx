@@ -9,6 +9,11 @@ import { App } from "./app.tsx";
 import { isoDay } from "./dates.ts";
 import type { Logbook } from "./schema.ts";
 
+// These tests render the whole app with the list of all 359 workouts. On the GitHub runners, a test
+// takes up to five times as long as on a computer, so 5 s were too little. See
+// "Longer time limit for the tests of the whole trainingsbuch app" in docs/decisions.md.
+vi.setConfig({ testTimeout: 15_000 });
+
 const FILE = "trainingsbuch/trainingsbuch.json";
 const TODAY = isoDay(new Date());
 
@@ -139,7 +144,17 @@ describe("Mit KI eintragen", () => {
           scoreType: "rounds-reps",
           timeCapMinutes: 12,
           rounds: null,
-          parts: [{ exercise: "wall-ball", amount: 10, unit: "reps", kg: 9, boxInches: null }],
+          parts: [
+            {
+              exercise: "wall-ball",
+              amount: 10,
+              unit: "reps",
+              kg: 9,
+              boxInches: null,
+              kgWomen: null,
+              boxInchesWomen: null,
+            },
+          ],
           notes: "",
         },
         division: "scaled",

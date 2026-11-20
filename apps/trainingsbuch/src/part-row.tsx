@@ -36,7 +36,7 @@ function boxChoices(current: string): number[] {
     : [...usual, inches].sort((a, b) => a - b);
 }
 
-/** One exercise of an own workout: amount, unit, weight and box height. */
+/** One exercise of an own workout: amount, unit, loads and box heights for men and women. */
 export function PartRow({ draft, handleProps, invalid, onChange, onRemove }: PartRowProps) {
   const name = EXERCISE_NAMES[draft.exercise];
   const units = unitsOf(draft.exercise);
@@ -100,46 +100,85 @@ export function PartRow({ draft, handleProps, invalid, onChange, onRemove }: Par
           </div>
         )}
         {isWeighted(draft.exercise) && (
-          <div className="flex w-32 flex-col gap-1">
-            <Label htmlFor={`${prefix}-kg`} className="text-xs text-muted-foreground">
-              Gewicht (kg)
-            </Label>
-            <Input
-              id={`${prefix}-kg`}
-              inputMode="decimal"
-              value={draft.kg}
-              placeholder="optional"
-              aria-invalid={invalid}
-              onChange={(event) => {
-                onChange({ ...draft, kg: event.target.value });
-              }}
-            />
-          </div>
+          <>
+            <div className="flex w-32 flex-col gap-1">
+              <Label htmlFor={`${prefix}-kg`} className="text-xs text-muted-foreground">
+                Männer (kg)
+              </Label>
+              <Input
+                id={`${prefix}-kg`}
+                inputMode="decimal"
+                value={draft.kg}
+                placeholder="optional"
+                aria-invalid={invalid}
+                onChange={(event) => {
+                  onChange({ ...draft, kg: event.target.value });
+                }}
+              />
+            </div>
+            <div className="flex w-32 flex-col gap-1">
+              <Label htmlFor={`${prefix}-kg-women`} className="text-xs text-muted-foreground">
+                Frauen (kg)
+              </Label>
+              <Input
+                id={`${prefix}-kg-women`}
+                inputMode="decimal"
+                value={draft.kgWomen}
+                placeholder="wie Männer"
+                aria-invalid={invalid}
+                onChange={(event) => {
+                  onChange({ ...draft, kgWomen: event.target.value });
+                }}
+              />
+            </div>
+          </>
         )}
         {hasBox(draft.exercise) && (
-          <div className="flex w-32 flex-col gap-1">
-            <Label htmlFor={`${prefix}-box`} className="text-xs text-muted-foreground">
-              Box (Zoll)
-            </Label>
-            <NativeSelect
-              id={`${prefix}-box`}
-              className="w-full"
-              value={draft.boxInches}
-              aria-invalid={invalid}
-              onChange={(event) => {
-                onChange({ ...draft, boxInches: event.target.value });
-              }}
-            >
-              {draft.boxInches === "" && (
-                <NativeSelectOption value="">Bitte wählen</NativeSelectOption>
-              )}
-              {boxChoices(draft.boxInches).map((inches) => (
-                <NativeSelectOption key={inches} value={String(inches)}>
-                  {inchesText(inches)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
+          <>
+            <div className="flex w-32 flex-col gap-1">
+              <Label htmlFor={`${prefix}-box`} className="text-xs text-muted-foreground">
+                Box Männer (Zoll)
+              </Label>
+              <NativeSelect
+                id={`${prefix}-box`}
+                className="w-full"
+                value={draft.boxInches}
+                aria-invalid={invalid}
+                onChange={(event) => {
+                  onChange({ ...draft, boxInches: event.target.value });
+                }}
+              >
+                {draft.boxInches === "" && (
+                  <NativeSelectOption value="">Bitte wählen</NativeSelectOption>
+                )}
+                {boxChoices(draft.boxInches).map((inches) => (
+                  <NativeSelectOption key={inches} value={String(inches)}>
+                    {inchesText(inches)}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="flex w-32 flex-col gap-1">
+              <Label htmlFor={`${prefix}-box-women`} className="text-xs text-muted-foreground">
+                Box Frauen (Zoll)
+              </Label>
+              <NativeSelect
+                id={`${prefix}-box-women`}
+                className="w-full"
+                value={draft.boxInchesWomen}
+                onChange={(event) => {
+                  onChange({ ...draft, boxInchesWomen: event.target.value });
+                }}
+              >
+                <NativeSelectOption value="">wie Männer</NativeSelectOption>
+                {boxChoices(draft.boxInchesWomen).map((inches) => (
+                  <NativeSelectOption key={inches} value={String(inches)}>
+                    {inchesText(inches)}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+          </>
         )}
       </div>
     </div>

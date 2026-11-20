@@ -11,7 +11,7 @@ import { PlanView } from "./plan-view.tsx";
 import { ProgressChart } from "./progress-chart.tsx";
 import { LOADS_FOR, UNIT_SYSTEMS, type Result } from "./schema.ts";
 import { bestResult, DIVISION_LABELS, formatKg, formatScore } from "./score.ts";
-import { showLine, type TextDisplay } from "./units.ts";
+import { hasMenWomen, showLine, type TextDisplay } from "./units.ts";
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatLabel, type Workout } from "./workouts.ts";
 
 export type WorkoutDetailProps = {
@@ -46,6 +46,8 @@ export function WorkoutDetail({
 }: WorkoutDetailProps) {
   const best = bestResult(results);
   const colors = CATEGORY_COLORS[workout.category];
+  const builtIn = workout.category !== "own";
+  const withWomen = workout.lines.some(hasMenWomen);
 
   return (
     <div className="flex flex-col gap-8">
@@ -132,8 +134,8 @@ export function WorkoutDetail({
           >
             Ablauf
           </h3>
-          {/* Own workouts have one load in kg. Only the built-in texts have both. */}
-          {workout.category !== "own" && (
+          {/* Own workouts are in kg. They have values for women only if the user gave some. */}
+          {(builtIn || withWomen) && (
             <div className="flex flex-wrap justify-end gap-2">
               <ToggleGroup
                 type="single"
@@ -152,23 +154,25 @@ export function WorkoutDetail({
                   Frauen
                 </ToggleGroupItem>
               </ToggleGroup>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label="Einheiten"
-                value={display.units}
-                onValueChange={(value) => {
-                  if (isOneOf(UNIT_SYSTEMS, value)) onDisplay({ ...display, units: value });
-                }}
-              >
-                <ToggleGroupItem value="metric" className="px-3">
-                  kg
-                </ToggleGroupItem>
-                <ToggleGroupItem value="imperial" className="px-3">
-                  lb
-                </ToggleGroupItem>
-              </ToggleGroup>
+              {builtIn && (
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  size="sm"
+                  aria-label="Einheiten"
+                  value={display.units}
+                  onValueChange={(value) => {
+                    if (isOneOf(UNIT_SYSTEMS, value)) onDisplay({ ...display, units: value });
+                  }}
+                >
+                  <ToggleGroupItem value="metric" className="px-3">
+                    kg
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="imperial" className="px-3">
+                    lb
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              )}
             </div>
           )}
         </div>

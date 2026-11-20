@@ -5,6 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
 import type { Logbook, OwnWorkout, Result } from "./schema.ts";
 
+// These tests render the whole app with the list of all 359 workouts. On the GitHub runners, a test
+// takes up to five times as long as on a computer, so 5 s were too little. See
+// "Longer time limit for the tests of the whole trainingsbuch app" in docs/decisions.md.
+vi.setConfig({ testTimeout: 15_000 });
+
 const FILE = "trainingsbuch/trainingsbuch.json";
 
 const OWN: OwnWorkout = {
@@ -14,8 +19,26 @@ const OWN: OwnWorkout = {
   timeCapMinutes: 12,
   rounds: null,
   parts: [
-    { id: "p1", exercise: "wall-ball", amount: 50, unit: "reps", kg: 9, boxInches: null },
-    { id: "p2", exercise: "burpee", amount: 50, unit: "reps", kg: null, boxInches: null },
+    {
+      id: "p1",
+      exercise: "wall-ball",
+      amount: 50,
+      unit: "reps",
+      kg: 9,
+      boxInches: null,
+      kgWomen: null,
+      boxInchesWomen: null,
+    },
+    {
+      id: "p2",
+      exercise: "burpee",
+      amount: 50,
+      unit: "reps",
+      kg: null,
+      boxInches: null,
+      kgWomen: null,
+      boxInchesWomen: null,
+    },
   ],
   notes: "",
 };
@@ -356,23 +379,40 @@ describe("Trainingsbuch", () => {
 
     await user.click(screen.getByRole("button", { name: "Box Chipper bearbeiten" }));
     const dialog = screen.getByRole("dialog", { name: "Workout bearbeiten" });
-    expect(within(dialog).getByLabelText("Box (Zoll)")).toHaveValue("");
+    expect(within(dialog).getByLabelText("Box Männer (Zoll)")).toHaveValue("");
     await user.click(within(dialog).getByRole("button", { name: "Speichern" }));
     expect(
       within(dialog).getByText("Box Jump: Bitte die Boxhöhe in Zoll wählen."),
     ).toBeInTheDocument();
 
-    await user.selectOptions(within(dialog).getByLabelText("Box (Zoll)"), "30");
+    await user.selectOptions(within(dialog).getByLabelText("Box Männer (Zoll)"), "30");
     await user.click(within(dialog).getByRole("button", { name: "Speichern" }));
     expect(lines()).toEqual(["10 ×Box Jump, 30 Zoll"]);
+    // One height for all: no switch for men and women.
+    expect(screen.queryByRole("radiogroup", { name: "Gewichte für" })).not.toBeInTheDocument();
 
-    // A new box exercise starts with 24 inches.
+    // A height for women makes a pair, and the switch shows one of them.
     await user.click(screen.getByRole("button", { name: "Box Chipper bearbeiten" }));
     const again = screen.getByRole("dialog", { name: "Workout bearbeiten" });
+    expect(within(again).getByLabelText("Box Frauen (Zoll)")).toHaveValue("");
+    await user.selectOptions(within(again).getByLabelText("Box Frauen (Zoll)"), "24");
+    // A new box exercise starts with 24 inches for men and 20 for women.
     await user.selectOptions(within(again).getByLabelText("Übung hinzufügen"), "box-step-over");
-    expect(within(again).getAllByLabelText("Box (Zoll)")[1]).toHaveValue("24");
+    expect(within(again).getAllByLabelText("Box Männer (Zoll)")[1]).toHaveValue("24");
+    expect(within(again).getAllByLabelText("Box Frauen (Zoll)")[1]).toHaveValue("20");
+    await user.click(within(again).getByRole("button", { name: "Box Step-over entfernen" }));
+    await user.click(within(again).getByRole("button", { name: "Speichern" }));
+    expect(lines()).toEqual(["10 ×Box Jump, 30 Zoll"]);
+    const loadsFor = within(screen.getByRole("radiogroup", { name: "Gewichte für" }));
+    await user.click(loadsFor.getByRole("radio", { name: "Frauen" }));
+    expect(lines()).toEqual(["10 ×Box Jump, 24 Zoll"]);
+    // Own workouts have no switch for kg and lb.
+    expect(screen.queryByRole("radiogroup", { name: "Einheiten" })).not.toBeInTheDocument();
     await waitForSave();
-    expect(savedData(folder).workouts[0]?.parts[0]?.boxInches).toBe(30);
+    expect(savedData(folder).workouts[0]?.parts[0]).toMatchObject({
+      boxInches: 30,
+      boxInchesWomen: 24,
+    });
   });
 
   it("adds an own workout with exercises, amounts and weights", async () => {
@@ -395,13 +435,14 @@ describe("Trainingsbuch", () => {
     await user.selectOptions(within(dialog).getByLabelText("Übung hinzufügen"), "thruster");
     expect(within(dialog).getByLabelText("Wiederholungen")).toHaveFocus();
     await user.keyboard("21");
-    await user.type(within(dialog).getByLabelText("Gewicht (kg)"), "42,5");
+    await user.type(within(dialog).getByLabelText("Männer (kg)"), "42,5");
+    await user.type(within(dialog).getByLabelText("Frauen (kg)"), "29");
     await user.selectOptions(within(dialog).getByLabelText("Übung hinzufügen"), "row");
     expect(within(dialog).getByLabelText("Meter")).toHaveFocus();
     await user.selectOptions(within(dialog).getByLabelText("Einheit"), "cal");
     await user.type(within(dialog).getByLabelText("Kalorien"), "15,5");
     await user.selectOptions(within(dialog).getByLabelText("Übung hinzufügen"), "burpee");
-    expect(within(dialog).getAllByLabelText("Gewicht (kg)")).toHaveLength(1);
+    expect(within(dialog).getAllByLabelText("Männer (kg)")).toHaveLength(1);
     await user.click(within(dialog).getByRole("button", { name: "Burpee entfernen" }));
 
     await user.click(within(dialog).getByRole("button", { name: "Speichern" }));
@@ -426,6 +467,8 @@ describe("Trainingsbuch", () => {
         .getAllByRole("listitem")
         .map((item) => item.textContent),
     ).toEqual(["15 calRow", "21 ×Thruster, 42,5 kg"]);
+    // A load for women shows the switch. It shows the loads for men first.
+    expect(screen.getByRole("radiogroup", { name: "Gewichte für" })).toBeInTheDocument();
     expect(within(plan).getByText("Ohne Pause")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Ergebnis eintragen" }));
@@ -455,6 +498,8 @@ describe("Trainingsbuch", () => {
             unit: "cal",
             kg: null,
             boxInches: null,
+            kgWomen: null,
+            boxInchesWomen: null,
           },
           {
             id: expect.any(String) as string,
@@ -463,6 +508,8 @@ describe("Trainingsbuch", () => {
             unit: "reps",
             kg: 42.5,
             boxInches: null,
+            kgWomen: 29,
+            boxInchesWomen: null,
           },
         ],
         notes: "Ohne Pause",
@@ -535,7 +582,7 @@ describe("Trainingsbuch", () => {
     await user.click(card("Montag Chipper", true));
     await user.click(screen.getByRole("button", { name: "Montag Chipper bearbeiten" }));
     const dialog = screen.getByRole("dialog", { name: "Workout bearbeiten" });
-    expect(within(dialog).getByLabelText("Gewicht (kg)")).toHaveValue("9");
+    expect(within(dialog).getByLabelText("Männer (kg)")).toHaveValue("9");
     // The workout has a result. Its score needs the same score type.
     expect(within(dialog).getByLabelText("Wertung nach")).toBeDisabled();
     expect(within(dialog).getByLabelText("Wertung nach")).toHaveAccessibleDescription(

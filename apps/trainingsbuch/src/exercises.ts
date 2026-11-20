@@ -384,8 +384,9 @@ export function hasBox(exercise: ExerciseId): boolean {
 /** The usual box heights in inches. 24 is Rx for men in most workouts, 30 in some. */
 export const BOX_HEIGHTS = [12, 16, 20, 24, 30] as const;
 
-/** The box height of a new part. */
+/** The box heights of a new part: 24 for men, 20 for women, as in most workouts. */
 export const DEFAULT_BOX_INCHES = 24;
+export const DEFAULT_BOX_INCHES_WOMEN = 20;
 
 /** A height in inches as German text: "24 Zoll", "24/20 Zoll". */
 export function inchesText(value: string | number): string {

@@ -51,10 +51,17 @@ const partSchema = z.object({
   /** Reps, meters, calories or seconds. `null`: no amount (for example "max reps"). */
   amount: z.number().positive().nullable(),
   unit: z.enum(UNITS),
-  /** Only for exercises with a weight. */
+  /** Only for exercises with a weight. The load for men, or for all if `kgWomen` is `null`. */
   kg: z.number().positive().nullable(),
-  /** Only for exercises with a box: its height in inches. `null` in data from before version 2. */
+  /** The load for women, if it is not the same. Only with `kg`. */
+  kgWomen: z.number().positive().nullable(),
+  /**
+   * Only for exercises with a box: its height in inches, for men, or for all if
+   * `boxInchesWomen` is `null`. `null` in data from before schema version 2.
+   */
   boxInches: z.number().int().positive().nullable(),
+  /** The box height for women, if it is not the same. Only with `boxInches`. */
+  boxInchesWomen: z.number().int().positive().nullable(),
 });
 
 const ownWorkoutSchema = z.object({

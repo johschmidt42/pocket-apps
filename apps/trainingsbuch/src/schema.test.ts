@@ -18,7 +18,18 @@ const OWN = {
   scoreType: "time-or-reps",
   timeCapMinutes: 12,
   rounds: 3,
-  parts: [{ id: "p1", exercise: "thruster", amount: 21, unit: "reps", kg: 42.5, boxInches: null }],
+  parts: [
+    {
+      id: "p1",
+      exercise: "thruster",
+      amount: 21,
+      unit: "reps",
+      kg: 42.5,
+      boxInches: null,
+      kgWomen: null,
+      boxInchesWomen: null,
+    },
+  ],
   notes: "",
 };
 

@@ -30,9 +30,19 @@ const newWorkoutSchema = z.object({
       exercise: z.enum(EXERCISE_IDS),
       amount: z.number().nullable().describe("Reps, meters, calories or seconds. null: max."),
       unit: z.enum(UNITS),
-      kg: z.number().nullable().describe("The load in kg. Only for an exercise with a weight."),
+      kg: z
+        .number()
+        .nullable()
+        .describe("The load in kg for men, or for all. Only for an exercise with a weight."),
+      kgWomen: z
+        .number()
+        .nullable()
+        .describe("The load in kg for women, only if the input gives another one. Else null."),
       boxInches: count.describe(
-        "Only for an exercise with a box: the box height in inches, for example 24 or 30. Else null.",
+        "Only for an exercise with a box: the box height in inches for men, or for all, for example 24 or 30. Else null.",
+      ),
+      boxInchesWomen: count.describe(
+        "The box height in inches for women, only if the input gives another one, for example 20. Else null.",
       ),
     }),
   ),
@@ -153,6 +163,8 @@ export function buildInstructions({ today, units, workouts, focus }: Instruction
     "  exercise is right.",
     "- Box heights are in inches (Zoll), never in cm. Take the box height of a new workout",
     "  from the input. If the input does not give it, ask the user (Rx for men: 24 or 30 in).",
+    '- A pair such as "52.5/35 kg" or "24/20 in" is for men/women: the first value goes into',
+    "  kg or boxInches, the second into kgWomen or boxInchesWomen.",
     "- Put details of the result into the notes, for example sets, scaling or how it felt.",
     "- Write all text for the user in German: short, friendly, with du.",
     "- When the user corrects a value, give the full draft again.",
@@ -228,6 +240,13 @@ function checkNewWorkout(
     if (part.kg !== null && isWeighted(part.exercise) && !isPositive(part.kg)) {
       return `The load of ${part.exercise} must be more than 0 kg, or null.`;
     }
+    if (
+      part.kgWomen !== null &&
+      isWeighted(part.exercise) &&
+      !(isPositive(part.kgWomen) && part.kg !== null)
+    ) {
+      return `kgWomen of ${part.exercise} must be more than 0 kg and needs kg, or it is null.`;
+    }
     if (hasBox(part.exercise) && !(isCount(part.boxInches) && part.boxInches > 0)) {
       return `${part.exercise} needs boxInches: the box height in inches, for example 24 or 30. Ask the user if the input does not say it.`;
     }
@@ -256,7 +275,15 @@ function checkNewWorkout(
       unit: part.unit,
       // An exercise without a weight has no kg, also if the AI gives one. The same for a box.
       kg: isWeighted(part.exercise) ? part.kg : null,
+      kgWomen: isWeighted(part.exercise) && part.kgWomen !== part.kg ? part.kgWomen : null,
       boxInches: hasBox(part.exercise) ? part.boxInches : null,
+      boxInchesWomen:
+        hasBox(part.exercise) &&
+        isCount(part.boxInchesWomen) &&
+        part.boxInchesWomen > 0 &&
+        part.boxInchesWomen !== part.boxInches
+          ? part.boxInchesWomen
+          : null,
     })),
     notes: draft.notes.trim(),
   };

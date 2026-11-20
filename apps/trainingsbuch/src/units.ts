@@ -20,8 +20,13 @@ export type TextDisplay = { units: UnitSystem; loadsFor: LoadsFor };
 /** A pair of values with a unit: "43/29 kg", "24/20 Zoll". The first is for men. */
 const MEN_WOMEN = /(\d[\d.,]*)\/(\d[\d.,]*)( (?:kg|lb|cm|in|m|ft|pood|miles?|Zoll)\b)/g;
 
+/** True if the line has a value for men and one for women, for example "43/29 kg". */
+export function hasMenWomen(line: string): boolean {
+  return new RegExp(MEN_WOMEN.source).test(line);
+}
+
 /**
- * A line of a built-in workout as the user wants to see it:
+ * A line of a workout as the user wants to see it:
  * - One unit system. Metric: "9/6 kg". Imperial: "20/14 lb". A value without a pair stays.
  * - In a line about a box, a height in inches always shows in inches, with the German word:
  *   "24/20 Zoll". Gyms give box heights in inches, also in countries with kg. Other heights (for
