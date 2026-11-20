@@ -11,6 +11,7 @@ import {
 import { createDropboxFolder, DROPBOX } from "./dropbox-folder.ts";
 import { isOneOf } from "../one-of.ts";
 import {
+  checkThenWrite,
   CLOUD_KINDS,
   type CloudKind,
   type DataFolder,
@@ -80,6 +81,18 @@ export function wrapDirectory(root: FileSystemDirectoryHandle): DataFolder {
     }
   }
 
+  async function lastModified(path: string): Promise<number | null> {
+    return (await snapshot(path))?.lastModified ?? null;
+  }
+
+  async function write(path: string, content: string | Blob): Promise<number> {
+    const handle = await fileHandle(path, true);
+    const writable = await handle.createWritable();
+    await writable.write(content);
+    await writable.close();
+    return (await handle.getFile()).lastModified;
+  }
+
   return {
     name: root.name,
     kind: "local",
@@ -89,15 +102,11 @@ export function wrapDirectory(root: FileSystemDirectoryHandle): DataFolder {
       const file = await snapshot(path);
       return file ? { text: await file.text(), lastModified: file.lastModified } : null;
     },
-    lastModified: async (path) => (await snapshot(path))?.lastModified ?? null,
+    lastModified,
     readBlob: snapshot,
-    write: async (path, content) => {
-      const handle = await fileHandle(path, true);
-      const writable = await handle.createWritable();
-      await writable.write(content);
-      await writable.close();
-      return (await handle.getFile()).lastModified;
-    },
+    write,
+    // The File System Access API has no write on a condition.
+    writeIfUnchanged: checkThenWrite(lastModified, write),
     remove: async (path) => {
       const { folders, file } = splitPath(path);
       try {

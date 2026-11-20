@@ -2,9 +2,9 @@
 // over the Dropbox API. The login is in `cloud-login.ts`. Dropbox gives a refresh token without an
 // end, so the person logs in only once per browser.
 import { z } from "zod";
-import { CHANGED_ELSEWHERE, readTimeThenText } from "./cloud-folder.ts";
+import { failOnConflict, readTimeThenText } from "./cloud-folder.ts";
 import type { CloudProvider, CloudSession } from "./cloud-login.ts";
-import type { DataFolder } from "./folder.ts";
+import { checkThenWrite, type DataFolder } from "./folder.ts";
 
 const API = "https://api.dropboxapi.com/2";
 const CONTENT = "https://content.dropboxapi.com/2";
@@ -59,13 +59,12 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     return body.success ? body.data.error_summary : "";
   }
 
-  /** A request to the Dropbox API. Throws a German error for all failures except `allowed`. */
-  async function call(url: string, init: RequestInit, allowed: string | null) {
+  /** A request to the Dropbox API. Throws a German error for all failures except `allowed` (409). */
+  async function call(url: string, init: RequestInit, allowed: string) {
     const response = await session.request(url, { method: "POST", ...init });
     if (response.ok) return { response, error: null };
     const error = await errorOf(response);
-    if (error !== null && allowed !== null && error.startsWith(allowed)) return { response, error };
-    if (error?.startsWith("path/conflict")) throw session.failure(CHANGED_ELSEWHERE);
+    if (error?.startsWith(allowed)) return { response, error };
     throw session.failure(`Dropbox hat mit dem Fehler ${String(response.status)} geantwortet.`);
   }
 
@@ -111,6 +110,43 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     return error === null ? response.blob() : null;
   }
 
+  /**
+   * Writes a file with the state of the last check: `update` with the revision, `add` for a file
+   * that did not exist, or `overwrite` for a file without a check (for example an image).
+   * Dropbox documents that `update` and `add` give a conflict if the file changed.
+   */
+  async function upload(path: string, content: string | Blob): Promise<number | "changed"> {
+    const state = checked.get(path);
+    const mode =
+      state === undefined
+        ? "overwrite"
+        : state === null
+          ? "add"
+          : { ".tag": "update", update: state.rev };
+    const arg = {
+      path: dropboxPath(path),
+      mode,
+      autorename: false,
+      mute: true,
+      strict_conflict: true,
+    };
+    const { response, error } = await call(
+      `${CONTENT}/files/upload`,
+      {
+        headers: { "Content-Type": "application/octet-stream", "Dropbox-API-Arg": apiArg(arg) },
+        body: content,
+      },
+      "path/conflict",
+    );
+    return error === null ? timeOf(path, response) : "changed";
+  }
+
+  /** The time of the last check, `null` for a file that did not exist, `undefined` without a check. */
+  function checkedTime(path: string): number | null | undefined {
+    const state = checked.get(path);
+    return state === undefined ? undefined : (state?.time ?? null);
+  }
+
   return {
     name: "Dropbox",
     kind: "dropbox",
@@ -119,34 +155,13 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     lastModified,
     readBlob,
     read: (path) => readTimeThenText(path, lastModified, readBlob),
-    async write(path, content) {
-      const state = checked.get(path);
-      const mode =
-        state === undefined
-          ? "overwrite"
-          : state === null
-            ? "add"
-            : { ".tag": "update", update: state.rev };
-      const arg = {
-        path: dropboxPath(path),
-        mode,
-        autorename: false,
-        mute: true,
-        strict_conflict: true,
-      };
-      const { response } = await call(
-        `${CONTENT}/files/upload`,
-        {
-          headers: {
-            "Content-Type": "application/octet-stream",
-            "Dropbox-API-Arg": apiArg(arg),
-          },
-          body: content,
-        },
-        null,
-      );
-      return timeOf(path, response);
-    },
+    write: failOnConflict(session, upload),
+    // The upload checks the revision itself. Only if the store expects another time than the last
+    // check (for example after a look at the raw file), the folder checks the time first.
+    writeIfUnchanged: (path, content, expected) =>
+      checkedTime(path) === expected
+        ? upload(path, content)
+        : checkThenWrite(lastModified, upload)(path, content, expected),
     async remove(path) {
       checked.delete(path);
       await call(

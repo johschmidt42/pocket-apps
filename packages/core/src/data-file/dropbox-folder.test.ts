@@ -195,6 +195,45 @@ describe("the Dropbox folder", () => {
     expect(argOf(server.requests.at(-1))).toMatchObject({ mode: "add" });
   });
 
+  it("saves the data file in one request, because the upload checks the revision", async () => {
+    const { folder, server } = setup();
+    // The store reads the data file first. It does not exist yet.
+    expect(await folder.read("a.json")).toBeNull();
+    server.requests.length = 0;
+    const first = (await folder.writeIfUnchanged("a.json", "eins", null)) as number;
+    expect(server.requests.map((request) => request.url)).toEqual([`${CONTENT}/files/upload`]);
+    expect(argOf(server.requests.at(-1))).toMatchObject({ mode: "add" });
+    server.requests.length = 0;
+
+    const second = (await folder.writeIfUnchanged("a.json", "zwei", first)) as number;
+
+    expect(typeof second).toBe("number");
+    expect(server.requests.map((request) => request.url)).toEqual([`${CONTENT}/files/upload`]);
+    expect(argOf(server.requests.at(-1))).toMatchObject({ mode: { ".tag": "update" } });
+    expect(server.files.get("/a.json")?.text).toBe("zwei");
+  });
+
+  it("gives a conflict when another device wrote the data file", async () => {
+    const { folder, server } = setup();
+    // A file without a check: the folder gets the time first.
+    const time = (await folder.writeIfUnchanged("a.json", "eins", null)) as number;
+    expect(server.requests.map((request) => request.url)).toEqual([
+      `${API}/files/get_metadata`,
+      `${CONTENT}/files/upload`,
+    ]);
+    server.files.set("/a.json", { text: "fremd", rev: "rev-other", time: "2026-11-20T11:00:00Z" });
+
+    expect(await folder.writeIfUnchanged("a.json", "zwei", time)).toBe("changed");
+    expect(server.files.get("/a.json")?.text).toBe("fremd");
+
+    // A look at the raw file gives the folder the new revision. The store still expects the old
+    // time, so the folder checks the time and does not write.
+    await folder.read("a.json");
+    server.requests.length = 0;
+    expect(await folder.writeIfUnchanged("a.json", "zwei", time)).toBe("changed");
+    expect(server.requests.map((request) => request.url)).toEqual([`${API}/files/get_metadata`]);
+  });
+
   it("escapes other characters than ASCII in the header", async () => {
     const { folder, server } = setup();
 

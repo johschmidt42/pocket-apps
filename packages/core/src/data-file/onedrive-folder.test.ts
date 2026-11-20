@@ -257,6 +257,39 @@ describe("the OneDrive folder", () => {
     expect(server.files.get("a.json")?.text).toBe("zwei");
   });
 
+  it("checks the time before it saves the data file, because Graph does not promise If-Match", async () => {
+    const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
+    const first = (await oneDrive.folder.writeIfUnchanged("a.json", "eins", null)) as number;
+    server.requests.length = 0;
+
+    const second = (await oneDrive.folder.writeIfUnchanged("a.json", "zwei", first)) as number;
+
+    expect(typeof second).toBe("number");
+    expect(server.requests.map((request) => request.init?.method ?? "GET")).toEqual(["GET", "PUT"]);
+    expect(new Headers(server.requests[1]?.init?.headers).get("If-Match")).toMatch(/^tag-/);
+
+    // Another device wrote the file: the folder does not write.
+    server.clock += 1000;
+    server.files.set("a.json", { text: "fremd", time: new Date(server.clock).toISOString() });
+    expect(await oneDrive.folder.writeIfUnchanged("a.json", "drei", second)).toBe("changed");
+    expect(server.files.get("a.json")?.text).toBe("fremd");
+  });
+
+  it("gives a conflict when Graph rejects the eTag of the check", async () => {
+    const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
+    const time = await oneDrive.folder.write("a.json", "eins");
+    // The other device writes between the check and the upload of this device.
+    server.fetch.mockImplementationOnce((input, init) => {
+      const answer = server.fetch.getMockImplementation()?.(input, init);
+      server.clock += 1000;
+      server.files.set("a.json", { text: "fremd", time: new Date(server.clock).toISOString() });
+      return answer ?? Promise.reject(new Error("no fake"));
+    });
+
+    expect(await oneDrive.folder.writeIfUnchanged("a.json", "zwei", time)).toBe("changed");
+    expect(server.files.get("a.json")?.text).toBe("fremd");
+  });
+
   it("writes a new file without a condition", async () => {
     const { oneDrive, server } = setup({ tokens: VALID_TOKENS });
 

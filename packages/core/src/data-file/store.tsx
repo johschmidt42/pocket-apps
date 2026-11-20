@@ -160,13 +160,17 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
   ): Promise<void> {
     dispatch({ type: "saving" });
     try {
-      // Another device can have changed the file (for example through Google Drive).
-      if ((await folder.lastModified(fileName)) !== state.lastModified) {
-        dispatch({ type: "conflict" });
-        return;
-      }
-      const lastModified = await folder.write(fileName, serialize(state.data));
-      dispatch({ type: "saved", data: state.data, lastModified });
+      // Another device can have changed the file (for example through OneDrive).
+      const lastModified = await folder.writeIfUnchanged(
+        fileName,
+        serialize(state.data),
+        state.lastModified,
+      );
+      dispatch(
+        lastModified === "changed"
+          ? { type: "conflict" }
+          : { type: "saved", data: state.data, lastModified },
+      );
     } catch (error) {
       dispatch({ type: "failed", message: errorMessage(error) });
     }

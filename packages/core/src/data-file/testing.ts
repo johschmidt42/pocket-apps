@@ -1,4 +1,10 @@
-import type { DataFolder, FileSnapshot, FolderHost, StorageKind } from "./folder.ts";
+import {
+  checkThenWrite,
+  type DataFolder,
+  type FileSnapshot,
+  type FolderHost,
+  type StorageKind,
+} from "./folder.ts";
 
 export type MemoryFolder = DataFolder & {
   /** All text files by path. */
@@ -61,6 +67,8 @@ export function createMemoryFolder(
       else folder.blobs.set(path, content);
       return Promise.resolve(clock);
     },
+    writeIfUnchanged: (path, content, expected) =>
+      checkThenWrite(folder.lastModified, folder.write)(path, content, expected),
     remove: (path) => {
       if (folder.writeError) return Promise.reject(folder.writeError);
       folder.files.delete(path);

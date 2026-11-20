@@ -43,15 +43,16 @@ Earlier versions kept the data file as `<app>.json` in the data folder itself. T
 
 A storage kind is a `StorageKind` in `folder.ts`: `"local"` (a folder on this computer) or a cloud storage (`CloudKind`: `"onedrive"`, `"dropbox"`). The files of all kinds have the same paths: `<app>/<app>.json`, `launcher/launcher.json`, `ai/ai.json`.
 
-The code of each kind is a `DataFolder`. Its JSDoc in `folder.ts` gives each function: `read()` and `readBlob()` give `null` for a missing file, `lastModified()` gives a time in ms or `null`, `write()` gives the new time, `remove()` does nothing for a missing file, `queryAccess()` gives `"granted"` or `"prompt"`. `name` shows in the status line ("Dropbox / <app>/<app>.json"). The store and the apps see only this interface.
+The code of each kind is a `DataFolder`. Its JSDoc in `folder.ts` gives each function: `read()` and `readBlob()` give `null` for a missing file, `lastModified()` gives a time in ms or `null`, `write()` gives the new time, `writeIfUnchanged()` writes only if the time of the file is the expected time and gives the new time or `"changed"`, `remove()` does nothing for a missing file, `queryAccess()` gives `"granted"` or `"prompt"`. `name` shows in the status line ("Dropbox / <app>/<app>.json"). The store and the apps see only this interface.
 
 - `browser-folder.ts`: `createBrowserFolderHost()` is the real `FolderHost`. `kinds()` gives the kinds that this browser offers. `loadSaved()` ends a login that comes back and gives the saved choice. `pick(kind)` lets the user pick. A local folder is `wrapDirectory()` in the same file. `PROVIDERS` lists the cloud storages.
 - `cloud-login.ts`: the login of all cloud storages (see "Login of the cloud storages").
-- `onedrive-folder.ts`, `dropbox-folder.ts`: the `CloudProvider` and the `DataFolder` of each cloud storage. `cloud-folder.ts` has the parts that they share: the read in the safe order and the message of a conflict.
+- `onedrive-folder.ts`, `dropbox-folder.ts`: the `CloudProvider` and the `DataFolder` of each cloud storage. `cloud-folder.ts` has the parts that they share: the read in the safe order and the error of a conflict in `write()`.
 - `settings-store.ts`: the key-value store in IndexedDB (database `pocket-apps`, store `settings`). The key `data-folder` holds the choice: a directory handle, or the text of a `CloudKind`. The key `<kind>-tokens` holds the tokens of a cloud storage.
 - `storage-kinds.ts`: the texts of each kind in the choice and on the screen of an expired login. `storage-choice.tsx` shows the choice. `data-folder-gate.tsx` shows it on the first visit and in the dialog "Speicherort wählen".
 - `STORAGE_ORIGINS` in `packages/vite-config/index.js`: the origins that the page code calls (`connect-src`): the token endpoint, the API and the server of the file contents. The login page of a provider is a page change, not a request, so it needs no entry.
-- The conflict check uses the time of the last change (`lastModified`) for all kinds. A cloud storage also keeps the version of each file from the last check in its `DataFolder` (eTag, revision). The next write sends it, and the provider writes only if nobody changed the file in between. A write without a check (for example an image) overwrites the file.
+- The store saves the data file with `writeIfUnchanged(path, text, expected)`. `expected` is the time of the last change when the app read or wrote the file, or `null` for no file. A folder that cannot write on a condition first gets the time and compares it (`checkThenWrite()` in `folder.ts`): the local folder and OneDrive. Dropbox writes in one request, because its upload checks the revision itself. Only if the store expects another time than the last check of the folder (for example after a look at the raw data), Dropbox checks the time first.
+- A cloud storage also keeps the version of each file from the last check in its `DataFolder` (eTag, revision). The next write sends it, and the provider writes only if nobody changed the file in between. A write without a check (for example an image) overwrites the file. A conflict in `write()` is an error. A conflict in `writeIfUnchanged()` gives `"changed"`.
 
 ## Login of the cloud storages
 
@@ -87,7 +88,7 @@ For example Google Drive:
 - Microsoft gives a browser app a refresh token for 24 hours. A new refresh token keeps the end time of the first one. Thus the user logs in again once a day, also with daily use.
 - A file that does not exist gives a 404 answer. Chrome writes each 404 answer to the console. This is normal.
 - A read gets the time of the last change first, then the content. In this order, a change in between gives a conflict at the next save, not a lost change.
-- A write sends the eTag of the last check as `If-Match`. A change in between gives 412.
+- A write sends the eTag of the last check as `If-Match`. A change in between gives 412. But Microsoft documents `If-Match` only for upload sessions, not for this simple upload. Thus `writeIfUnchanged()` also gets the time first (one more request, about 0.5 s). Do not remove this check without a guarantee from Microsoft.
 - A write is one request (Graph "simple upload"). Graph limits its size. The data files and the photos of the apps are small. Large files are not tested.
 
 ## Dropbox
@@ -97,7 +98,7 @@ For example Google Drive:
 - The login asks for `token_access_type=offline`. Then Dropbox gives a refresh token without an end. A refresh gives no new refresh token: the old one stays. The user logs in once per browser.
 - A file that does not exist gives an error answer (409, "path/not_found"). Chrome writes it to the console. This is normal.
 - A read gets the metadata first (`get_metadata`), then the content (`download`).
-- A write (`upload`) uses the state of the last check: `update` with the revision, `add` for a file that did not exist, or `overwrite` for a file without a check. A change in between gives 409 "path/conflict".
+- A write (`upload`) uses the state of the last check: `update` with the revision, `add` for a file that did not exist, or `overwrite` for a file without a check. A change in between gives 409 "path/conflict". The Dropbox API documents this (`WriteMode` and `strict_conflict` in `files.stone` of `dropbox/dropbox-api-spec`). Thus `writeIfUnchanged()` saves the data file in one request.
 - Dropbox gives the time of a change only in whole seconds. If a check finds a new revision with the same time, the folder gives a time 1 ms later. Then the conflict check of the store also sees a change of another device in the same second.
 - The login does not ask for the password again (`chooseAccountFields` is empty): Dropbox has no list of accounts. To use another account, the person logs out on dropbox.com.
 - The header `Dropbox-API-Arg` takes only ASCII. The code escapes other characters.
@@ -105,7 +106,7 @@ For example Google Drive:
 ## While the app is open
 
 - The store saves each change automatically after 500 ms. The status line under the header shows "Gespeichert" or "Speichert …".
-- Before each save, the store compares the time of the last change of the file with the time when the app read or wrote it. If the file changed elsewhere (for example on another device), the store does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
+- At each save, the store compares the time of the last change of the file with the time when the app read or wrote it (`writeIfUnchanged()`). If the file changed elsewhere (for example on another device), the store does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
 - After a failed save, the store shows an error and tries again after 5 seconds.
 - While a change is not saved, the store warns before the tab closes.
 - A click on the folder and file name in the status line (for example "Pocket Apps Daten / app-ideen/app-ideen.json") shows the raw data. The store reads the file again from the data folder. A dialog shows the JSON text with indents and colors. The user can only read it. If the file does not exist yet, is not JSON or cannot be read, the dialog says so. If a change was not saved at the time of the click, the dialog says that the change is not in the file yet. A broken file has the button "Rohdaten ansehen" in its error message. If the browser lost the access to the folder, the click asks for it again: for a local folder in a Chrome window, for a cloud storage with the login of the provider.

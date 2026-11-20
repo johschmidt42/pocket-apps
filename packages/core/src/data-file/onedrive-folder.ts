@@ -2,9 +2,9 @@
 // "Pocket Apps" (Microsoft Entra), over Microsoft Graph. The login is in `cloud-login.ts`.
 // Microsoft gives a browser app (platform "SPA") a refresh token for 24 hours.
 import { z } from "zod";
-import { CHANGED_ELSEWHERE, readTimeThenText } from "./cloud-folder.ts";
+import { failOnConflict, readTimeThenText } from "./cloud-folder.ts";
 import type { CloudProvider, CloudSession } from "./cloud-login.ts";
-import type { DataFolder } from "./folder.ts";
+import { checkThenWrite, type DataFolder } from "./folder.ts";
 
 const AUTHORITY = "https://login.microsoftonline.com/common/oauth2/v2.0";
 const APP_ROOT = "https://graph.microsoft.com/v1.0/me/drive/special/approot";
@@ -38,13 +38,13 @@ export function createOneDriveFolder(session: CloudSession): DataFolder {
   // writes only if nobody changed the file after the check of the store.
   const checkedTags = new Map<string, string>();
 
-  /** A request to Microsoft Graph. 404 is a normal answer. Other failures are German errors. */
+  /**
+   * A request to Microsoft Graph. 404 (no file) and 412 (`If-Match` does not match) are normal
+   * answers. Other failures are German errors.
+   */
   async function graph(url: string, init: RequestInit = {}): Promise<Response> {
     const response = await session.request(url, init);
-    if (response.status === 412) {
-      throw session.failure(CHANGED_ELSEWHERE);
-    }
-    if (!response.ok && response.status !== 404) {
+    if (!response.ok && response.status !== 404 && response.status !== 412) {
       throw session.failure(`OneDrive hat mit dem Fehler ${String(response.status)} geantwortet.`);
     }
     return response;
@@ -72,6 +72,20 @@ export function createOneDriveFolder(session: CloudSession): DataFolder {
     return response.status === 404 ? null : response.blob();
   }
 
+  /** Writes a file. Sends the eTag of the last check as `If-Match`. */
+  async function upload(path: string, content: string | Blob): Promise<number | "changed"> {
+    const type = typeof content === "string" ? "text/plain; charset=utf-8" : content.type;
+    const headers = new Headers({ "Content-Type": type || "application/octet-stream" });
+    const tag = checkedTags.get(path);
+    if (tag !== undefined) headers.set("If-Match", tag);
+    const response = await graph(`${itemUrl(path)}/content`, {
+      method: "PUT",
+      headers,
+      body: content,
+    });
+    return response.status === 412 ? "changed" : timeOf(path, response);
+  }
+
   return {
     name: "OneDrive",
     kind: "onedrive",
@@ -80,18 +94,10 @@ export function createOneDriveFolder(session: CloudSession): DataFolder {
     lastModified,
     readBlob,
     read: (path) => readTimeThenText(path, lastModified, readBlob),
-    async write(path, content) {
-      const type = typeof content === "string" ? "text/plain; charset=utf-8" : content.type;
-      const headers = new Headers({ "Content-Type": type || "application/octet-stream" });
-      const tag = checkedTags.get(path);
-      if (tag !== undefined) headers.set("If-Match", tag);
-      const response = await graph(`${itemUrl(path)}/content`, {
-        method: "PUT",
-        headers,
-        body: content,
-      });
-      return timeOf(path, response);
-    },
+    write: failOnConflict(session, upload),
+    // Microsoft documents `If-Match` only for upload sessions, not for this simple upload. So the
+    // folder checks the time first: one more request, but no lost change if Graph ignores it.
+    writeIfUnchanged: checkThenWrite(lastModified, upload),
     async remove(path) {
       checkedTags.delete(path);
       await graph(itemUrl(path), { method: "DELETE" });

@@ -30,6 +30,16 @@ export type DataFolder = {
    * Returns the new time of the last change.
    */
   write: (path: string, content: string | Blob) => Promise<number>;
+  /**
+   * Writes a text file only if nobody changed it since `expected`: the time of its last change
+   * that the app knows, or `null` for a file that did not exist. Returns the new time, or
+   * `"changed"` if the file changed elsewhere. The store saves the data file with it.
+   */
+  writeIfUnchanged: (
+    path: string,
+    content: string,
+    expected: number | null,
+  ) => Promise<number | "changed">;
   /** Deletes a file. Does nothing if the file does not exist. */
   remove: (path: string) => Promise<void>;
 };
@@ -46,3 +56,15 @@ export type FolderHost = {
    */
   pick: (kind: StorageKind) => Promise<DataFolder | null>;
 };
+
+/**
+ * `writeIfUnchanged()` for a folder that cannot write on a condition: it gets the time of the
+ * last change first and writes only if the time is `expected`.
+ */
+export function checkThenWrite(
+  lastModified: DataFolder["lastModified"],
+  write: (path: string, content: string) => Promise<number | "changed">,
+): DataFolder["writeIfUnchanged"] {
+  return async (path, content, expected) =>
+    (await lastModified(path)) === expected ? write(path, content) : "changed";
+}
