@@ -136,3 +136,4 @@ The pipeline `CD - Release` publishes the app files on GitHub Pages after each s
 | lebenslauf    | yes       | no       | CV as an A4 page with variants per job ad. Print it or save a PDF.                                                                                                               |
 | galerie       | no        | no       | The images of a folder, with thumbnails and a large preview.                                                                                                                     |
 | trainingsbuch | yes       | yes      | Logs your results of well-known fitness workouts (for example "The Girls" and the yearly Open), and of workouts that you add. The AI can record a result from a text or a photo. |
+| spielekaeufe  | yes       | yes      | Your game purchases on Steam with day and price, sorted by day, price or name. The pictures are links to the server of Steam.                                                    |
