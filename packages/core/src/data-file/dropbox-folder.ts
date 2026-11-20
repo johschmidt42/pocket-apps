@@ -2,8 +2,9 @@
 // over the Dropbox API. The login is in `cloud-login.ts`. Dropbox gives a refresh token without an
 // end, so the person logs in only once per browser.
 import { z } from "zod";
+import { CHANGED_ELSEWHERE, readTimeThenText } from "./cloud-folder.ts";
 import type { CloudProvider, CloudSession } from "./cloud-login.ts";
-import type { DataFolder, FileSnapshot } from "./folder.ts";
+import type { DataFolder } from "./folder.ts";
 
 const API = "https://api.dropboxapi.com/2";
 const CONTENT = "https://content.dropboxapi.com/2";
@@ -18,7 +19,8 @@ export const DROPBOX: CloudProvider = {
   tokenUrl: "https://api.dropboxapi.com/oauth2/token",
   // "offline" gives a refresh token. Without it, the login would end after 4 hours.
   authorizeFields: { token_access_type: "offline" },
-  chooseAccountFields: { force_reauthentication: "true" },
+  // Dropbox has no list of accounts. To use another account, the person logs out on dropbox.com.
+  chooseAccountFields: {},
   refreshFields: {},
 };
 
@@ -37,17 +39,18 @@ function dropboxPath(path: string): string {
 /** JSON for the header `Dropbox-API-Arg`. A header takes only ASCII, so other characters are escaped. */
 function apiArg(value: unknown): string {
   return JSON.stringify(value).replace(
-    /[\u007f-￿]/g,
+    /[\u007f-\uffff]/g,
     (character) => `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`,
   );
 }
 
 /** The app folder in Dropbox, with the login of `session`. */
 export function createDropboxFolder(session: CloudSession): DataFolder {
-  // The state of each file at the last check of the store: its revision, or `null` if it did
-  // not exist. The next write uses it: Dropbox writes only if nobody changed the file after the
-  // check. A file without a check (for example an image) is overwritten.
-  const checked = new Map<string, string | null>();
+  // The state of each file at the last check of the store: its revision and the time that the
+  // app gave for it, or `null` if it did not exist. The next write uses it: Dropbox writes only if
+  // nobody changed the file after the check. A file without a check (for example an image) is
+  // overwritten.
+  const checked = new Map<string, { rev: string; time: number } | null>();
 
   /** The summary of an error answer (409), or `null`. */
   async function errorOf(response: Response): Promise<string | null> {
@@ -62,20 +65,25 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     if (response.ok) return { response, error: null };
     const error = await errorOf(response);
     if (error !== null && allowed !== null && error.startsWith(allowed)) return { response, error };
-    if (error?.startsWith("path/conflict")) {
-      throw session.failure(
-        "Die Datei hat sich gerade woanders geändert. Die App prüft sie gleich noch einmal.",
-      );
-    }
+    if (error?.startsWith("path/conflict")) throw session.failure(CHANGED_ELSEWHERE);
     throw session.failure(`Dropbox hat mit dem Fehler ${String(response.status)} geantwortet.`);
   }
 
-  /** The time of the last change from metadata. Keeps the revision for the next write. */
+  /**
+   * The time of the last change from metadata. Keeps the revision for the next write.
+   * Dropbox gives the time only in whole seconds. A new revision in the same second as the known
+   * one gets a later time, so that the conflict check of the store sees the change.
+   */
   async function timeOf(path: string, response: Response): Promise<number> {
     const metadata = metadataSchema.safeParse(await response.json().catch(() => null));
     if (!metadata.success) throw session.failure("Dropbox hat eine unerwartete Antwort geschickt.");
-    checked.set(path, metadata.data.rev);
-    return Date.parse(metadata.data.server_modified);
+    const { rev } = metadata.data;
+    const known = checked.get(path);
+    const time = Date.parse(metadata.data.server_modified);
+    const shown =
+      known?.rev === rev ? known.time : known && time <= known.time ? known.time + 1 : time;
+    checked.set(path, { rev, time: shown });
+    return shown;
   }
 
   async function lastModified(path: string): Promise<number | null> {
@@ -110,14 +118,7 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
     requestAccess: () => session.startLogin({ chooseAccount: false }),
     lastModified,
     readBlob,
-    async read(path): Promise<FileSnapshot | null> {
-      // First the time, then the text, as in OneDrive: a change in between gives a conflict.
-      const time = await lastModified(path);
-      const blob = time === null ? null : await readBlob(path);
-      return time === null || blob === null
-        ? null
-        : { text: await blob.text(), lastModified: time };
-    },
+    read: (path) => readTimeThenText(path, lastModified, readBlob),
     async write(path, content) {
       const state = checked.get(path);
       const mode =
@@ -125,7 +126,7 @@ export function createDropboxFolder(session: CloudSession): DataFolder {
           ? "overwrite"
           : state === null
             ? "add"
-            : { ".tag": "update", update: state };
+            : { ".tag": "update", update: state.rev };
       const arg = {
         path: dropboxPath(path),
         mode,

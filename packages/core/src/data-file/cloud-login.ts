@@ -218,16 +218,25 @@ export function createCloudSession(
     return fresh?.accessToken ?? null;
   }
 
-  /** A valid access token, or `null` if the person must log in again. */
-  async function accessToken(): Promise<string | null> {
-    const tokens = await savedTokens();
-    if (!tokens) return null;
-    if (tokens.expiresAt - 60_000 > deps.now()) return tokens.accessToken;
-    // Two requests at the same time use one refresh.
+  /** A refresh of the tokens. Two requests at the same time use one refresh. */
+  function refreshOnce(tokens: Tokens): Promise<string | null> {
     refreshing ??= refresh(tokens).finally(() => {
       refreshing = null;
     });
     return refreshing;
+  }
+
+  /** A valid access token, or `null` if the person must log in again. */
+  async function accessToken(): Promise<string | null> {
+    const tokens = await savedTokens();
+    if (!tokens) return null;
+    return tokens.expiresAt - 60_000 > deps.now() ? tokens.accessToken : refreshOnce(tokens);
+  }
+
+  function withToken(url: string, init: RequestInit, token: string): Promise<Response> {
+    const headers = new Headers(init.headers);
+    headers.set("Authorization", `Bearer ${token}`);
+    return send(deps, provider.name, url, { ...init, headers });
   }
 
   return {
@@ -236,9 +245,12 @@ export function createCloudSession(
     async request(url, init = {}) {
       const token = await accessToken();
       if (token === null) throw loginExpired();
-      const headers = new Headers(init.headers);
-      headers.set("Authorization", `Bearer ${token}`);
-      const response = await send(deps, provider.name, url, { ...init, headers });
+      let response = await withToken(url, init, token);
+      // The provider rejects the token, for example because the clock of the device is wrong.
+      // One refresh can fix it. Only if that fails, the person must log in again.
+      const tokens = response.status === 401 ? await savedTokens() : null;
+      const fresh = tokens ? await refreshOnce(tokens) : null;
+      if (fresh !== null) response = await withToken(url, init, fresh);
       if (response.status === 401) {
         await deps.store.set(tokenKey(provider), null);
         throw loginExpired();
@@ -343,6 +355,10 @@ export async function finishCloudLogin(
       throw loginError(`Die Anmeldung bei ${name} hat nicht geklappt. Versuche es noch einmal.`);
     }
     await deps.store.set(FOLDER_KEY, from.kind);
+    // Only the picked storage keeps a login.
+    for (const other of providers) {
+      if (other !== from) await deps.store.set(tokenKey(other), null);
+    }
   }
 }
 

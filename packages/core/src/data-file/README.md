@@ -47,7 +47,7 @@ The code of each kind is a `DataFolder`. Its JSDoc in `folder.ts` gives each fun
 
 - `browser-folder.ts`: `createBrowserFolderHost()` is the real `FolderHost`. `kinds()` gives the kinds that this browser offers. `loadSaved()` ends a login that comes back and gives the saved choice. `pick(kind)` lets the user pick. A local folder is `wrapDirectory()` in the same file. `PROVIDERS` lists the cloud storages.
 - `cloud-login.ts`: the login of all cloud storages (see "Login of the cloud storages").
-- `onedrive-folder.ts`, `dropbox-folder.ts`: the `CloudProvider` and the `DataFolder` of each cloud storage.
+- `onedrive-folder.ts`, `dropbox-folder.ts`: the `CloudProvider` and the `DataFolder` of each cloud storage. `cloud-folder.ts` has the parts that they share: the read in the safe order and the message of a conflict.
 - `settings-store.ts`: the key-value store in IndexedDB (database `pocket-apps`, store `settings`). The key `data-folder` holds the choice: a directory handle, or the text of a `CloudKind`. The key `<kind>-tokens` holds the tokens of a cloud storage.
 - `storage-kinds.ts`: the texts of each kind in the choice and on the screen of an expired login. `storage-choice.tsx` shows the choice. `data-folder-gate.tsx` shows it on the first visit and in the dialog "Speicherort wählen".
 - `STORAGE_ORIGINS` in `packages/vite-config/index.js`: the origins that the page code calls (`connect-src`): the token endpoint, the API and the server of the file contents. The login page of a provider is a page change, not a request, so it needs no entry.
@@ -61,7 +61,8 @@ The code of each kind is a `DataFolder`. Its JSDoc in `folder.ts` gives each fun
 - `createCloudSession(provider)` gives a `CloudSession`: `queryAccess()`, `request(url, init)` (with the access token), `startLogin()`, `forget()` and `failure(message)`.
 - The login always comes back to the start page of the site (`/pocket-apps/`, on the dev server `/`). Before the login, `startLogin()` keeps the provider, the PKCE verifier, the `state` and the address of the app page in `sessionStorage`. `finishCloudLogin()` on the start page checks the `state`, gets the tokens, saves the choice and goes back to the app page. Thus the app registration of a provider needs only one address per web address, and a new app needs no change of the registration. Each registration lists `http://localhost:5173/`, `http://localhost:4173/pocket-apps/` and `https://johschmidt42.github.io/pocket-apps/`. The dev server must run on port 5173.
 - A failed or cancelled login goes back to the page of the app too. That page shows the error. If the user had a storage before, the app keeps it.
-- The session refreshes the access token before it ends. Two requests at the same time use one refresh. If the provider does not accept the refresh token (400 or 401), the tokens go away and the app shows "Bei … anmelden". Other failures (for example 503) keep the tokens.
+- The session refreshes the access token before it ends. Two requests at the same time use one refresh. If the provider rejects an access token (401, for example because the clock of the device is wrong), the session refreshes it once and sends the request again. If the provider does not accept the refresh token (400 or 401), the tokens go away and the app shows "Bei … anmelden". Other failures (for example 503) keep the tokens.
+- After a login, only the picked cloud storage keeps its tokens. The tokens of the other cloud storages go away.
 - Errors are `DataFileError`s with a German message: `"cloud-login"` for a login that is not valid (`request()` throws it on 401 and forgets the tokens), `"cloud-failed"` for all other failures (`session.failure(message)`): a conflict, an HTTP error (the store tries again), an answer of an unexpected shape, and no connection.
 - If the login ends while the app is open, a save fails. "Jetzt erneut versuchen" goes to the login of the provider. A change that is not saved is then lost. The browser warns before the page leaves.
 
@@ -69,7 +70,7 @@ The code of each kind is a `DataFolder`. Its JSDoc in `folder.ts` gives each fun
 
 For example Google Drive:
 
-1. Register an app with the name "Pocket Apps" at the provider. Some providers keep the first name for the folder. Allow only the app folder, add the three redirect addresses (see "Login of the cloud storages") and allow public clients (PKCE). Put the public client ID into the code, never a secret.
+1. Register an app with the name "Pocket Apps" at the provider. Some providers keep the first name for the folder. If the name is taken (Dropbox needs a unique name), use another name and set the name of the app folder to "Pocket Apps" in the settings of the provider. Allow only the app folder, add the three redirect addresses (see "Login of the cloud storages") and allow public clients (PKCE). Put the public client ID into the code, never a secret.
 2. Add the kind to `CloudKind` in `folder.ts`.
 3. Write `<kind>-folder.ts` with a `CloudProvider` and a `DataFolder`, like `dropbox-folder.ts`. Use the folder `/Apps/Pocket Apps`. Map the HTTP answers to `session.failure()` messages, and keep the version of each file for the next write. A provider without paths (Google Drive uses file IDs) maps each path to an ID in its `DataFolder`.
 4. Write `<kind>-folder.test.ts` with a fake `fetch` that follows the rules of the API, like `dropbox-folder.test.ts`. `packages/core` needs 100 % coverage.
@@ -97,6 +98,8 @@ For example Google Drive:
 - A file that does not exist gives an error answer (409, "path/not_found"). Chrome writes it to the console. This is normal.
 - A read gets the metadata first (`get_metadata`), then the content (`download`).
 - A write (`upload`) uses the state of the last check: `update` with the revision, `add` for a file that did not exist, or `overwrite` for a file without a check. A change in between gives 409 "path/conflict".
+- Dropbox gives the time of a change only in whole seconds. If a check finds a new revision with the same time, the folder gives a time 1 ms later. Then the conflict check of the store also sees a change of another device in the same second.
+- The login does not ask for the password again (`chooseAccountFields` is empty): Dropbox has no list of accounts. To use another account, the person logs out on dropbox.com.
 - The header `Dropbox-API-Arg` takes only ASCII. The code escapes other characters.
 
 ## While the app is open
@@ -106,7 +109,7 @@ For example Google Drive:
 - After a failed save, the store shows an error and tries again after 5 seconds.
 - While a change is not saved, the store warns before the tab closes.
 - A click on the folder and file name in the status line (for example "Pocket Apps Daten / app-ideen/app-ideen.json") shows the raw data. The store reads the file again from the data folder. A dialog shows the JSON text with indents and colors. The user can only read it. If the file does not exist yet, is not JSON or cannot be read, the dialog says so. If a change was not saved at the time of the click, the dialog says that the change is not in the file yet. A broken file has the button "Rohdaten ansehen" in its error message. If the browser lost the access to the folder, the click asks for it again: for a local folder in a Chrome window, for a cloud storage with the login of the provider.
-- The button "Speicherort wechseln" in the status line opens the dialog "Speicherort wählen" with the same choice. It works only when all changes are saved. After the change, the app loads the file of the new storage. The new storage is then the storage of all apps. Other open tabs keep the old storage until they load again. A pick of a local folder forgets the logins of all cloud storages. A pick of a cloud storage keeps the earlier choice until the login works.
+- The button "Speicherort wechseln" in the status line opens the dialog "Speicherort wählen" with the same choice. It works only when all changes are saved. After the change, the app loads the file of the new storage. The new storage is then the storage of all apps. Other open tabs keep the old storage until they load again. A pick of a local folder forgets the logins of all cloud storages. A pick of a cloud storage keeps the earlier choice until the login works. Then the logins of the other cloud storages go away.
 
 ## Optional folder (only for the launcher)
 

@@ -166,6 +166,21 @@ describe("the Dropbox folder", () => {
     expect(server.files.get("/a.json")?.text).toBe("fremd");
   });
 
+  it("sees a change of another device in the same second", async () => {
+    const { folder, server } = setup();
+    const time = await folder.write("a.json", "eins");
+    expect(await folder.lastModified("a.json")).toBe(time);
+
+    // Dropbox gives whole seconds: the other change has the same time, but a new revision.
+    const saved = server.files.get("/a.json");
+    server.files.set("/a.json", { text: "fremd", rev: "rev-other", time: saved?.time ?? "" });
+
+    const later = await folder.lastModified("a.json");
+    expect(later).toBe(time + 1);
+    // The same revision keeps its time.
+    expect(await folder.lastModified("a.json")).toBe(later);
+  });
+
   it("adds a new file only if nobody made it in between", async () => {
     const { folder, server } = setup();
 
@@ -247,26 +262,45 @@ describe("the Dropbox login", () => {
     );
   });
 
-  it("asks Dropbox for a refresh token, and for the account only on the first login", async () => {
+  it("asks Dropbox for a refresh token, without a new password", async () => {
     const { folder, session, navigate } = setup();
 
     void session.startLogin({ chooseAccount: true });
+    // A new login after an ended one goes the same way.
     void folder.requestAccess();
     await vi.waitFor(() => {
       expect(navigate).toHaveBeenCalledTimes(2);
     });
 
-    const [first, again] = navigate.mock.calls.map((call) => new URL(String(call[0])));
-    expect(`${String(first?.origin)}${String(first?.pathname)}`).toBe(
-      "https://www.dropbox.com/oauth2/authorize",
-    );
-    expect(first?.searchParams.get("token_access_type")).toBe("offline");
-    expect(first?.searchParams.get("force_reauthentication")).toBe("true");
-    expect(again?.searchParams.get("force_reauthentication")).toBeNull();
+    const url = new URL(String(navigate.mock.calls[0]?.[0]));
+    expect(`${url.origin}${url.pathname}`).toBe("https://www.dropbox.com/oauth2/authorize");
+    expect(url.searchParams.get("token_access_type")).toBe("offline");
+    expect(url.searchParams.get("force_reauthentication")).toBeNull();
   });
 
-  it("makes Dropbox the picked storage after the login", async () => {
+  it("refreshes the token once when Dropbox rejects it, for example after a wrong clock", async () => {
+    const { folder, server, store } = setup();
+    let rejected = false;
+    const original = server.fetch.getMockImplementation();
+    server.fetch.mockImplementation((input, init) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      const auth = new Headers(init?.headers).get("Authorization");
+      if (url !== TOKEN_URL && auth === "Bearer access" && !rejected) {
+        rejected = true;
+        return Promise.resolve(new Response("expired", { status: 401 }));
+      }
+      return original?.(input, init) ?? Promise.reject(new Error("no fake"));
+    });
+
+    expect(await folder.lastModified("a.json")).toBeNull();
+
+    expect(rejected).toBe(true);
+    expect(store.values.get("dropbox-tokens")).toMatchObject({ accessToken: "fresh" });
+  });
+
+  it("makes Dropbox the picked storage after the login, and forgets other logins", async () => {
     const { deps, store } = setup(null);
+    store.values.set("onedrive-tokens", VALID_TOKENS);
     window.sessionStorage.setItem(
       "pocket-apps-cloud-login",
       JSON.stringify({ provider: "dropbox", verifier: "v1", state: "s1", returnTo: START_PAGE }),
@@ -286,5 +320,6 @@ describe("the Dropbox login", () => {
       refreshToken: "r",
     });
     expect(server.requests[0]?.url).toBe(TOKEN_URL);
+    expect(store.values.get("onedrive-tokens")).toBeNull();
   });
 });

@@ -1,13 +1,22 @@
 // The data folder in the browser: a folder on this computer (File System Access API, Chrome and
-// Edge) or OneDrive. The choice stays in IndexedDB. Every page of the same web address uses it.
+// Edge) or a cloud storage (OneDrive, Dropbox). The choice stays in IndexedDB. Every page of the
+// same web address uses it.
 import {
   createCloudSession,
   finishCloudLogin,
   type CloudDeps,
   type CloudProvider,
+  type CloudSession,
 } from "./cloud-login.ts";
 import { createDropboxFolder, DROPBOX } from "./dropbox-folder.ts";
-import type { CloudKind, DataFolder, FileSnapshot, FolderHost } from "./folder.ts";
+import { isOneOf } from "../one-of.ts";
+import {
+  CLOUD_KINDS,
+  type CloudKind,
+  type DataFolder,
+  type FileSnapshot,
+  type FolderHost,
+} from "./folder.ts";
 import { createOneDriveFolder, ONEDRIVE } from "./onedrive-folder.ts";
 import { FOLDER_KEY, indexedDbStore, type KeyValueStore } from "./settings-store.ts";
 
@@ -118,7 +127,7 @@ export type CloudStorages = {
 
 const PROVIDERS: Record<
   CloudKind,
-  { provider: CloudProvider; folder: typeof createOneDriveFolder }
+  { provider: CloudProvider; folder: (session: CloudSession) => DataFolder }
 > = {
   onedrive: { provider: ONEDRIVE, folder: createOneDriveFolder },
   dropbox: { provider: DROPBOX, folder: createDropboxFolder },
@@ -142,7 +151,7 @@ export function createCloudStorages(overrides: Partial<CloudDeps> = {}): CloudSt
 }
 
 function isCloudKind(value: unknown): value is CloudKind {
-  return value === "onedrive" || value === "dropbox";
+  return typeof value === "string" && isOneOf(CLOUD_KINDS, value);
 }
 
 /**
@@ -161,7 +170,7 @@ export function createBrowserFolderHost(
     kinds: () => [
       ...(typeof window.showDirectoryPicker === "function" ? (["local"] as const) : []),
       // The login needs Web Crypto. Browsers have it on https and on localhost.
-      ...(typeof crypto.subtle === "object" ? (["onedrive", "dropbox"] as const) : []),
+      ...(typeof crypto.subtle === "object" ? CLOUD_KINDS : []),
     ],
     loadSaved: async () => {
       // A failed or cancelled login keeps the earlier choice. Only without one, the person sees

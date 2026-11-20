@@ -2,8 +2,9 @@
 // "Pocket Apps" (Microsoft Entra), over Microsoft Graph. The login is in `cloud-login.ts`.
 // Microsoft gives a browser app (platform "SPA") a refresh token for 24 hours.
 import { z } from "zod";
+import { CHANGED_ELSEWHERE, readTimeThenText } from "./cloud-folder.ts";
 import type { CloudProvider, CloudSession } from "./cloud-login.ts";
-import type { DataFolder, FileSnapshot } from "./folder.ts";
+import type { DataFolder } from "./folder.ts";
 
 const AUTHORITY = "https://login.microsoftonline.com/common/oauth2/v2.0";
 const APP_ROOT = "https://graph.microsoft.com/v1.0/me/drive/special/approot";
@@ -41,9 +42,7 @@ export function createOneDriveFolder(session: CloudSession): DataFolder {
   async function graph(url: string, init: RequestInit = {}): Promise<Response> {
     const response = await session.request(url, init);
     if (response.status === 412) {
-      throw session.failure(
-        "Die Datei hat sich gerade woanders geändert. Die App prüft sie gleich noch einmal.",
-      );
+      throw session.failure(CHANGED_ELSEWHERE);
     }
     if (!response.ok && response.status !== 404) {
       throw session.failure(`OneDrive hat mit dem Fehler ${String(response.status)} geantwortet.`);
@@ -80,16 +79,7 @@ export function createOneDriveFolder(session: CloudSession): DataFolder {
     requestAccess: () => session.startLogin({ chooseAccount: false }),
     lastModified,
     readBlob,
-    async read(path): Promise<FileSnapshot | null> {
-      // First the time, then the text. If the file changes in between, the time is older than
-      // the text. Then the next save shows a conflict and loses nothing. The other order could
-      // overwrite the change of another device.
-      const time = await lastModified(path);
-      const blob = time === null ? null : await readBlob(path);
-      return time === null || blob === null
-        ? null
-        : { text: await blob.text(), lastModified: time };
-    },
+    read: (path) => readTimeThenText(path, lastModified, readBlob),
     async write(path, content) {
       const type = typeof content === "string" ? "text/plain; charset=utf-8" : content.type;
       const headers = new Headers({ "Content-Type": type || "application/octet-stream" });

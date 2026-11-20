@@ -4,8 +4,9 @@ export type FileSnapshot = { text: string; lastModified: number };
 /** Where the data lives: a folder on this computer, or the app folder in a cloud storage. */
 export type StorageKind = "local" | CloudKind;
 
-/** The cloud storages. Each has the app folder `/Apps/Pocket Apps`. */
-export type CloudKind = "onedrive" | "dropbox";
+/** The cloud storages, in the order of the choice. Each has the app folder `/Apps/Pocket Apps`. */
+export const CLOUD_KINDS = ["onedrive", "dropbox"] as const;
+export type CloudKind = (typeof CLOUD_KINDS)[number];
 
 /** The data folder that the person picked. Paths use "/" between folder names. */
 export type DataFolder = {
