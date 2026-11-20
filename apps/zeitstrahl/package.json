@@ -1,6 +1,6 @@
 {
   "name": "zeitstrahl",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
   "description": "Zeigt Zeitpunkte und Zeiträume auf senkrechten Zeitstrahlen, zum Beispiel einen Lebenslauf.",

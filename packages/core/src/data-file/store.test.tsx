@@ -79,7 +79,9 @@ describe("data folder", () => {
     await user.click(await screen.findByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-    expect(screen.getByText("Pocket Apps Daten / demo/demo.json")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Pocket Apps Daten / demo/demo.json: Rohdaten ansehen" }),
+    ).toBeInTheDocument();
   });
 
   it("uses the folder of the browser by default", async () => {
@@ -426,17 +428,22 @@ describe("conflict", () => {
 describe("change folder", () => {
   it("loads the file of the new folder", async () => {
     const { folder, host } = readyHost();
-    const other = createMemoryFolder("Andere Daten");
+    const other = createMemoryFolder("Dropbox", "dropbox");
     other.files.set("demo/demo.json", { text: dataFile(2, { count: 9 }), lastModified: 1 });
     host.nextPick = other;
     const user = setup(host);
     await screen.findByRole("button", { name: "Zähler 0" });
+    // The icon of the status line shows the kind of the storage.
+    expect(screen.getByRole("img", { name: "Ordner auf diesem Computer" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Speicherort wechseln" }));
-    await user.click(screen.getByRole("button", { name: "Ordner wählen …" }));
+    await user.click(screen.getByRole("button", { name: "Mit Dropbox verbinden" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 9" })).toBeInTheDocument();
-    expect(screen.getByText("Andere Daten / demo/demo.json")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Dropbox / demo/demo.json: Rohdaten ansehen" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Dropbox" })).toBeInTheDocument();
     expect(folder.files.size).toBe(0);
   });
 
@@ -495,7 +502,9 @@ describe("broken file", () => {
     await user.click(screen.getByRole("button", { name: "Ordner wählen …" }));
 
     expect(await screen.findByRole("button", { name: "Zähler 0" })).toBeInTheDocument();
-    expect(screen.getByText("Neu / demo/demo.json")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Neu / demo/demo.json: Rohdaten ansehen" }),
+    ).toBeInTheDocument();
   });
 
   it("keeps an app with an optional folder usable", async () => {

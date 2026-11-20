@@ -327,6 +327,7 @@ export function createDataFileStore<T>(schema: DataSchema<T>, options: DataFileS
       <Context value={api}>
         <DataFileStatus
           folderName={folder.name}
+          folderKind={folder.kind}
           fileName={fileName}
           save={state.save}
           error={state.error}

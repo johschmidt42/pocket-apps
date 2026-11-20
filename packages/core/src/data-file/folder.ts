@@ -4,8 +4,11 @@ export type FileSnapshot = { text: string; lastModified: number };
 /** Where the data lives: a folder on this computer, or the app folder in a cloud storage. */
 export type StorageKind = "local" | CloudKind;
 
-/** The cloud storages, in the order of the choice. Each has the app folder `/Apps/Pocket Apps`. */
-export const CLOUD_KINDS = ["onedrive", "dropbox"] as const;
+/**
+ * The cloud storages, in the order of the choice: the recommended one first. Each has the app
+ * folder `/Apps/Pocket Apps`.
+ */
+export const CLOUD_KINDS = ["dropbox", "onedrive"] as const;
 export type CloudKind = (typeof CLOUD_KINDS)[number];
 
 /** The result of a write on a condition: the new time, or `"changed"` if the file changed elsewhere. */

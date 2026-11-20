@@ -114,6 +114,9 @@ test.describe("trainingsbuch in Chrome and Edge", () => {
     await withDataFolder(page);
     await page.goto(releaseUrl("trainingsbuch.html"));
     await page.getByRole("button", { name: "Ordner wählen …" }).click();
+    // The mouse stays where the button was. A card under the mouse grows on hover, and the page
+    // then keeps the scroll position a few pixels off. Move the mouse away from the list.
+    await page.mouse.move(0, 0);
 
     // Murph is far down in the list.
     const murph = page.getByRole("button", { name: /^Murph/ });

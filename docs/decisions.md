@@ -3,6 +3,14 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-20: Dropbox first in the choice, the icon of the storage in the status line (core)
+
+- **Context:** The project owner compared OneDrive and Dropbox in Chrome. Dropbox loads in about 0.8 s, OneDrive in up to 2.9 s. A Dropbox login holds without an end, a OneDrive login for 24 hours. On a phone, the status line was too small, and it did not show which storage the app uses.
+- **Decision:** The choice shows the cloud storages first, because they work on all devices: Dropbox, OneDrive, then the local folder. Dropbox has the badge "Empfohlen" and the main button (`RECOMMENDED` in `storage-kinds.ts`).
+- **Decision:** The status line shows the icon of the storage kind: a box for Dropbox, a cloud for OneDrive, a hard disk for a local folder. `lucide-react` has no brand logos, so the icons only hint at the kind. The same icons show in the choice. The icon has the title of the kind as its accessible name, because the name of a local folder does not tell its kind.
+- **Decision:** The status line uses the normal text size. "Speicherort wechseln" is an outline button of 32 px height. On a phone, the line shows only the name of the storage and the button says "Wechseln". Its accessible name stays "Speicherort wechseln".
+- **Consequence:** All stateful apps and the launcher get a new minor version.
+
 ## 2026-11-20: Read and save in one request where the provider allows it (core)
 
 - **Context:** Before each save, the store got the time of the last change of the data file and then wrote it: two requests. A read was two requests too. A measurement in Chrome: the check takes about 0.23 s with Dropbox and 0.5 s with OneDrive. The write already sends the version of the last check (revision, eTag).

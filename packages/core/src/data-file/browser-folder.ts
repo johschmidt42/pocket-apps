@@ -176,10 +176,11 @@ export function createBrowserFolderHost(
   }
 
   return {
+    // The order of the choice: the cloud storages first, because they work on all devices.
     kinds: () => [
-      ...(typeof window.showDirectoryPicker === "function" ? (["local"] as const) : []),
       // The login needs Web Crypto. Browsers have it on https and on localhost.
       ...(typeof crypto.subtle === "object" ? CLOUD_KINDS : []),
+      ...(typeof window.showDirectoryPicker === "function" ? (["local"] as const) : []),
     ],
     loadSaved: async () => {
       // A failed or cancelled login keeps the earlier choice. Only without one, the person sees

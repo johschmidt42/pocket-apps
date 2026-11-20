@@ -93,7 +93,7 @@ export function createMemoryFolderHost(
   const host: MemoryFolderHost = {
     saved: options.saved ?? null,
     nextPick: null,
-    supportedKinds: options.kinds ?? ["local", "onedrive", "dropbox"],
+    supportedKinds: options.kinds ?? ["dropbox", "onedrive", "local"],
     pickedKind: null,
     kinds: () => host.supportedKinds,
     loadSaved: () => Promise.resolve(host.saved),

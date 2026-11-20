@@ -92,7 +92,10 @@ test.describe("data in Dropbox", () => {
         redirect_uri: releaseUrl(""),
       }),
     ]);
-    await expect(page.getByText("Dropbox / app-ideen/app-ideen.json")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Dropbox / app-ideen/app-ideen.json" }),
+    ).toBeVisible();
+    await expect(page.getByRole("img", { name: "Dropbox" })).toBeVisible();
 
     await page.getByLabel("Titel").fill("Pflanzen");
     await page.getByRole("button", { name: "Hinzufügen" }).click();

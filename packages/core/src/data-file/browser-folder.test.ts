@@ -169,11 +169,12 @@ describe("createBrowserFolderHost", () => {
     const store = memoryStore();
     const host = createBrowserFolderHost(store, fakeClouds(store));
 
-    expect(host.kinds()).toEqual(["onedrive", "dropbox"]);
+    expect(host.kinds()).toEqual(["dropbox", "onedrive"]);
 
     vi.stubGlobal("showDirectoryPicker", () => Promise.resolve(fakeDirectory("Daten")));
 
-    expect(host.kinds()).toEqual(["local", "onedrive", "dropbox"]);
+    // The cloud storages come first: they work on all devices.
+    expect(host.kinds()).toEqual(["dropbox", "onedrive", "local"]);
   });
 
   it("offers the cloud storages only with Web Crypto", () => {

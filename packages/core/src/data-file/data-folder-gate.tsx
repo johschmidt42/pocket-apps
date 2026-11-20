@@ -198,7 +198,7 @@ export function DataFolderGate({ host, optional = false, children }: DataFolderG
     <>
       {content()}
       <Dialog open={choosing} onOpenChange={setChoosing}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Speicherort wählen</DialogTitle>
             <DialogDescription>Wo sollen deine Daten liegen?</DialogDescription>

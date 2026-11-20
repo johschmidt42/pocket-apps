@@ -77,7 +77,8 @@ test.describe("data in OneDrive", () => {
         redirect_uri: releaseUrl(""),
       }),
     ]);
-    await expect(page.getByText(`OneDrive / ${FILE}`)).toBeVisible();
+    await expect(page.getByRole("button", { name: `OneDrive / ${FILE}` })).toBeVisible();
+    await expect(page.getByRole("img", { name: "OneDrive" })).toBeVisible();
 
     await page.getByLabel("Titel").fill("Pflanzen");
     await page.getByRole("button", { name: "Hinzufügen" }).click();

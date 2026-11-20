@@ -53,7 +53,7 @@ test.describe("app-ideen in Chrome and Edge", () => {
   }) => {
     await openWithFolder(page);
 
-    await expect(page.getByText(`${FOLDER_NAME} / ${FILE}`)).toBeVisible();
+    await expect(page.getByRole("button", { name: `${FOLDER_NAME} / ${FILE}` })).toBeVisible();
     await addIdeaInUi(page, "Pflanzen", "Gießplan");
     await addIdeaInUi(page, "Rezepte", "Wochenplan");
     await addIdeaInUi(page, "Wetter", "");

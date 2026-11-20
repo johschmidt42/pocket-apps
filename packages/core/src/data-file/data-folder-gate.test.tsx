@@ -42,6 +42,15 @@ describe("DataFolderGate", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "OneDrive" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 3, name: "Dropbox" })).toBeInTheDocument();
+    // Dropbox comes first, with the badge and the main button.
+    const options = screen.getAllByRole("listitem");
+    expect(options.map((option) => within(option).getByRole("heading").textContent)).toEqual([
+      "Dropbox",
+      "OneDrive",
+      "Ordner auf diesem Computer",
+    ]);
+    expect(within(options[0]!).getByText("Empfohlen")).toBeInTheDocument();
+    expect(screen.getAllByText("Empfohlen")).toHaveLength(1);
     // Each cloud storage says that all devices see the same data.
     expect(screen.getAllByText(/dieselben Daten auf all deinen Geräten/)).toHaveLength(2);
   });

@@ -1,9 +1,10 @@
 // The texts of each storage kind: in the choice "Wo sollen deine Daten liegen?" and on the screen
 // of an expired login. A new storage kind adds its texts here.
-import { Cloud, FolderOpen, HardDrive, LogIn, type LucideIcon } from "lucide-react";
+import { Box, Cloud, FolderOpen, HardDrive, LogIn, type LucideIcon } from "lucide-react";
 import type { CloudKind, StorageKind } from "./folder.ts";
 
 export type StorageTexts = {
+  /** The icon in the choice and in the status line of the apps. */
   icon: LucideIcon;
   /** The name in the choice, and in "Bei … anmelden". */
   title: string;
@@ -35,7 +36,7 @@ export const STORAGE_TEXTS: Record<StorageKind, StorageTexts> = {
     buttonIcon: LogIn,
   },
   dropbox: {
-    icon: Cloud,
+    icon: Box,
     title: "Dropbox",
     texts: [
       "Deine Daten liegen in deiner Dropbox im Ordner „Apps/Pocket Apps“. Du siehst dieselben Daten auf all deinen Geräten, auch auf dem Handy.",
@@ -45,6 +46,12 @@ export const STORAGE_TEXTS: Record<StorageKind, StorageTexts> = {
     buttonIcon: LogIn,
   },
 };
+
+/**
+ * The storage that the choice recommends: the login holds without an end, and a read or a save
+ * is one request (see `docs/decisions.md`).
+ */
+export const RECOMMENDED: StorageKind = "dropbox";
 
 /** The texts on the screen "Bei … anmelden" when the login of a cloud storage ended. */
 export const EXPIRED_LOGIN_TEXTS: Record<CloudKind, string> = {

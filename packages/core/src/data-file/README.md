@@ -27,9 +27,9 @@ All names come from `@pocket-apps/core/data-file`. The test helpers come from `@
 
 `DataFileProvider` shows the header and then one of these screens:
 
-1. On the first visit: "Wo sollen deine Daten liegen?". It shows the storage kinds that this browser offers:
+1. On the first visit: "Wo sollen deine Daten liegen?". It shows the storage kinds that this browser offers, in the order of `kinds()`:
+   - "Dropbox" with the button "Mit Dropbox verbinden", and "OneDrive" with the button "Mit OneDrive verbinden". All browsers with Web Crypto offer them (on `https` and on `localhost`). The texts say that the user sees the same data on all devices. Dropbox (`RECOMMENDED` in `storage-kinds.ts`) has the badge "Empfohlen" and the main button.
    - "Ordner auf diesem Computer" with the button "Ordner wählen …". Only browsers with the folder dialog offer it (Chrome and Edge on a computer). The browser keeps the folder in IndexedDB.
-   - "OneDrive" with the button "Mit OneDrive verbinden", and "Dropbox" with the button "Mit Dropbox verbinden". All browsers with Web Crypto offer them (on `https` and on `localhost`). The texts say that the user sees the same data on all devices.
 2. When the browser has no access to a local folder: "Zugriff auf deinen Datenordner". One click gives access again. If the user selects "Bei jedem Besuch erlauben", Chrome does not ask again.
 3. When the login of a cloud storage ended: "Bei OneDrive anmelden" (24 hours after the login) or "Bei Dropbox anmelden" (only if the user removed the access). The button "Anmelden" goes to the login of the provider without the list of accounts.
 4. Else the app. If the data file does not exist, the app starts with `initial()`. The store writes the file at the first change.
@@ -105,12 +105,13 @@ For example Google Drive:
 
 ## While the app is open
 
-- The store saves each change automatically after 500 ms. The status line under the header shows "Gespeichert" or "Speichert …".
+- The status line under the header shows the icon of the storage kind (`icon` in `STORAGE_TEXTS`: a box for Dropbox, a cloud for OneDrive, a hard disk for a local folder), the name of the folder and the file. On a phone, it shows only the name of the folder. The icon has the title of the kind as its accessible name.
+- The store saves each change automatically after 500 ms. The status line shows "Gespeichert" or "Speichert …".
 - At each save, the store compares the time of the last change of the file with the time when the app read or wrote it (`writeIfUnchanged()`). If the file changed elsewhere (for example on another device), the store does not save. It shows "Nicht gespeichert: Konflikt". The user then loads the other version or saves their own version.
 - After a failed save, the store shows an error and tries again after 5 seconds.
 - While a change is not saved, the store warns before the tab closes.
 - A click on the folder and file name in the status line (for example "Pocket Apps Daten / app-ideen/app-ideen.json") shows the raw data. The store reads the file again from the data folder. A dialog shows the JSON text with indents and colors. The user can only read it. If the file does not exist yet, is not JSON or cannot be read, the dialog says so. If a change was not saved at the time of the click, the dialog says that the change is not in the file yet. A broken file has the button "Rohdaten ansehen" in its error message. If the browser lost the access to the folder, the click asks for it again: for a local folder in a Chrome window, for a cloud storage with the login of the provider.
-- The button "Speicherort wechseln" in the status line opens the dialog "Speicherort wählen" with the same choice. It works only when all changes are saved. After the change, the app loads the file of the new storage. The new storage is then the storage of all apps. Other open tabs keep the old storage until they load again. A pick of a local folder forgets the logins of all cloud storages. A pick of a cloud storage keeps the earlier choice until the login works. Then the logins of the other cloud storages go away.
+- The button "Speicherort wechseln" in the status line ("Wechseln" on a phone) opens the dialog "Speicherort wählen" with the same choice. It works only when all changes are saved. After the change, the app loads the file of the new storage. The new storage is then the storage of all apps. Other open tabs keep the old storage until they load again. A pick of a local folder forgets the logins of all cloud storages. A pick of a cloud storage keeps the earlier choice until the login works. Then the logins of the other cloud storages go away.
 
 ## Optional folder (only for the launcher)
 

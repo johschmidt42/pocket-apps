@@ -29,8 +29,15 @@ The header shows the app version, for example `1.0`. The moon button switches to
 
 Some apps keep data, for example a list of ideas. All these apps use one data folder. On the start page or in an app that keeps data, find "Wo sollen deine Daten liegen?". You choose once per browser. All apps in this browser then use your choice.
 
-- On a phone, in Firefox and in Safari, the page offers OneDrive and Dropbox.
+- On a phone, in Firefox and in Safari, the page offers Dropbox and OneDrive.
 - In Chrome and Edge on a computer, the page also offers a folder on this computer.
+- The page shows Dropbox first, with the label "Empfohlen".
+
+**Dropbox (recommended):** you see the same data on all your devices. You log in only once, and the apps load and save faster than with OneDrive. You need a Dropbox account. It is free.
+
+1. Click "Mit Dropbox verbinden".
+2. Log in with your Dropbox account and allow the access. The apps use only the folder `Apps/Pocket Apps` in your Dropbox. They cannot see your other files. This folder is your data folder.
+3. Do this once in each browser on each device. The login stays. You log in again only if you remove the access in your Dropbox account.
 
 **OneDrive:** you see the same data on all your devices. You need a Microsoft account. It is free.
 
@@ -40,12 +47,6 @@ Some apps keep data, for example a list of ideas. All these apps use one data fo
 4. Microsoft allows a login of a browser app for 24 hours. Thus, about once a day, the app shows "Bei OneDrive anmelden". Click "Anmelden". Microsoft usually knows your account, so you do not type your password again.
 
 Do not delete the folder `Apps/Pocket Apps` and do not replace it with another folder. OneDrive knows it by an internal ID, not by its name. To bring your data into it, move the app folders (for example `app-ideen/`) into it.
-
-**Dropbox:** you see the same data on all your devices. You need a Dropbox account. It is free.
-
-1. Click "Mit Dropbox verbinden".
-2. Log in with your Dropbox account and allow the access. The apps use only the folder `Apps/Pocket Apps` in your Dropbox. They cannot see your other files. This folder is your data folder.
-3. Do this once in each browser on each device. The login stays. You log in again only if you remove the access in your Dropbox account.
 
 **A folder on this computer:** only this computer has the data.
 
@@ -59,7 +60,7 @@ Each app has its own folder in the data folder, in OneDrive and in a folder on y
 
 Earlier versions kept all files directly in the data folder, for example `app-ideen.json`. When you open an app, it moves its file into its folder. Old backup files (for example `kursverlauf.backup-v1.json`) stay where they are. You can delete them when the app shows all your data.
 
-The bar under the header shows the folder, the file and the status:
+The bar under the header shows where your data is and the status. An icon shows the storage: a box for Dropbox, a cloud for OneDrive, a hard disk for a folder on this computer. On a phone, the bar shows only the name of the storage, not the file. The button "Wechseln" ("Speicherort wechseln" on a computer) opens the choice again. The status is one of these:
 
 - "Gespeichert": the file has all your changes. The apps save each change automatically.
 - "Speichert …": the app writes the file now.
