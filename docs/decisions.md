@@ -6,8 +6,9 @@ Read the related entry before you change a decision. Add an entry for each new d
 ## 2026-11-20: Longer time limit for the tests of the whole trainingsbuch app
 
 - **Context:** `CI - Test` failed for version 4.0: ten tests of `trainingsbuch` ran longer than the default limit of 5 s. A run again passed. These tests render the whole app with the list of all 359 workouts. On a computer, the slowest test takes about 1.4 s. On the GitHub runners, it takes up to five times as long, and the time changes from run to run.
-- **Decision:** The three test files that render the whole app (`app.test.tsx`, `exercise-filter-dialog.test.tsx`, `ai-entry-dialog.test.tsx`) set `vi.setConfig({ testTimeout: 15_000 })`. The project owner agreed. The tests check the same things as before. Only the time limit changes, and only for these files. All other tests keep 5 s.
+- **Decision:** The test files that render the whole app (`app-*.test.tsx`, `exercise-filter-dialog.test.tsx`, `ai-entry-dialog.test.tsx`) set `vi.setConfig({ testTimeout: 15_000 })`. The project owner agreed. The tests check the same things as before. Only the time limit changes, and only for these files. All other tests keep 5 s.
 - **Rejected:** A smaller catalog in the tests: the tests would no longer check the real list. A higher limit in `vitest.config.ts` for all tests: the other tests do not need it.
+- **Decision:** The tests of the whole app are in four files: `app-list`, `app-results`, `app-own` and `app-history`. Vitest runs files in parallel, but the tests of one file one after the other. With one file of 37 s, no run could be shorter than this file. After the split, the unit tests take 24.5 s instead of 40 s on a computer with 12 cores. The shared helpers are in `test-app.tsx`.
 
 ## 2026-11-19: Loads for men or for women (trainingsbuch)
 
