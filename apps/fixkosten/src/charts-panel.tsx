@@ -39,7 +39,7 @@ export function ChartsPanel({ profile, period }: { profile: Profile; period: Per
           }}
           className="flex flex-col gap-4"
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 sm:flex sm:w-fit">
+          <TabsList className="grid w-full grid-cols-2 group-data-horizontal/tabs:h-auto sm:flex sm:w-fit sm:group-data-horizontal/tabs:h-9">
             <TabsTrigger value="flow">Fluss</TabsTrigger>
             <TabsTrigger value="categories">Kategorien</TabsTrigger>
             <TabsTrigger value="tiles">Kacheln</TabsTrigger>

@@ -55,7 +55,7 @@ export function EntryList({
         ) : (
           <ul aria-labelledby={id} className="flex flex-col divide-y">
             {rows.map((row) => (
-              // In narrow windows, the amount and the buttons go to a second line.
+              // In narrow windows, the buttons always go to a second line. The name gets shorter.
               <li key={row.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
                 <span
                   aria-hidden="true"
@@ -63,11 +63,11 @@ export function EntryList({
                 >
                   <row.icon className="size-4" />
                 </span>
-                <div className="flex min-w-40 flex-1 flex-col">
+                <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium">{row.name}</span>
                   <span className="truncate text-xs text-muted-foreground">{row.detail}</span>
                 </div>
-                <div className="ml-auto flex flex-col items-end text-right">
+                <div className="ml-auto flex shrink-0 flex-col items-end text-right">
                   <span className="font-medium tabular-nums">{row.amount}</span>
                   {row.equivalent && (
                     <span className="text-xs text-muted-foreground tabular-nums">
@@ -75,7 +75,7 @@ export function EntryList({
                     </span>
                   )}
                 </div>
-                <div className="flex shrink-0">
+                <div className="flex shrink-0 basis-full justify-end sm:basis-auto">
                   <Button
                     id={entryButtonId(row.id, "edit")}
                     size="icon-sm"
