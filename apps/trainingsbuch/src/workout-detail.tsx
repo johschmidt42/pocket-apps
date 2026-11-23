@@ -5,13 +5,12 @@ import { ToggleGroup, ToggleGroupItem } from "@pocket-apps/ui/components/toggle-
 import { ArrowLeft, Pencil, Plus, Sparkles, Trash2, Trophy } from "lucide-react";
 import { formatDay, formatShortDay } from "./dates.ts";
 import { DivisionBadge } from "./division-badge.tsx";
-import { ExerciseIcon } from "./exercise-icon.tsx";
-import { EXERCISE_NAMES } from "./exercises.ts";
+import { ExerciseSection } from "./exercise-section.tsx";
 import { PlanView } from "./plan-view.tsx";
 import { ProgressChart } from "./progress-chart.tsx";
 import { LOADS_FOR, UNIT_SYSTEMS, type Result } from "./schema.ts";
 import { bestResult, DIVISION_LABELS, formatKg, formatScore } from "./score.ts";
-import { hasMenWomen, showLine, type TextDisplay } from "./units.ts";
+import { hasLoadInBothUnits, hasMenWomen, showLine, type TextDisplay } from "./units.ts";
 import { CATEGORY_COLORS, CATEGORY_LABELS, formatLabel, type Workout } from "./workouts.ts";
 
 export type WorkoutDetailProps = {
@@ -48,6 +47,9 @@ export function WorkoutDetail({
   const colors = CATEGORY_COLORS[workout.category];
   const builtIn = workout.category !== "own";
   const withWomen = workout.lines.some(hasMenWomen);
+  // The choice between kg and lb is for loads. Without it, a distance stays in meters.
+  const withLoads = builtIn && workout.lines.some(hasLoadInBothUnits);
+  const lineDisplay: TextDisplay = withLoads ? display : { ...display, units: "metric" };
 
   return (
     <div className="flex flex-col gap-8">
@@ -134,27 +136,29 @@ export function WorkoutDetail({
           >
             Ablauf
           </h3>
-          {/* Own workouts are in kg. They have values for women only if the user gave some. */}
-          {(builtIn || withWomen) && (
+          {/* Each choice shows only when it changes the text of this workout. */}
+          {(withWomen || withLoads) && (
             <div className="flex flex-wrap justify-end gap-2">
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                size="sm"
-                aria-label="Gewichte für"
-                value={display.loadsFor}
-                onValueChange={(value) => {
-                  if (isOneOf(LOADS_FOR, value)) onDisplay({ ...display, loadsFor: value });
-                }}
-              >
-                <ToggleGroupItem value="men" className="px-3">
-                  Männer
-                </ToggleGroupItem>
-                <ToggleGroupItem value="women" className="px-3">
-                  Frauen
-                </ToggleGroupItem>
-              </ToggleGroup>
-              {builtIn && (
+              {withWomen && (
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  size="sm"
+                  aria-label="Gewichte für"
+                  value={display.loadsFor}
+                  onValueChange={(value) => {
+                    if (isOneOf(LOADS_FOR, value)) onDisplay({ ...display, loadsFor: value });
+                  }}
+                >
+                  <ToggleGroupItem value="men" className="px-3">
+                    Männer
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="women" className="px-3">
+                    Frauen
+                  </ToggleGroupItem>
+                </ToggleGroup>
+              )}
+              {withLoads && (
                 <ToggleGroup
                   type="single"
                   variant="outline"
@@ -179,7 +183,7 @@ export function WorkoutDetail({
         <div className={`border-l-4 pl-5 ${colors.border}`}>
           {workout.lines.length > 0 || (workout.notes ?? []).length > 0 ? (
             <PlanView
-              lines={workout.lines.map((line) => showLine(line, display))}
+              lines={workout.lines.map((line) => showLine(line, lineDisplay))}
               notes={workout.notes ?? []}
             />
           ) : (
@@ -187,17 +191,7 @@ export function WorkoutDetail({
           )}
         </div>
         {workout.exercises.length > 0 && (
-          <ul aria-label="Übungen" className="flex flex-wrap gap-2">
-            {workout.exercises.map((exercise) => (
-              <li
-                key={exercise}
-                className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm"
-              >
-                <ExerciseIcon exercise={exercise} className="size-3.5 text-muted-foreground" />
-                {EXERCISE_NAMES[exercise]}
-              </li>
-            ))}
-          </ul>
+          <ExerciseSection exercises={workout.exercises} lines={workout.lines} />
         )}
       </section>
 

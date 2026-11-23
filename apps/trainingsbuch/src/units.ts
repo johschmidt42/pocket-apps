@@ -25,6 +25,11 @@ export function hasMenWomen(line: string): boolean {
   return new RegExp(MEN_WOMEN.source).test(line);
 }
 
+/** True if the line has a load with a value in kg and one in lb or pood: "43/29 kg (95/65 lb)". */
+export function hasLoadInBothUnits(line: string): boolean {
+  return [...line.matchAll(PAIR)].some((match) => match[1]?.endsWith(" kg"));
+}
+
 /**
  * A line of a workout as the user wants to see it:
  * - One unit system. Metric: "9/6 kg". Imperial: "20/14 lb". A value without a pair stays.

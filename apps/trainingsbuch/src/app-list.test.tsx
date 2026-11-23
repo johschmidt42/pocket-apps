@@ -51,6 +51,33 @@ describe("Trainingsbuch: the list of workouts", () => {
     expect(screen.getByRole("region", { name: "The Girls" })).toBeInTheDocument();
   });
 
+  it("offers kg, lb, Männer and Frauen only for a workout with a load", async () => {
+    const { user } = await openApp();
+    await user.click(card("Angie"));
+    expect(screen.getByRole("heading", { level: 2, name: "Angie" })).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Einheiten" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Gewichte für" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Alle Workouts" }));
+    await user.click(card("Fran"));
+    expect(screen.getByRole("radiogroup", { name: "Einheiten" })).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup", { name: "Gewichte für" })).toBeInTheDocument();
+  });
+
+  it("keeps a distance in meters in a workout without a load, also after lb", async () => {
+    const { user } = await openApp();
+    await user.click(card("Fran"));
+    await user.click(
+      within(screen.getByRole("radiogroup", { name: "Einheiten" })).getByRole("radio", {
+        name: "lb",
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Alle Workouts" }));
+    await user.click(card("Jerry"));
+    const plan = screen.getByRole("region", { name: "Ablauf" });
+    expect(within(plan).getAllByText(/1600 m/).length).toBeGreaterThan(0);
+    expect(within(plan).queryByText(/mile/)).not.toBeInTheDocument();
+  });
+
   it("shows the loads in lb and keeps the choice in the data file", async () => {
     const { folder, user } = await openApp();
     await user.click(card("Fran"));
