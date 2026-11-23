@@ -13,7 +13,11 @@ import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
 import { CLEAN_AND_JERK } from "./exercises/clean-and-jerk.ts";
 import { DEADLIFT } from "./exercises/deadlift.ts";
 import { DOUBLE_UNDER } from "./exercises/double-under.ts";
+import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
+import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
 import { DUMBBELL_SNATCH } from "./exercises/dumbbell-snatch.ts";
+import { DUMBBELL_SQUAT_CLEAN } from "./exercises/dumbbell-squat-clean.ts";
+import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
@@ -71,6 +75,9 @@ const KETTLEBELL_CARRY = form("Kettlebell", FARMERS_CARRY_KETTLEBELL);
 const PLATE_LUNGE = form("Plate", OVERHEAD_LUNGE_PLATE);
 const BARBELL_LUNGE = form("Bar", OVERHEAD_LUNGE_BARBELL);
 const DUMBBELL_LUNGE = form("DB", OVERHEAD_LUNGE_DUMBBELL);
+const DUMBBELL_SQUAT = form("Squat", DUMBBELL_SQUAT_CLEAN);
+const DUMBBELL_HANG = form("Hang", DUMBBELL_HANG_CLEAN);
+const DUMBBELL_POWER = form("Power", DUMBBELL_POWER_CLEAN);
 
 /**
  * The exercises that have an animation. To add one, copy its file from the prototype into
@@ -96,7 +103,9 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "clean-and-jerk": [form("Power", POWER_CLEAN_AND_JERK), form("Squat", CLEAN_AND_JERK)],
   deadlift: only(DEADLIFT),
   "double-under": only(DOUBLE_UNDER),
+  "dumbbell-clean": [DUMBBELL_SQUAT, DUMBBELL_HANG, DUMBBELL_POWER],
   "dumbbell-snatch": only(DUMBBELL_SNATCH),
+  "dumbbell-thruster": only(DUMBBELL_THRUSTER),
   "farmers-carry": [form("Dumbbell", FARMERS_CARRY), KETTLEBELL_CARRY],
   "front-squat": only(FRONT_SQUAT),
   "hand-release-push-up": only(HAND_RELEASE_PUSH_UP),
@@ -144,6 +153,12 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
 const FORMS_IN_TEXT: Partial<
   Record<ExerciseId, readonly { pattern: RegExp; variant: ExerciseVariant }[]>
 > = {
+  // The order is important: Santiago has dumbbell hang squat cleans and barbell power cleans.
+  "dumbbell-clean": [
+    { pattern: /\bhang squat clean/i, variant: DUMBBELL_HANG },
+    { pattern: /\bpower cleans?\b/i, variant: DUMBBELL_POWER },
+    { pattern: /\bsquat cleans?\b/i, variant: DUMBBELL_SQUAT },
+  ],
   "farmers-carry": [{ pattern: /\bkettlebell farmers carry\b/i, variant: KETTLEBELL_CARRY }],
   "handstand-push-up": [
     { pattern: /\bstrict\s+handstand\s+push-?ups?\b/i, variant: STRICT_HANDSTAND_PUSH_UP },
@@ -160,7 +175,9 @@ const FORMS_IN_TEXT: Partial<
 const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   burpee: /\bburpees?\b[^,]*\bover\b/i,
   "burpee-pull-up": /\b(?:strict burpee|burpee chest-to-bar)/i,
+  "dumbbell-clean": /\bsplit cleans?\b/i,
   "dumbbell-snatch": /\bsplit snatch/i,
+  "dumbbell-thruster": /\bsquat clean thrusters?\b|\b(?:left|right)-arm dumbbell thrusters?\b/i,
   "farmers-carry": /\bbarbell farmers carry\b/i,
   "handstand-push-up": /\b(?:ring|freestanding)\s+handstand/i,
   "overhead-squat": /\boverhead squats?\b.*\b(?:left|right) arm\b/i,

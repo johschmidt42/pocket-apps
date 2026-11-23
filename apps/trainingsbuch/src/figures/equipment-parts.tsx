@@ -236,6 +236,9 @@ function dumbbells({ joints, flat, fromSide }: Scene): Parts {
     const hand = joints.arms[side].end;
     const back = flat(vec(hand.x - 9, hand.y, hand.z));
     const front = flat(vec(hand.x + 9, hand.y, hand.z));
+    // From the front, an elbow in front of the hand hides the dumbbell. The head stays over the
+    // forearm, so the load is visible.
+    const elbow = flat(joints.arms[side].mid).depth;
     const head = (key: string, end: FlatPoint) =>
       fromSide
         ? part(
@@ -251,7 +254,7 @@ function dumbbells({ joints, flat, fromSide }: Scene): Parts {
               stroke="none"
             />,
           )
-        : disc(key, end.depth, end, 7);
+        : disc(key, Math.max(end.depth, elbow + 0.5), end, 7);
     return [
       bar(`handle${String(side)}`, flat(hand).depth - 0.5, back, front, 3.5),
       head(`back${String(side)}`, back),

@@ -5,6 +5,10 @@ import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
+import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
+import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
+import { DUMBBELL_SQUAT_CLEAN } from "./exercises/dumbbell-squat-clean.ts";
+import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
@@ -124,6 +128,41 @@ describe("variantsOf", () => {
     ]);
   });
 
+  it("shows the dumbbell thruster with two dumbbells", () => {
+    expect(motions("dumbbell-thruster", ["14 dumbbell thrusters, 22.5/15 kg"])).toEqual([
+      DUMBBELL_THRUSTER,
+    ]);
+  });
+
+  it("shows the squat form of the dumbbell clean for dumbbell squat cleans", () => {
+    expect(motions("dumbbell-clean", ["23 dumbbell squat cleans, 18/14 kg (40/30 lb)"])).toEqual([
+      DUMBBELL_SQUAT_CLEAN,
+    ]);
+  });
+
+  it("shows the hang form of the dumbbell clean, also next to barbell power cleans", () => {
+    expect(
+      motions("dumbbell-clean", [
+        "18 dumbbell hang squat cleans, 15/9 kg (35/20 lb)",
+        "10 power cleans, 61/43 kg (135/95 lb)",
+      ]),
+    ).toEqual([DUMBBELL_HANG_CLEAN]);
+  });
+
+  it("shows the power form of the dumbbell clean for power cleans", () => {
+    expect(motions("dumbbell-clean", ["8 power cleans", "Dumbbells: 22.5/15 kg"])).toEqual([
+      DUMBBELL_POWER_CLEAN,
+    ]);
+  });
+
+  it("offers the three forms of the dumbbell clean when the text names none", () => {
+    expect(motions("dumbbell-clean", ["10 dumbbell cleans"])).toEqual([
+      DUMBBELL_SQUAT_CLEAN,
+      DUMBBELL_HANG_CLEAN,
+      DUMBBELL_POWER_CLEAN,
+    ]);
+  });
+
   it("shows the push press", () => {
     expect(motions("push-press", ["15 push presses, 52/35 kg"])).toEqual([PUSH_PRESS]);
   });
@@ -143,6 +182,7 @@ describe("variantsOf", () => {
 
   it.each([
     ["clean", ["Power", "Squat"]],
+    ["dumbbell-clean", ["Squat", "Hang", "Power"]],
     ["farmers-carry", ["Dumbbell", "Kettlebell"]],
     ["jerk", ["Push", "Split"]],
     ["shoulder-to-overhead", ["Press", "Push", "Split"]],
@@ -172,7 +212,10 @@ describe("variantsOf", () => {
     ["burpee", "8 burpees (over the barbell)"],
     ["burpee-pull-up", "7 strict burpee pull-ups"],
     ["burpee-pull-up", "7 burpee chest-to-bar pull-ups"],
+    ["dumbbell-clean", "15 dumbbell split cleans, 18/14 kg (40/30 lb)"],
     ["dumbbell-snatch", "10 dumbbell hang split snatches, right arm"],
+    ["dumbbell-thruster", "Dumbbell squat clean thrusters, 29/20 kg (65/45 lb) dumbbells"],
+    ["dumbbell-thruster", "10 left-arm dumbbell thrusters, 14/9 kg (30/20 lb)"],
     ["farmers-carry", "800 m single-arm barbell farmers carry, 43/30 kg"],
     ["farmers-carry", "10 m barbell farmers carry, 102/70 kg"],
     ["handstand-push-up", "25 ring handstand push-ups"],
