@@ -3304,6 +3304,21 @@ export const CATALOG: readonly Workout[] = [
     exercises: ["double-under", "knees-to-elbows", "overhead-carry"],
   },
   {
+    id: "paul-pena",
+    name: "Paul Pena",
+    category: "hero",
+    scoreType: "time",
+    timeCapMinutes: null,
+    lines: [
+      "7 rounds, each for time, of:",
+      "100 m sprint",
+      "19 kettlebell swings, 32/24 kg (70/53 lb)",
+      "10 burpee box jumps, 61/51 cm (24/20 in)",
+      "Rest 3 minutes between rounds. Record the total time",
+    ],
+    exercises: ["run", "kettlebell-swing", "burpee-box-jump"],
+  },
+  {
     id: "peyton",
     name: "Peyton",
     category: "hero",

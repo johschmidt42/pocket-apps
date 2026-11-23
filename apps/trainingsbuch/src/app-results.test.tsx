@@ -2,7 +2,7 @@ import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { card, chip, fran, openApp, OWN, savedData, waitForSave } from "./test-app.tsx";
 
-// These tests render the whole app with the list of all 359 workouts. See "Longer time limit for
+// These tests render the whole app with the list of all 360 workouts. See "Longer time limit for
 // the tests of the whole trainingsbuch app" in docs/decisions.md.
 vi.setConfig({ testTimeout: 15_000 });
 
