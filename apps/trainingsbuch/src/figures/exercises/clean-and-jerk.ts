@@ -115,9 +115,17 @@ const UNDER: Pose = {
 const LAND_HIP = { x: 62, y: 146 };
 const LAND: Pose = { ...base, hip: LAND_HIP, lean: 17, ...rackAt(LAND_HIP, 17), elbowsOut: 3 };
 const [AROUND, ONTO] = intoRack(UNDER, LAND, { t: 0.5, shrug: 2.5 }, { t: 0.8, shrug: 1 });
-// The front rack (`rackAt`): the bar is on the shoulders, the elbows are high and in front.
+// The front rack in the deep catch. `rackAt` puts the hands along the torso, so with this lean the elbows were 44
+// degrees below level (the user saw it, 2026-11-23). With the hands more above the shoulders, they are 26 below
+// level, as in the catch of the power clean.
 const CATCH_HIP = { x: 54, y: 167 };
-const CATCH: Pose = { ...base, hip: CATCH_HIP, lean: 27, ...rackAt(CATCH_HIP, 27) };
+const CATCH: Pose = {
+  ...base,
+  hip: CATCH_HIP,
+  lean: 27,
+  hands: handAt(CATCH_HIP, 27, 4, -10),
+  elbowTo: 80,
+};
 const RACK_HIP = { x: 74, y: 120 };
 const RACK: Pose = { ...base, hip: RACK_HIP, lean: 2, ...rackAt(RACK_HIP, 2) };
 const DIP_HIP = { x: 74, y: 132 };

@@ -45,6 +45,7 @@ describe("variantsOf", () => {
   });
 
   it.each([
+    ["clean", ["Power", "Squat"]],
     ["clean-and-jerk", ["Power", "Squat"]],
     ["snatch", ["Power", "Squat"]],
     ["toes-to-bar", ["Tuck", "Straight"]],

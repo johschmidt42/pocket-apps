@@ -66,6 +66,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("Kipping", KIPPING_CHEST_TO_BAR_PULL_UP),
     form("Strict", CHEST_TO_BAR_PULL_UP),
   ],
+  clean: [form("Power", POWER_CLEAN), form("Squat", SQUAT_CLEAN)],
   "clean-and-jerk": [form("Power", POWER_CLEAN_AND_JERK), form("Squat", CLEAN_AND_JERK)],
   deadlift: only(DEADLIFT),
   "double-under": only(DOUBLE_UNDER),
