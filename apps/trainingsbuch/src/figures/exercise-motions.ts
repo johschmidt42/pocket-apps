@@ -49,6 +49,7 @@ import { SNATCH } from "./exercises/snatch.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
+import { SUMO_DEADLIFT_HIGH_PULL } from "./exercises/sumo-deadlift-high-pull.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
@@ -140,6 +141,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "squat-clean": only(SQUAT_CLEAN),
   "squat-snatch": only(SNATCH),
   "step-up": only(STEP_UP),
+  "sumo-deadlift-high-pull": only(SUMO_DEADLIFT_HIGH_PULL),
   "strict-handstand-push-up": only(HANDSTAND_PUSH_UP),
   "strict-pull-up": only(PULL_UP),
   thruster: only(THRUSTER),

@@ -29,6 +29,7 @@ import { RUN } from "./exercises/run.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
+import { SUMO_DEADLIFT_HIGH_PULL } from "./exercises/sumo-deadlift-high-pull.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 
@@ -166,6 +167,12 @@ describe("variantsOf", () => {
 
   it("shows the hang power clean", () => {
     expect(motions("hang-power-clean", ["9 hang power cleans"])).toEqual([HANG_POWER_CLEAN]);
+  });
+
+  it("shows the sumo deadlift high pull", () => {
+    expect(motions("sumo-deadlift-high-pull", ["21 sumo deadlift high pulls, 43/29 kg"])).toEqual([
+      SUMO_DEADLIFT_HIGH_PULL,
+    ]);
   });
 
   it("shows the push press", () => {
