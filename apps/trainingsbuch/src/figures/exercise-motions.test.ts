@@ -37,6 +37,7 @@ import { STEP_UP } from "./exercises/step-up.ts";
 import { SUMO_DEADLIFT_HIGH_PULL } from "./exercises/sumo-deadlift-high-pull.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
+import { WALL_WALK } from "./exercises/wall-walk.ts";
 
 const motions = (...args: Parameters<typeof variantsOf>) =>
   variantsOf(...args)?.map((variant) => variant.exercise);
@@ -204,6 +205,11 @@ describe("variantsOf", () => {
     expect(
       motions("alternating-dumbbell-snatch", ["22 alternating dumbbell snatches, 22.5/15 kg"]),
     ).toEqual([ALTERNATING_DUMBBELL_SNATCH]);
+  });
+
+  it("shows the wall walk, also for wall climbs", () => {
+    expect(motions("wall-walk", ["3 wall walks"])).toEqual([WALL_WALK]);
+    expect(motions("wall-walk", ["5 wall climbs"])).toEqual([WALL_WALK]);
   });
 
   it("shows the push press", () => {

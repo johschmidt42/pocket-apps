@@ -29,8 +29,10 @@ export type Equipment =
   /**
    * A wall at `x = wall`, to the right of the figure.
    * In a handstand push-up, the back of the figure is at the wall, and the heels touch it.
+   * `side: "left"`: the wall is behind the feet of a figure that looks to +x. In a wall walk, the
+   * chest comes to the wall.
    */
-  | { kind: "wall"; wall: number }
+  | { kind: "wall"; wall: number; side?: "left" }
   /**
    * A wall ball. The figure looks at a wall at `x = wall`. `target` is the y of the target line on the wall.
    * The two hands hold the ball: one spot for `hands`, `grip: 15`. The center of the ball is 6 above the hands.

@@ -590,7 +590,9 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "kettlebell":
       return kettlebell(scene);
     case "wall":
-      return scene.fromSide ? [wallLine(equipment.wall)] : [];
+      return scene.fromSide
+        ? [wallLine(equipment.side === "left" ? equipment.wall - 6 : equipment.wall)]
+        : [];
     case "wallball":
       return wallBall(scene, equipment.wall, equipment.target);
     case "abmat":

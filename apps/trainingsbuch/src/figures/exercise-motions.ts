@@ -60,6 +60,7 @@ import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 import { WALL_BALL } from "./exercises/wall-ball.ts";
+import { WALL_WALK } from "./exercises/wall-walk.ts";
 import type { Motion } from "./skeleton.ts";
 import { motionOf } from "./turning-motion.ts";
 
@@ -157,6 +158,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   thruster: only(THRUSTER),
   "toes-to-bar": [form("Tuck", TOES_TO_BAR_TUCK), form("Straight", TOES_TO_BAR)],
   "walking-lunge": only(WALKING_LUNGE),
+  "wall-walk": only(WALL_WALK),
   "wall-ball": only(WALL_BALL),
 };
 
