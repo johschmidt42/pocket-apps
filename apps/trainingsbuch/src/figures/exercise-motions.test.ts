@@ -3,6 +3,8 @@ import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
+import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
+import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
@@ -48,6 +50,16 @@ describe("variantsOf", () => {
     expect(motions("overhead-squat", ["15 overhead squats, 43/30 kg"])).toEqual([OVERHEAD_SQUAT]);
   });
 
+  it("offers only Kettlebell for a carry that names kettlebells", () => {
+    expect(motions("farmers-carry", ["30 m (100 ft) double-kettlebell farmers carry"])).toEqual([
+      FARMERS_CARRY_KETTLEBELL,
+    ]);
+    expect(motions("farmers-carry", ["200 m farmers carry, 22.5/15 kg dumbbells"])).toEqual([
+      FARMERS_CARRY,
+      FARMERS_CARRY_KETTLEBELL,
+    ]);
+  });
+
   it("shows the burpee pull-up for a plain burpee pull-up", () => {
     expect(motions("burpee-pull-up", ["10 burpee pull-ups"])).toEqual([BURPEE_PULL_UP]);
   });
@@ -63,6 +75,7 @@ describe("variantsOf", () => {
 
   it.each([
     ["clean", ["Power", "Squat"]],
+    ["farmers-carry", ["Dumbbell", "Kettlebell"]],
     ["clean-and-jerk", ["Power", "Squat"]],
     ["snatch", ["Power", "Squat"]],
     ["toes-to-bar", ["Tuck", "Straight"]],
@@ -89,6 +102,8 @@ describe("variantsOf", () => {
     ["burpee-pull-up", "7 strict burpee pull-ups"],
     ["burpee-pull-up", "7 burpee chest-to-bar pull-ups"],
     ["dumbbell-snatch", "10 dumbbell hang split snatches, right arm"],
+    ["farmers-carry", "800 m single-arm barbell farmers carry, 43/30 kg"],
+    ["farmers-carry", "10 m barbell farmers carry, 102/70 kg"],
     ["handstand-push-up", "25 ring handstand push-ups"],
     ["handstand-push-up", "8 freestanding handstand push-ups"],
     ["overhead-squat", "21 overhead squats, left arm"],

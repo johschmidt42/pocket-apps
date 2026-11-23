@@ -1,5 +1,5 @@
 // Helpers that each exercise author wrote again: now they are here, once.
-import { BODY, up, type Pose } from "./skeleton.ts";
+import { BODY, GROUND, up, type Pose } from "./skeleton.ts";
 
 type Spot2 = { x: number; y: number };
 
@@ -65,6 +65,19 @@ export function rackAt(hip: Spot2, lean: number): { hands: Spot2; elbowTo: numbe
       y: shoulder.y + along.y * 9.8 + along.x * 2,
     },
     elbowTo: 80,
+  };
+}
+
+/**
+ * The ankle of a foot that stands on its heel, with the toes up (`toes` below 90). `heelX` is the x
+ * of the heel. At `toes: 90` the foot is flat, and the result fits `tiptoeFromToe(heelX + 18, 90)`:
+ * a gait can roll from heel to toe.
+ */
+export function onHeel(heelX: number, toes: number, floor = GROUND): Spot2 {
+  const forward = up(toes);
+  return {
+    x: heelX + forward.x * 3 + forward.y * 1.5,
+    y: floor - 4.5 + forward.y * 3 - forward.x * 1.5,
   };
 }
 

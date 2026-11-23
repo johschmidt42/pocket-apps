@@ -151,6 +151,46 @@ function dumbbell({ joints, flat, fromSide }: Scene, handIndex: 0 | 1): Parts {
   ];
 }
 
+function dumbbells({ joints, flat, fromSide }: Scene): Parts {
+  return SIDES.flatMap((side) => {
+    const hand = joints.arms[side].end;
+    const back = flat(vec(hand.x - 9, hand.y, hand.z));
+    const front = flat(vec(hand.x + 9, hand.y, hand.z));
+    const head = (key: string, end: FlatPoint) =>
+      fromSide
+        ? part(
+            end.depth,
+            <rect
+              key={key}
+              x={end.x - 3.5}
+              y={end.y - 7}
+              width={7}
+              height={14}
+              rx={2.5}
+              fill={COLOR}
+              stroke="none"
+            />,
+          )
+        : disc(key, end.depth, end, 7);
+    return [
+      bar(`handle${String(side)}`, flat(hand).depth - 0.5, back, front, 3.5),
+      head(`back${String(side)}`, back),
+      head(`front${String(side)}`, front),
+    ];
+  });
+}
+
+function kettlebells({ joints, flat, fromSide }: Scene): Parts {
+  return SIDES.flatMap((side) => {
+    const end = joints.arms[side].end;
+    const ball = flat(vec(end.x, end.y + BELL.away, end.z));
+    return [
+      bar(`handle${String(side)}`, ball.depth - 0.5, flat(end), ball, fromSide ? 4 : 7, "butt"),
+      disc(`bell${String(side)}`, ball.depth, ball, BELL.radius),
+    ];
+  });
+}
+
 function kettlebell({ joints, flat, fromSide }: Scene): Parts {
   const [near, far] = joints.arms;
   const hand = flat(
@@ -460,6 +500,10 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return barbell(scene, equipment.onBack === true);
     case "dumbbell":
       return dumbbell(scene, equipment.hand);
+    case "dumbbells":
+      return dumbbells(scene);
+    case "kettlebells":
+      return kettlebells(scene);
     case "kettlebell":
       return kettlebell(scene);
     case "wall":

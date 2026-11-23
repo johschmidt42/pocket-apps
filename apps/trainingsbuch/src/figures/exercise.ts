@@ -12,6 +12,13 @@ export type Equipment =
   /** A dumbbell in one hand: 0 is the near hand, 1 the far hand. */
   | { kind: "dumbbell"; hand: 0 | 1 }
   /**
+   * Two dumbbells, one in each hand, parallel to the way of the figure (a farmers carry). From the
+   * side, each one is a bar with two plates. From the front, it is a circle at the hand.
+   */
+  | { kind: "dumbbells" }
+  /** Two kettlebells, one in each hand. Each bell hangs straight below its hand (a farmers carry). */
+  | { kind: "kettlebells" }
+  /**
    * A kettlebell in both hands. Give the two hands one spot and a small `grip` (2 to 3).
    * The bell is in line with the forearms: it hangs below hands that hang, and it is above hands that are overhead.
    */
