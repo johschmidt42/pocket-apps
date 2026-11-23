@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { EXERCISE_IDS } from "../exercises.ts";
@@ -8,7 +9,7 @@ import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { ROW } from "./exercises/row.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
-import { BODY, type Vec } from "./skeleton.ts";
+import { BODY, solve, type Vec } from "./skeleton.ts";
 
 const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 
@@ -23,8 +24,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 55 animations of the prototype", () => {
-    expect(ALL).toHaveLength(55);
+  it("are all 57 animations of the prototype", () => {
+    expect(ALL).toHaveLength(57);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -40,6 +41,22 @@ describe("the exercises", () => {
       Math.max(...equipmentParts(equipment, scene).map((part) => part.depth));
     expect(deepest(BACK_SQUAT.equipment)).toBeLessThan(joints.hip.x);
     expect(deepest({ kind: "barbell" })).toBeGreaterThan(joints.hip.x);
+  });
+
+  it.each([true, false])("keeps the box on its spot (from the side: %s)", (fromSide) => {
+    const scene = {
+      joints: solve(BACK_SQUAT.start),
+      // From the side, this is a figure that has turned around.
+      flat: (v: Vec) => ({ x: fromSide ? 500 - v.x : v.x, y: v.y, depth: v.z }),
+      fromSide,
+      progress: 0,
+      thrown: undefined,
+    };
+    const [part] = equipmentParts({ kind: "box", x: 224, width: 46, height: 50 }, scene);
+    expect((part?.node as ReactElement<{ x: number; width: number }>).props).toMatchObject({
+      x: 224,
+      width: 46,
+    });
   });
 
   it("gives a wide picture two columns", () => {

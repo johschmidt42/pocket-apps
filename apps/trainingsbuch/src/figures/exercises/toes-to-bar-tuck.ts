@@ -28,7 +28,7 @@ type Body = {
 /** A direction in the side plane, as an offset: 0 is down, 90 is forward. */
 const direction = (angle: number) => ({ x: Math.sin(angle * RAD), y: Math.cos(angle * RAD) });
 
-function pose(body: Body): Pose {
+export function pose(body: Body): Pose {
   const shoulder = {
     x: BAR.x - Math.sin(body.swing * RAD) * ARM,
     y: BAR.y + Math.cos(body.swing * RAD) * ARM,

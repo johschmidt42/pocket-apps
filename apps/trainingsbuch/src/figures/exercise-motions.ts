@@ -7,6 +7,7 @@ import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
+import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { BURPEE } from "./exercises/burpee.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
@@ -29,6 +30,7 @@ import { KETTLEBELL_SWING_RUSSIAN } from "./exercises/kettlebell-swing-russian.t
 import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-pull-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -96,6 +98,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   bike: only(BIKE_EXERCISE),
   "box-jump": only(BOX_JUMP),
   burpee: only(BURPEE),
+  "burpee-box-jump-over": only(BURPEE_BOX_JUMP_OVER),
   "burpee-pull-up": only(BURPEE_PULL_UP),
   "chest-to-bar": [
     form("Kipping", KIPPING_CHEST_TO_BAR_PULL_UP),
@@ -114,6 +117,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "hang-power-clean": only(HANG_POWER_CLEAN),
   "handstand-push-up": [form("Kipping", KIPPING_HANDSTAND_PUSH_UP), STRICT_HANDSTAND_PUSH_UP],
   jerk: [form("Push", PUSH_JERK), form("Split", SPLIT_JERK)],
+  "knees-to-elbows": only(KNEES_TO_ELBOWS),
   "kettlebell-swing": [
     form("American", KETTLEBELL_SWING_AMERICAN),
     form("Russian", KETTLEBELL_SWING_RUSSIAN),

@@ -402,11 +402,11 @@ function jumpRope(
   ];
 }
 
-function box({ flat }: Scene, x: number, width: number, height: number): Parts {
-  const corners = [x, x + width].flatMap((edge) => [
-    flat(vec(edge, 0, -26)),
-    flat(vec(edge, 0, 26)),
-  ]);
+function box({ flat, fromSide }: Scene, x: number, width: number, height: number): Parts {
+  // From the side, the box stays on its spot when the figure turns around.
+  const corners = [x, x + width].flatMap((edge) =>
+    fromSide ? [{ x: edge }] : [flat(vec(edge, 0, -26)), flat(vec(edge, 0, 26))],
+  );
   const left = Math.min(...corners.map((corner) => corner.x));
   const right = Math.max(...corners.map((corner) => corner.x));
   return [

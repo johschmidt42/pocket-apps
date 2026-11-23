@@ -4,6 +4,7 @@ import { runOf, variantsOf } from "./exercise-motions.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
+import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
@@ -17,6 +18,7 @@ import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -172,6 +174,16 @@ describe("variantsOf", () => {
   it("shows the sumo deadlift high pull", () => {
     expect(motions("sumo-deadlift-high-pull", ["21 sumo deadlift high pulls, 43/29 kg"])).toEqual([
       SUMO_DEADLIFT_HIGH_PULL,
+    ]);
+  });
+
+  it("shows knees-to-elbows", () => {
+    expect(motions("knees-to-elbows", ["35 knees-to-elbows"])).toEqual([KNEES_TO_ELBOWS]);
+  });
+
+  it("shows the burpee box jump-over", () => {
+    expect(motions("burpee-box-jump-over", ["15 burpee box jump-overs"])).toEqual([
+      BURPEE_BOX_JUMP_OVER,
     ]);
   });
 
