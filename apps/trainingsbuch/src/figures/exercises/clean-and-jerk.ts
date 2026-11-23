@@ -225,6 +225,36 @@ export const LOWER: Step[] = [
   { to: SETUP, seconds: 0.2 },
 ];
 
+/** The squat clean, from the floor to the stand with the bar in the rack. `squat-clean.ts` uses it too. */
+export const SQUAT_CLEAN_STEPS: Step[] = [
+  // One step from the floor to the power position: the bar gets faster and faster. "fk": the arms are ropes.
+  {
+    to: POWER,
+    via: [SHIN, KNEE, THIGH],
+    seconds: 0.6,
+    label: "Zug",
+    ease: "in",
+    anchor: "feet",
+    arms: "fk",
+    follow: "hands",
+  },
+  // "fk": the arms are still ropes, the shrug lifts the bar.
+  { to: EXTEND, seconds: 0.16, label: "Streckung", ease: "linear", anchor: "feet", arms: "fk" },
+  // "fk": the arm bones turn under the bar. Then "carry": the bar stays on the shoulders while the legs give way.
+  {
+    to: LAND,
+    via: [UNDER, AROUND, ONTO],
+    seconds: 0.17,
+    label: "Umsetzen",
+    ease: "linear",
+    arms: "fk",
+  },
+  { to: CATCH, seconds: 0.2, ease: "out", anchor: "feet", arms: "carry" },
+  { to: CATCH, seconds: 0.15 },
+  { to: RACK, seconds: 0.6, label: "Aufstehen", anchor: "feet", arms: "carry" },
+  { to: RACK, seconds: 0.3 },
+];
+
 export const CLEAN_AND_JERK: Exercise = {
   key: "clean-and-jerk",
   title: "Squat Clean & Jerk",
@@ -232,32 +262,7 @@ export const CLEAN_AND_JERK: Exercise = {
   views: [SIDE, FRONT],
   start: SETUP,
   steps: [
-    // One step from the floor to the power position: the bar gets faster and faster. "fk": the arms are ropes.
-    {
-      to: POWER,
-      via: [SHIN, KNEE, THIGH],
-      seconds: 0.6,
-      label: "Zug",
-      ease: "in",
-      anchor: "feet",
-      arms: "fk",
-      follow: "hands",
-    },
-    // "fk": the arms are still ropes, the shrug lifts the bar.
-    { to: EXTEND, seconds: 0.16, label: "Streckung", ease: "linear", anchor: "feet", arms: "fk" },
-    // "fk": the arm bones turn under the bar. Then "carry": the bar stays on the shoulders while the legs give way.
-    {
-      to: LAND,
-      via: [UNDER, AROUND, ONTO],
-      seconds: 0.17,
-      label: "Umsetzen",
-      ease: "linear",
-      arms: "fk",
-    },
-    { to: CATCH, seconds: 0.2, ease: "out", anchor: "feet", arms: "carry" },
-    { to: CATCH, seconds: 0.15 },
-    { to: RACK, seconds: 0.6, label: "Aufstehen", anchor: "feet", arms: "carry" },
-    { to: RACK, seconds: 0.3 },
+    ...SQUAT_CLEAN_STEPS,
     { to: DIP, seconds: 0.25, label: "Dip", anchor: "feet", arms: "carry" },
     { to: DRIVE, seconds: 0.14, label: "Ausstoßen", ease: "in", anchor: "feet", arms: "carry" },
     { to: SPLIT, seconds: 0.26, label: "Ausfallschritt", ease: "out", arms: "line" },

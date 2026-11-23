@@ -4,8 +4,10 @@ import { runOf, variantsOf } from "./exercise-motions.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { RUN } from "./exercises/run.ts";
+import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 
 const motions = (...args: Parameters<typeof variantsOf>) =>
@@ -26,6 +28,11 @@ describe("variantsOf", () => {
 
   it("has one form without a label for an exercise with one form", () => {
     expect(variantsOf("thruster", [])).toEqual([{ key: "only", label: null, exercise: THRUSTER }]);
+  });
+
+  it("shows the power clean and the squat clean each with their own motion", () => {
+    expect(motions("power-clean", ["15 power cleans, 61/43 kg"])).toEqual([POWER_CLEAN]);
+    expect(motions("squat-clean", ["10 squat cleans, 61/43 kg"])).toEqual([SQUAT_CLEAN]);
   });
 
   it.each([

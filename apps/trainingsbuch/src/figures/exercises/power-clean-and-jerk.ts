@@ -2,7 +2,7 @@
 // A variant of `clean-and-jerk.ts`. Only the extension, the catch and the way up from the catch are different.
 import { FRONT, SIDE, type Exercise } from "../exercise.ts";
 import { handAt, rackAt } from "../poses.ts";
-import { tiptoe, type Pose } from "../skeleton.ts";
+import { tiptoe, type Pose, type Step } from "../skeleton.ts";
 import { intoRack, KNEE, LOWER, POWER, SETUP, SHIN, shrugged, THIGH } from "./clean-and-jerk.ts";
 
 const base = { feet: { x: 74, y: 200 }, stance: 10, knees: 0.5, grip: 16 };
@@ -90,6 +90,37 @@ const OVERHEAD: Pose = {
 // The way back to the floor is in the stance of the pull.
 const RACK_DOWN: Pose = { ...RACK, stance: 10 };
 
+/** The power clean, from the floor to the stand with the bar in the rack. `power-clean.ts` uses it too. */
+export const POWER_CLEAN_STEPS: Step[] = [
+  // One step from the floor to the power position: the bar gets faster and faster. "fk": the arms are ropes.
+  {
+    to: POWER,
+    via: [SHIN, KNEE, THIGH],
+    seconds: 0.6,
+    label: "Zug",
+    ease: "in",
+    anchor: "feet",
+    arms: "fk",
+    follow: "hands",
+  },
+  // "fk": the arms are still ropes, the shrug lifts the bar.
+  { to: EXTEND, seconds: 0.16, label: "Streckung", ease: "linear", anchor: "feet", arms: "fk" },
+  // Two steps with one speed of the hip at their border: the bar is on the shoulders after 0.17 s,
+  // then the legs give way. The sum is 0.26 s, as before.
+  {
+    to: LAND,
+    via: [UNDER, AROUND, ONTO],
+    seconds: 0.17,
+    label: "Umsetzen",
+    ease: "linear",
+    arms: "fk",
+  },
+  { to: CATCH, seconds: 0.09, ease: "out", anchor: "feet", arms: "carry" },
+  { to: CATCH, seconds: 0.15 },
+  { to: RACK, seconds: 0.35, label: "Aufstehen", anchor: "feet", arms: "carry" },
+  { to: RACK, seconds: 0.3 },
+];
+
 export const POWER_CLEAN_AND_JERK: Exercise = {
   key: "power-clean-and-jerk",
   title: "Power Clean & Jerk",
@@ -97,33 +128,7 @@ export const POWER_CLEAN_AND_JERK: Exercise = {
   views: [SIDE, FRONT],
   start: SETUP,
   steps: [
-    // One step from the floor to the power position: the bar gets faster and faster. "fk": the arms are ropes.
-    {
-      to: POWER,
-      via: [SHIN, KNEE, THIGH],
-      seconds: 0.6,
-      label: "Zug",
-      ease: "in",
-      anchor: "feet",
-      arms: "fk",
-      follow: "hands",
-    },
-    // "fk": the arms are still ropes, the shrug lifts the bar.
-    { to: EXTEND, seconds: 0.16, label: "Streckung", ease: "linear", anchor: "feet", arms: "fk" },
-    // Two steps with one speed of the hip at their border: the bar is on the shoulders after 0.17 s,
-    // then the legs give way. The sum is 0.26 s, as before.
-    {
-      to: LAND,
-      via: [UNDER, AROUND, ONTO],
-      seconds: 0.17,
-      label: "Umsetzen",
-      ease: "linear",
-      arms: "fk",
-    },
-    { to: CATCH, seconds: 0.09, ease: "out", anchor: "feet", arms: "carry" },
-    { to: CATCH, seconds: 0.15 },
-    { to: RACK, seconds: 0.35, label: "Aufstehen", anchor: "feet", arms: "carry" },
-    { to: RACK, seconds: 0.3 },
+    ...POWER_CLEAN_STEPS,
     { to: DIP, seconds: 0.25, label: "Dip", anchor: "feet", arms: "carry" },
     { to: DRIVE, seconds: 0.14, label: "Ausstoßen", ease: "in", anchor: "feet", arms: "carry" },
     { to: SPLIT, seconds: 0.26, label: "Ausfallschritt", ease: "out", arms: "line" },

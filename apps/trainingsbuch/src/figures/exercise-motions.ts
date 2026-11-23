@@ -17,6 +17,7 @@ import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-p
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
+import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { POWER_SNATCH } from "./exercises/power-snatch.ts";
 import { PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_UP } from "./exercises/push-up.ts";
@@ -26,6 +27,7 @@ import { RUN } from "./exercises/run.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
 import { SNATCH } from "./exercises/snatch.ts";
+import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
@@ -73,6 +75,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("American", KETTLEBELL_SWING_AMERICAN),
     form("Russian", KETTLEBELL_SWING_RUSSIAN),
   ],
+  "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
   "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
   "push-up": only(PUSH_UP),
@@ -82,6 +85,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "sit-up": only(SIT_UP),
   ski: only(SKI),
   snatch: [form("Power", POWER_SNATCH), form("Squat", SNATCH)],
+  "squat-clean": only(SQUAT_CLEAN),
   "squat-snatch": only(SNATCH),
   "strict-handstand-push-up": only(HANDSTAND_PUSH_UP),
   "strict-pull-up": only(PULL_UP),
