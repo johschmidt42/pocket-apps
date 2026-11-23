@@ -18,6 +18,7 @@ import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.t
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
+import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { KETTLEBELL_SWING_AMERICAN } from "./exercises/kettlebell-swing-american.ts";
 import { KETTLEBELL_SWING_RUSSIAN } from "./exercises/kettlebell-swing-russian.ts";
 import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-pull-up.ts";
@@ -89,6 +90,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "dumbbell-snatch": only(DUMBBELL_SNATCH),
   "farmers-carry": [form("Dumbbell", FARMERS_CARRY), KETTLEBELL_CARRY],
   "front-squat": only(FRONT_SQUAT),
+  "hand-release-push-up": only(HAND_RELEASE_PUSH_UP),
   "handstand-push-up": [form("Kipping", KIPPING_HANDSTAND_PUSH_UP), STRICT_HANDSTAND_PUSH_UP],
   "kettlebell-swing": [
     form("American", KETTLEBELL_SWING_AMERICAN),

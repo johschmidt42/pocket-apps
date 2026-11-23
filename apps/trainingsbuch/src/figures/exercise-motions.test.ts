@@ -8,6 +8,7 @@ import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
+import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
@@ -77,6 +78,12 @@ describe("variantsOf", () => {
 
   it("shows the bench press", () => {
     expect(motions("bench-press", ["10 bench presses, 61/43 kg"])).toEqual([BENCH_PRESS]);
+  });
+
+  it("shows the hand-release push-up", () => {
+    expect(motions("hand-release-push-up", ["10 hand-release push-ups"])).toEqual([
+      HAND_RELEASE_PUSH_UP,
+    ]);
   });
 
   it("shows the push press", () => {

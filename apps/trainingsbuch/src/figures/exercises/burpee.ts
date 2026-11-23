@@ -15,8 +15,8 @@ const STAND_TOE_X = FEET_X + 15;
 const HAND_Y = GROUND - 4.5;
 /** The hands are on this spot from "Hände zum Boden" to "Füße vor": 32 in front of the ankles. */
 const HANDS = { x: FEET_X + 32, y: HAND_Y };
-/** The hands are exactly under the shoulder joints (see `push-up.ts`). */
-const GRIP = BODY.shoulderHalf;
+/** The hands are just outside the shoulders, as in `push-up.ts`: only then can the elbows be 45 degrees from the body. */
+const GRIP = 21;
 /** The ankle is exactly below the hip joint: a leg of 80 is then straight. */
 const STANCE = BODY.hipHalf;
 
@@ -28,8 +28,11 @@ const BOTTOM_TOES = 172;
 function tiltFor(shoulderY: number, toes: number): number {
   return Math.asin((tiptoeFromToe(0, toes).y - shoulderY) / (LEG + BODY.torso)) / RAD;
 }
-// The shoulders of the plank are 61.97 above the hands: the arms are straight, and the hands are on their spot.
-const TOP_TILT = tiltFor(HAND_Y - 61.97, TOP_TOES);
+// The shoulders of the plank are as high as a straight arm permits, with the hands outside the shoulders.
+const TOP_TILT = tiltFor(
+  HAND_Y - Math.sqrt(61.97 ** 2 - (GRIP - BODY.shoulderHalf) ** 2),
+  TOP_TOES,
+);
 /** The toes in the plank. With this value, the shoulders of the plank are exactly over the hands. */
 const PLANK_TOE_X =
   HANDS.x - (tiptoeFromToe(0, TOP_TOES).x + Math.cos(TOP_TILT * RAD) * (LEG + BODY.torso));
@@ -42,7 +45,11 @@ function line(tilt: number, toes: number) {
   return { ankle, hip, lean: 90 - tilt, toes };
 }
 
-type Elbows = { elbows: number; elbowsOut: number };
+type Elbows = { elbowTo: number; elbowsOut: number };
+// The elbows of `push-up.ts`: the upper arms are about 45 degrees from the body at the bottom, an arrow and not a T.
+const TOP_ELBOWS: Elbows = { elbowTo: -100, elbowsOut: 0 };
+const LOW_ELBOWS: Elbows = { elbowTo: -110, elbowsOut: 0.1 };
+const BOTTOM_ELBOWS: Elbows = { elbowTo: -175, elbowsOut: 0.2 };
 
 function onHands(b: ReturnType<typeof line>, head: number, elbows: Elbows): Pose {
   return {
@@ -68,11 +75,12 @@ const FLOOR_TILT = tiltFor(CHEST_Y, BOTTOM_TOES);
 /** The part of the way down at which the "in" step ends and the "out" step starts. */
 const PART = 0.6;
 
-const PLANK = onHands(line(TOP_TILT, TOP_TOES), -8, { elbows: -1, elbowsOut: 2.5 });
-const LOW = onHands(line(mix(TOP_TILT, FLOOR_TILT, PART), mix(TOP_TOES, BOTTOM_TOES, PART)), -18, {
-  elbows: -1.5,
-  elbowsOut: 4,
-});
+const PLANK = onHands(line(TOP_TILT, TOP_TOES), -8, TOP_ELBOWS);
+const LOW = onHands(
+  line(mix(TOP_TILT, FLOOR_TILT, PART), mix(TOP_TOES, BOTTOM_TOES, PART)),
+  -18,
+  LOW_ELBOWS,
+);
 // The rule of the burpee: the chest and the thighs touch the floor. The ankle on its toes is 19.5 above the
 // floor, so a straight line to a chest on the floor leaves the hip 6 above it. The hip goes down to the floor too.
 const bottomAnkle = tiptoeFromToe(PLANK_TOE_X, BOTTOM_TOES);
@@ -89,7 +97,7 @@ const BOTTOM = onHands(
     toes: BOTTOM_TOES,
   },
   -26,
-  { elbows: -3, elbowsOut: 1.5 },
+  BOTTOM_ELBOWS,
 );
 
 // ---------- From the feet to the hands, and back ----------
@@ -129,8 +137,7 @@ const CROUCH: Pose = {
   knees: 0.5,
   hands: HANDS,
   grip: GRIP,
-  elbows: -1,
-  elbowsOut: 2.5,
+  ...TOP_ELBOWS,
 };
 
 // The feet are in the air on the way back. The hips go up a little, and the shoulders come over the hands.
@@ -145,8 +152,7 @@ const KICK: Pose = {
   knees: 0.2,
   hands: HANDS,
   grip: GRIP,
-  elbows: -1,
-  elbowsOut: 2.5,
+  ...TOP_ELBOWS,
 };
 
 // The feet are in the air on the way forward. The knees come under the body.
@@ -160,8 +166,7 @@ const TUCK: Pose = {
   knees: 0.3,
   hands: HANDS,
   grip: GRIP,
-  elbows: -1,
-  elbowsOut: 2.5,
+  ...TOP_ELBOWS,
 };
 // The feet land. The hip is still 4 units above the deep squat: the legs take the landing.
 const TOUCH: Pose = { ...CROUCH, hip: { x: 131, y: 160 }, lean: 64 };
