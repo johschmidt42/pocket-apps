@@ -3,7 +3,7 @@
 // While a foot is on the ground, its contact point is on the belt, which moves back at a constant speed: the foot
 // lands on the heel, is flat, and stands on its toe while the knee of this leg goes down to the ground.
 // In the swing, the leg comes from two angles (thigh and knee) on smooth curves. There is no flight and no stop.
-import type { Exercise, View } from "../exercise.ts";
+import type { Equipment, Exercise, View } from "../exercise.ts";
 import { onHeel } from "../poses.ts";
 import { item, tiptoeFromToe, up, type Pose, type Step } from "../skeleton.ts";
 
@@ -187,7 +187,7 @@ function ankleOf(part: number, hip: Spot): Spot {
  * The hand of one side: the arm is straight and hangs from the shoulder joint. It swings a little, opposite to
  * the leg of its side: the hand is in front when the leg is back.
  */
-function handOf(part: number, hip: Spot, lean: number): Spot {
+export function handOf(part: number, hip: Spot, lean: number): Spot {
   const torso = up(lean);
   const joint = { x: hip.x + torso.x * 46, y: hip.y + torso.y * 46 };
   const dx = 4 - SWING * Math.cos(2 * Math.PI * (part - 0.12));
@@ -196,8 +196,23 @@ function handOf(part: number, hip: Spot, lean: number): Spot {
   return { x: joint.x + dx, y: joint.y + Math.sqrt(flat * flat - dx * dx) };
 }
 
+/** What the upper body does at one part of the loop. The overhead lunges hold a load with it. */
+export type Upper = (
+  part: number,
+  hip: Spot,
+  lean: number,
+) => Pick<Pose, "hands" | "grip"> &
+  Partial<Pick<Pose, "head" | "shrug" | "elbows" | "elbowsOut" | "elbowTo">>;
+
+/** The arms hang beside the body and swing a little. */
+export const hangingArms: Upper = (part, hip, lean) => ({
+  hands: [handOf(part, hip, lean), handOf(part + 0.5, hip, lean)],
+  grip: GRIP,
+  elbows: -0.2,
+});
+
 /** The pose at one part of the loop. The near leg lands at 0, the far leg lands at 0.5. */
-function pose(part: number): Pose {
+function pose(part: number, upper: Upper): Pose {
   const hip = hipOf(part);
   const lean = leanOf(part * 2);
   return {
@@ -208,36 +223,48 @@ function pose(part: number): Pose {
     toes: [toesOf(part), toesOf(part + 0.5)],
     stance: 7,
     knees: 0.06,
-    hands: [handOf(part, hip, lean), handOf(part + 0.5, hip, lean)],
-    grip: GRIP,
-    elbows: -0.2,
+    ...upper(part, hip, lean),
   };
-}
-
-const START = pose(0);
-
-const steps: Step[] = [];
-for (let i = 1; i <= POSES; i++) {
-  steps.push({
-    to: i === POSES ? START : pose(i / POSES),
-    seconds: LOOP / POSES,
-    ...(i === 1 ? { label: "Rechter Ausfallschritt" } : {}),
-    ...(i === POSES / 2 + 1 ? { label: "Linker Ausfallschritt" } : {}),
-    ease: "linear",
-    legs: "line",
-    arms: "line",
-  });
 }
 
 const SIDE: View = { label: "Seite", yaw: 0, box: [14, 22, 170, 190] };
 const FRONT: View = { label: "Vorn", yaw: 90, box: [-60, 22, 120, 190] };
 
-export const WALKING_LUNGE: Exercise = {
+/** A walking lunge. The legs are the same in each form. `upper` sets the arms and the load. */
+export function lunge(options: {
+  key: string;
+  title: string;
+  equipment: Equipment;
+  upper: Upper;
+  views?: Exercise["views"];
+}): Exercise {
+  const start = pose(0, options.upper);
+  const steps: Step[] = [];
+  for (let i = 1; i <= POSES; i++) {
+    steps.push({
+      to: i === POSES ? start : pose(i / POSES, options.upper),
+      seconds: LOOP / POSES,
+      ...(i === 1 ? { label: "Rechter Ausfallschritt" } : {}),
+      ...(i === POSES / 2 + 1 ? { label: "Linker Ausfallschritt" } : {}),
+      ease: "linear",
+      legs: "line",
+      arms: "line",
+    });
+  }
+  return {
+    key: options.key,
+    title: options.title,
+    equipment: options.equipment,
+    belt: 2 * STRIDE,
+    views: options.views ?? [SIDE, FRONT],
+    start,
+    steps,
+  };
+}
+
+export const WALKING_LUNGE: Exercise = lunge({
   key: "walking-lunge",
   title: "Walking Lunge",
   equipment: { kind: "none" },
-  belt: 2 * STRIDE,
-  views: [SIDE, FRONT],
-  start: START,
-  steps,
-};
+  upper: hangingArms,
+});

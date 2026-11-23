@@ -12,6 +12,9 @@ import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
+import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
+import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
@@ -95,6 +98,20 @@ describe("variantsOf", () => {
     ]);
   });
 
+  it.each([
+    ["Blake", OVERHEAD_LUNGE_PLATE],
+    ["Hidalgo", OVERHEAD_LUNGE_PLATE],
+    ["Wesley", OVERHEAD_LUNGE_PLATE],
+    ["White", OVERHEAD_LUNGE_PLATE],
+    ["City 100", OVERHEAD_LUNGE_BARBELL],
+    ["Open 16.1", OVERHEAD_LUNGE_BARBELL],
+    ["Open 19.3", OVERHEAD_LUNGE_DUMBBELL],
+    ["Open 26.2", OVERHEAD_LUNGE_DUMBBELL],
+  ])("shows the load of the overhead lunge in %s", (name, exercise) => {
+    const workout = CATALOG.find((item) => item.name === name);
+    expect(motions("overhead-lunge", workout?.lines ?? [])).toEqual([exercise]);
+  });
+
   it("shows the push press", () => {
     expect(motions("push-press", ["15 push presses, 52/35 kg"])).toEqual([PUSH_PRESS]);
   });
@@ -115,6 +132,7 @@ describe("variantsOf", () => {
   it.each([
     ["clean", ["Power", "Squat"]],
     ["farmers-carry", ["Dumbbell", "Kettlebell"]],
+    ["overhead-lunge", ["Plate", "Barbell", "Dumbbell"]],
     ["clean-and-jerk", ["Power", "Squat"]],
     ["snatch", ["Power", "Squat"]],
     ["toes-to-bar", ["Tuck", "Straight"]],

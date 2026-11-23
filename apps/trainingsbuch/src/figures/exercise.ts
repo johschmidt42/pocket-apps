@@ -62,6 +62,11 @@ export type Equipment =
    */
   | { kind: "floorbar"; x: number }
   /**
+   * A weight plate in both hands, held at its edge. Its flat side looks forward: from the side it
+   * is a thin bar, from the front a circle. Its center is between the hands.
+   */
+  | { kind: "plate" }
+  /**
    * A flat bench and a barbell in both hands (bench press). `x` is the end of the bench at the
    * head. The sizes are in `BENCH`. The figure lies on it with the head at -x.
    */

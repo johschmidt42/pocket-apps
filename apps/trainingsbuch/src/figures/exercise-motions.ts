@@ -24,6 +24,9 @@ import { KETTLEBELL_SWING_RUSSIAN } from "./exercises/kettlebell-swing-russian.t
 import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-pull-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
+import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
+import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
@@ -63,6 +66,9 @@ const only = (exercise: Exercise): ExerciseVariants => [{ key: "only", label: nu
 const STRICT_PULL_UP = form("Strict", PULL_UP);
 const STRICT_HANDSTAND_PUSH_UP = form("Strict", HANDSTAND_PUSH_UP);
 const KETTLEBELL_CARRY = form("Kettlebell", FARMERS_CARRY_KETTLEBELL);
+const PLATE_LUNGE = form("Plate", OVERHEAD_LUNGE_PLATE);
+const BARBELL_LUNGE = form("Barbell", OVERHEAD_LUNGE_BARBELL);
+const DUMBBELL_LUNGE = form("Dumbbell", OVERHEAD_LUNGE_DUMBBELL);
 
 /**
  * The exercises that have an animation. To add one, copy its file from the prototype into
@@ -97,6 +103,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("American", KETTLEBELL_SWING_AMERICAN),
     form("Russian", KETTLEBELL_SWING_RUSSIAN),
   ],
+  "overhead-lunge": [PLATE_LUNGE, BARBELL_LUNGE, DUMBBELL_LUNGE],
   "overhead-squat": only(OVERHEAD_SQUAT),
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
@@ -120,14 +127,23 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "wall-ball": only(WALL_BALL),
 };
 
-/** Some workouts have a general id, but their text asks for one form. */
-const FORM_IN_TEXT: Partial<Record<ExerciseId, { pattern: RegExp; variant: ExerciseVariant }>> = {
-  "farmers-carry": { pattern: /\bkettlebell farmers carry\b/i, variant: KETTLEBELL_CARRY },
-  "pull-up": { pattern: /\b(?:strict|weighted|L)\s+pull-?ups?\b/i, variant: STRICT_PULL_UP },
-  "handstand-push-up": {
-    pattern: /\bstrict\s+handstand\s+push-?ups?\b/i,
-    variant: STRICT_HANDSTAND_PUSH_UP,
-  },
+/**
+ * Some workouts have a general id, but their text asks for one form. The first pattern that fits
+ * a line of the workout wins.
+ */
+const FORMS_IN_TEXT: Partial<
+  Record<ExerciseId, readonly { pattern: RegExp; variant: ExerciseVariant }[]>
+> = {
+  "farmers-carry": [{ pattern: /\bkettlebell farmers carry\b/i, variant: KETTLEBELL_CARRY }],
+  "handstand-push-up": [
+    { pattern: /\bstrict\s+handstand\s+push-?ups?\b/i, variant: STRICT_HANDSTAND_PUSH_UP },
+  ],
+  "overhead-lunge": [
+    { pattern: /\bdumbbell overhead (?:walking )?lunge/i, variant: DUMBBELL_LUNGE },
+    { pattern: /\blunges?\b.*\bplate\b/i, variant: PLATE_LUNGE },
+    { pattern: /^barbell:|\boverhead walking lunge, \d/i, variant: BARBELL_LUNGE },
+  ],
+  "pull-up": [{ pattern: /\b(?:strict|weighted|L)\s+pull-?ups?\b/i, variant: STRICT_PULL_UP }],
 };
 
 /** Some workouts have the id of an exercise, but their text asks for another movement. */
@@ -160,8 +176,8 @@ export function variantsOf(id: ExerciseId, lines: readonly string[]): ExerciseVa
   if (id === "run" && onlyOtherRuns(lines)) return null;
   const other = OTHER_MOVEMENT[id];
   if (other && lines.some((line) => other.test(line))) return null;
-  const named = FORM_IN_TEXT[id];
-  if (named && lines.some((line) => named.pattern.test(line))) return [named.variant];
+  const named = FORMS_IN_TEXT[id]?.find(({ pattern }) => lines.some((line) => pattern.test(line)));
+  if (named) return [named.variant];
   return EXERCISE_VARIANTS[id] ?? null;
 }
 

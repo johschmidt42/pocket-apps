@@ -16,6 +16,8 @@ import {
 } from "./skeleton.ts";
 
 const PLATE = 17;
+/** A plate of 20 kg that the hands hold at its edge. */
+const HELD_PLATE = 20;
 /** The depths of equipment that is behind the whole figure or in front of it. */
 const BEHIND = -1e6;
 const IN_FRONT = 1e6;
@@ -148,6 +150,36 @@ function dumbbell({ joints, flat, fromSide }: Scene, handIndex: 0 | 1): Parts {
     bar("handle", flat(hand).depth - 0.5, first, second, 3.5),
     head("head0", first),
     head("head1", second),
+  ];
+}
+
+/** A plate in both hands: a thin bar from the side, a circle with a hole from the front. */
+function heldPlate(scene: Scene): Parts {
+  const { flat, fromSide } = scene;
+  const center = flat(handsMiddle(scene));
+  if (fromSide) {
+    return [
+      part(
+        center.depth,
+        <rect
+          key="plate"
+          x={center.x - 3}
+          y={center.y - HELD_PLATE}
+          width={6}
+          height={HELD_PLATE * 2}
+          rx={3}
+          fill={COLOR}
+          stroke="none"
+        />,
+      ),
+    ];
+  }
+  return [
+    disc("plate", center.depth - 1, center, HELD_PLATE),
+    part(
+      center.depth - 0.9,
+      <circle key="plateHole" cx={center.x} cy={center.y} r={3.5} fill={BACK} stroke="none" />,
+    ),
   ];
 }
 
@@ -566,6 +598,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return skiErg(scene, equipment.x);
     case "bike":
       return airBike(scene, equipment.x);
+    case "plate":
+      return heldPlate(scene);
     case "bench":
       return [...bench(scene, equipment.x), ...barbell(scene, false)];
     case "floorbar":
