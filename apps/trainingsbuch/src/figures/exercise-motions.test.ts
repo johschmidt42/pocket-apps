@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
@@ -47,6 +48,10 @@ describe("variantsOf", () => {
     expect(motions("overhead-squat", ["15 overhead squats, 43/30 kg"])).toEqual([OVERHEAD_SQUAT]);
   });
 
+  it("shows the burpee pull-up for a plain burpee pull-up", () => {
+    expect(motions("burpee-pull-up", ["10 burpee pull-ups"])).toEqual([BURPEE_PULL_UP]);
+  });
+
   it.each([
     "9 strict pull-ups",
     "Strict pull-ups",
@@ -81,6 +86,8 @@ describe("variantsOf", () => {
   it.each([
     ["burpee", "23 burpees over the backpack"],
     ["burpee", "8 burpees (over the barbell)"],
+    ["burpee-pull-up", "7 strict burpee pull-ups"],
+    ["burpee-pull-up", "7 burpee chest-to-bar pull-ups"],
     ["dumbbell-snatch", "10 dumbbell hang split snatches, right arm"],
     ["handstand-push-up", "25 ring handstand push-ups"],
     ["handstand-push-up", "8 freestanding handstand push-ups"],

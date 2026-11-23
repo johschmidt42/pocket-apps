@@ -5,6 +5,7 @@ import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
 import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
+import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { BURPEE } from "./exercises/burpee.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
 import { CLEAN_AND_JERK } from "./exercises/clean-and-jerk.ts";
@@ -66,6 +67,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   bike: only(BIKE_EXERCISE),
   "box-jump": only(BOX_JUMP),
   burpee: only(BURPEE),
+  "burpee-pull-up": only(BURPEE_PULL_UP),
   "chest-to-bar": [
     form("Kipping", KIPPING_CHEST_TO_BAR_PULL_UP),
     form("Strict", CHEST_TO_BAR_PULL_UP),
@@ -113,6 +115,7 @@ const STRICT_IN_TEXT: Partial<Record<ExerciseId, { pattern: RegExp; variant: Exe
 /** Some workouts have the id of an exercise, but their text asks for another movement. */
 const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   burpee: /\bburpees?\b[^,]*\bover\b/i,
+  "burpee-pull-up": /\b(?:strict burpee|burpee chest-to-bar)/i,
   "dumbbell-snatch": /\bsplit snatch/i,
   "handstand-push-up": /\b(?:ring|freestanding)\s+handstand/i,
   "overhead-squat": /\boverhead squats?\b.*\b(?:left|right) arm\b/i,

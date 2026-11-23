@@ -1,7 +1,7 @@
 // Burpee: hands to the floor, feet back, chest to the floor, push up, feet forward, jump.
 import type { Exercise } from "../exercise.ts";
 import { handAt } from "../poses.ts";
-import { BODY, flightHip, GROUND, tiptoeFromToe, type Pose } from "../skeleton.ts";
+import { BODY, flightHip, GROUND, tiptoeFromToe, type Pose, type Step } from "../skeleton.ts";
 
 const RAD = Math.PI / 180;
 const LEG = BODY.thigh + BODY.shin;
@@ -94,7 +94,7 @@ const BOTTOM = onHands(
 
 // ---------- From the feet to the hands, and back ----------
 
-const STAND: Pose = {
+export const STAND: Pose = {
   hip: { x: FEET_X, y: 120 },
   lean: 0,
   feet: FLAT,
@@ -171,7 +171,7 @@ const AIR = 0.3;
 
 // Most of the way up. The arms swing forward and up, and they are at the height of the shoulders.
 const riseHip = { x: 148, y: 126 };
-const RISE: Pose = {
+export const RISE: Pose = {
   hip: riseHip,
   lean: 16,
   head: -8,
@@ -186,7 +186,7 @@ const JUMP_TOES = 130;
 const jumpAnkle = tiptoeFromToe(STAND_TOE_X, JUMP_TOES);
 const takeoffHip = { x: jumpAnkle.x, y: jumpAnkle.y - LEG };
 // Full extension, on the toes. The arms are nearly up.
-const TAKEOFF: Pose = {
+export const TAKEOFF: Pose = {
   hip: takeoffHip,
   lean: 2,
   feet: jumpAnkle,
@@ -209,7 +209,7 @@ const APEX: Pose = {
   hands: handAt(apexHip, 0, 2, -66),
 };
 // First contact, on the toes. The arms start to come down in front of the body.
-const LAND: Pose = {
+export const LAND: Pose = {
   hip: takeoffHip,
   lean: 2,
   feet: jumpAnkle,
@@ -221,7 +221,7 @@ const LAND: Pose = {
 };
 // The legs take the landing.
 const absorbHip = { x: 148, y: 126 };
-const ABSORB: Pose = {
+export const ABSORB: Pose = {
   hip: absorbHip,
   lean: 10,
   head: -6,
@@ -231,6 +231,38 @@ const ABSORB: Pose = {
   hands: handAt(absorbHip, 10, 44, 40),
 };
 
+/** From the stand to the floor and back to the deep squat. The burpee pull-up uses the same steps. */
+export const TO_THE_FLOOR: Step[] = [
+  // The hip has the same speed on the two sides of each border: `2 * distance / seconds` fits.
+  { to: FOLD, seconds: 0.32, label: "Hände zum Boden", ease: "in", anchor: "feet" },
+  { to: CROUCH, seconds: 0.21, ease: "out", anchor: "feet" },
+  // The hands carry the body: the hip moves on a straight line, and the hands keep their spot.
+  // The feet get faster, then slower. With a constant speed to the plank, the knees whip when the legs get straight.
+  { to: KICK, seconds: 0.26, label: "Füße zurück", ease: "in", arms: "line" },
+  { to: PLANK, seconds: 0.17, ease: "out", arms: "line" },
+  {
+    to: LOW,
+    seconds: 0.5 * PART,
+    label: "Brust zum Boden",
+    ease: "in",
+    anchor: "feet",
+    arms: "line",
+  },
+  { to: BOTTOM, seconds: 0.5 * (1 - PART), ease: "out", anchor: "feet", arms: "line" },
+  {
+    to: LOW,
+    seconds: 0.5 * (1 - PART),
+    label: "Hochdrücken",
+    ease: "in",
+    anchor: "feet",
+    arms: "line",
+  },
+  { to: PLANK, seconds: 0.5 * PART, ease: "out", anchor: "feet", arms: "line" },
+  { to: TUCK, seconds: 0.21, label: "Füße vor", ease: "in", arms: "line" },
+  { to: TOUCH, seconds: 0.14, ease: "linear", arms: "line" },
+  { to: CROUCH, seconds: 0.14, ease: "out", arms: "line" },
+];
+
 export const BURPEE: Exercise = {
   key: "burpee",
   title: "Burpee",
@@ -239,34 +271,7 @@ export const BURPEE: Exercise = {
   views: [{ label: "Seite", yaw: 0, box: [40, -26, 204, 238] }],
   start: STAND,
   steps: [
-    // The hip has the same speed on the two sides of each border: `2 * distance / seconds` fits.
-    { to: FOLD, seconds: 0.32, label: "Hände zum Boden", ease: "in", anchor: "feet" },
-    { to: CROUCH, seconds: 0.21, ease: "out", anchor: "feet" },
-    // The hands carry the body: the hip moves on a straight line, and the hands keep their spot.
-    // The feet get faster, then slower. With a constant speed to the plank, the knees whip when the legs get straight.
-    { to: KICK, seconds: 0.26, label: "Füße zurück", ease: "in", arms: "line" },
-    { to: PLANK, seconds: 0.17, ease: "out", arms: "line" },
-    {
-      to: LOW,
-      seconds: 0.5 * PART,
-      label: "Brust zum Boden",
-      ease: "in",
-      anchor: "feet",
-      arms: "line",
-    },
-    { to: BOTTOM, seconds: 0.5 * (1 - PART), ease: "out", anchor: "feet", arms: "line" },
-    {
-      to: LOW,
-      seconds: 0.5 * (1 - PART),
-      label: "Hochdrücken",
-      ease: "in",
-      anchor: "feet",
-      arms: "line",
-    },
-    { to: PLANK, seconds: 0.5 * PART, ease: "out", anchor: "feet", arms: "line" },
-    { to: TUCK, seconds: 0.21, label: "Füße vor", ease: "in", arms: "line" },
-    { to: TOUCH, seconds: 0.14, ease: "linear", arms: "line" },
-    { to: CROUCH, seconds: 0.14, ease: "out", arms: "line" },
+    ...TO_THE_FLOOR,
     // The legs push faster and faster. The last part and the flight have nearly the same speed of the hip.
     { to: RISE, seconds: 0.38, label: "Sprung", ease: "in", anchor: "feet" },
     { to: TAKEOFF, seconds: 0.11, ease: "linear", anchor: "feet" },

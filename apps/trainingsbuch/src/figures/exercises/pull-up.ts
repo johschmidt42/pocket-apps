@@ -21,8 +21,9 @@ export type Body = {
   bend?: number;
 };
 
-function pose(body: Body): Pose {
-  const shoulder = { x: BAR.x - body.back, y: BAR.y + body.down };
+/** A pose in a hang from the bar at `bar`. The burpee pull-up has its bar at another place. */
+export function pose(body: Body, bar: { x: number; y: number } = BAR): Pose {
+  const shoulder = { x: bar.x - body.back, y: bar.y + body.down };
   const torso = up(body.lean);
   const hip = { x: shoulder.x - torso.x * BODY.torso, y: shoulder.y - torso.y * BODY.torso };
   // 82 is a little more than the leg can reach: the legs are straight.
@@ -42,7 +43,7 @@ function pose(body: Body): Pose {
     knees: 0,
     // The toes point down, nearly in line with the legs.
     toes: 165 - body.legs,
-    hands: BAR,
+    hands: bar,
     grip: 17,
     elbows: body.elbows,
     elbowsOut: body.elbowsOut,
@@ -61,7 +62,7 @@ const HANG = pose({ back: 0, down: 61.8, lean: 3, legs: 9, head: 0, elbows: 0.5,
 // A light arch at the top (added on 2026-11-21, when the torso learned to bend): the chest goes to the bar.
 // The chin is 3 above the bar and the shoulders are 11 below it. Before 2026-11-22 the shoulders were 7 below
 // the bar and the chin 6.9 above it: the user asked for "the chin just over the bar".
-const CHIN_OVER_BAR: Body = {
+export const CHIN_OVER_BAR: Body = {
   back: 13,
   down: 11,
   lean: -12,
@@ -76,7 +77,7 @@ const CHIN_OVER_BAR: Body = {
 // turn at a constant rate, and a turn of a nearly straight arm lifts the body very little.
 // Their shoulders are on the arc that the engine made without them. Their leans (-1 and -6.2) are tuned with the
 // numbers: the lean rate is then nearly the same on the two sides of each of these poses (no corner in the time chart).
-const LOW = pose({
+export const LOW_BODY: Body = {
   back: 7.2,
   down: 54.7,
   lean: -1,
@@ -84,9 +85,10 @@ const LOW = pose({
   head: 1,
   elbows: 0.4,
   elbowsOut: 0.55,
-});
+};
+const LOW = pose(LOW_BODY);
 // Here the head passes the bar. The head tilt is 0, so that the face stays about 4 units behind the bar.
-const HIGH = pose({
+export const HIGH_BODY: Body = {
   back: 14,
   down: 34,
   lean: -6.2,
@@ -95,7 +97,8 @@ const HIGH = pose({
   elbows: 0.25,
   elbowsOut: 0.75,
   bend: -7,
-});
+};
+const HIGH = pose(HIGH_BODY);
 
 const SIDE: View = { label: "Seite", yaw: 0, box: [8, -18, 130, 284] };
 const FRONT: View = { label: "Vorn", yaw: 90, box: [-65, -18, 130, 284] };
