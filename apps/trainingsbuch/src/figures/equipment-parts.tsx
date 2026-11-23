@@ -90,7 +90,7 @@ function handsMiddle({ joints }: Scene): Vec {
   return vec((near.end.x + far.end.x) / 2, (near.end.y + far.end.y) / 2, 0);
 }
 
-function barbell(scene: Scene): Parts {
+function barbell(scene: Scene, onBack: boolean): Parts {
   const { flat, fromSide, joints } = scene;
   const middle = flat(handsMiddle(scene));
   if (fromSide) return [disc("plate", BEHIND, middle, PLATE), grip("bar", IN_FRONT, middle, 3, 2)];
@@ -119,7 +119,7 @@ function barbell(scene: Scene): Parts {
           stroke="none"
         />,
       ),
-      bar(`bar${String(side)}`, middle.depth - 0.5, middle, end, 4),
+      bar(`bar${String(side)}`, onBack ? BEHIND + 1 : middle.depth - 0.5, middle, end, 4),
     ];
   });
 }
@@ -457,7 +457,7 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "none":
       return [];
     case "barbell":
-      return barbell(scene);
+      return barbell(scene, equipment.onBack === true);
     case "dumbbell":
       return dumbbell(scene, equipment.hand);
     case "kettlebell":

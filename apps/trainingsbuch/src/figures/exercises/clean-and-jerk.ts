@@ -119,7 +119,7 @@ const [AROUND, ONTO] = intoRack(UNDER, LAND, { t: 0.5, shrug: 2.5 }, { t: 0.8, s
 // degrees below level (the user saw it, 2026-11-23). With the hands more above the shoulders, they are 26 below
 // level, as in the catch of the power clean.
 const CATCH_HIP = { x: 54, y: 167 };
-const CATCH: Pose = {
+export const CATCH: Pose = {
   ...base,
   hip: CATCH_HIP,
   lean: 27,
@@ -127,7 +127,7 @@ const CATCH: Pose = {
   elbowTo: 80,
 };
 const RACK_HIP = { x: 74, y: 120 };
-const RACK: Pose = { ...base, hip: RACK_HIP, lean: 2, ...rackAt(RACK_HIP, 2) };
+export const RACK: Pose = { ...base, hip: RACK_HIP, lean: 2, ...rackAt(RACK_HIP, 2) };
 const DIP_HIP = { x: 74, y: 132 };
 const DIP: Pose = { ...base, hip: DIP_HIP, lean: 2, ...rackAt(DIP_HIP, 2) };
 // The bar leaves the shoulders: the hands are 20 above the shoulder joints.

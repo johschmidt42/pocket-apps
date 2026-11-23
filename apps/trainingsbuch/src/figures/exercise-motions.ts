@@ -1,6 +1,7 @@
 import type { ExerciseId } from "../exercises.ts";
 import type { Exercise } from "./exercise.ts";
 import { AIR_SQUAT } from "./exercises/air-squat.ts";
+import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
 import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
@@ -10,6 +11,7 @@ import { CLEAN_AND_JERK } from "./exercises/clean-and-jerk.ts";
 import { DEADLIFT } from "./exercises/deadlift.ts";
 import { DOUBLE_UNDER } from "./exercises/double-under.ts";
 import { DUMBBELL_SNATCH } from "./exercises/dumbbell-snatch.ts";
+import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KETTLEBELL_SWING_AMERICAN } from "./exercises/kettlebell-swing-american.ts";
 import { KETTLEBELL_SWING_RUSSIAN } from "./exercises/kettlebell-swing-russian.ts";
@@ -58,6 +60,7 @@ const STRICT_HANDSTAND_PUSH_UP = form("Strict", HANDSTAND_PUSH_UP);
 const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "air-squat": only(AIR_SQUAT),
   "air-bike": only(BIKE_EXERCISE),
+  "back-squat": only(BACK_SQUAT),
   "bar-muscle-up": only(BAR_MUSCLE_UP),
   bike: only(BIKE_EXERCISE),
   "box-jump": only(BOX_JUMP),
@@ -71,6 +74,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   deadlift: only(DEADLIFT),
   "double-under": only(DOUBLE_UNDER),
   "dumbbell-snatch": only(DUMBBELL_SNATCH),
+  "front-squat": only(FRONT_SQUAT),
   "handstand-push-up": [form("Kipping", KIPPING_HANDSTAND_PUSH_UP), STRICT_HANDSTAND_PUSH_UP],
   "kettlebell-swing": [
     form("American", KETTLEBELL_SWING_AMERICAN),

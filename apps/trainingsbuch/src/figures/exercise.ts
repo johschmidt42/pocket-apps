@@ -3,8 +3,12 @@ import type { Pose, Step } from "./skeleton.ts";
 
 export type Equipment =
   | { kind: "none" }
-  /** A barbell in both hands. */
-  | { kind: "barbell" }
+  /**
+   * A barbell in both hands. `onBack`: the bar lies on the upper back (back squat). The front view
+   * then draws it behind the body, also when the torso leans and the bar is nearer to the camera
+   * than the hips.
+   */
+  | { kind: "barbell"; onBack?: boolean }
   /** A dumbbell in one hand: 0 is the near hand, 1 the far hand. */
   | { kind: "dumbbell"; hand: 0 | 1 }
   /**

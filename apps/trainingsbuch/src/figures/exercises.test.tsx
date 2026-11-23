@@ -1,8 +1,10 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { EXERCISE_IDS } from "../exercises.ts";
+import { equipmentParts } from "./equipment-parts.tsx";
 import { runOf, variantsOf } from "./exercise-motions.ts";
-import { isWide, type Exercise } from "./exercise.ts";
+import { isWide, type Equipment, type Exercise } from "./exercise.ts";
+import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { ROW } from "./exercises/row.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
@@ -21,8 +23,23 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 32 animations of the prototype", () => {
-    expect(ALL).toHaveLength(32);
+  it("are all 34 animations of the prototype", () => {
+    expect(ALL).toHaveLength(34);
+  });
+
+  it("draws the bar of the back squat behind the body in the front view", () => {
+    const { joints } = runOf(BACK_SQUAT).at(1.2);
+    const scene = {
+      joints,
+      flat: (v: Vec) => ({ x: -v.z, y: v.y, depth: v.x }),
+      fromSide: false,
+      progress: 0,
+      thrown: undefined,
+    };
+    const deepest = (equipment: Equipment) =>
+      Math.max(...equipmentParts(equipment, scene).map((part) => part.depth));
+    expect(deepest(BACK_SQUAT.equipment)).toBeLessThan(joints.hip.x);
+    expect(deepest({ kind: "barbell" })).toBeGreaterThan(joints.hip.x);
   });
 
   it("gives a wide picture two columns", () => {

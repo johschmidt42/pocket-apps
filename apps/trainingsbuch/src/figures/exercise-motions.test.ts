@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
+import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
@@ -33,6 +35,11 @@ describe("variantsOf", () => {
   it("shows the power clean and the squat clean each with their own motion", () => {
     expect(motions("power-clean", ["15 power cleans, 61/43 kg"])).toEqual([POWER_CLEAN]);
     expect(motions("squat-clean", ["10 squat cleans, 61/43 kg"])).toEqual([SQUAT_CLEAN]);
+  });
+
+  it("shows the back squat and the front squat each with their own motion", () => {
+    expect(motions("back-squat", ["5 back squats, 102/70 kg"])).toEqual([BACK_SQUAT]);
+    expect(motions("front-squat", ["5 front squats, 61/43 kg"])).toEqual([FRONT_SQUAT]);
   });
 
   it.each([
