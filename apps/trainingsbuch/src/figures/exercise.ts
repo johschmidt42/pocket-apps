@@ -1,0 +1,98 @@
+// What one exercise is: key poses, steps, equipment and views. Only data.
+import type { Pose, Step } from "./skeleton.ts";
+
+export type Equipment =
+  | { kind: "none" }
+  /** A barbell in both hands. */
+  | { kind: "barbell" }
+  /** A dumbbell in one hand: 0 is the near hand, 1 the far hand. */
+  | { kind: "dumbbell"; hand: 0 | 1 }
+  /**
+   * A kettlebell in both hands. Give the two hands one spot and a small `grip` (2 to 3).
+   * The bell is in line with the forearms: it hangs below hands that hang, and it is above hands that are overhead.
+   */
+  | { kind: "kettlebell" }
+  /**
+   * A wall at `x = wall`, to the right of the figure.
+   * In a handstand push-up, the back of the figure is at the wall, and the heels touch it.
+   */
+  | { kind: "wall"; wall: number }
+  /**
+   * A wall ball. The figure looks at a wall at `x = wall`. `target` is the y of the target line on the wall.
+   * The two hands hold the ball: one spot for `hands`, `grip: 15`. The center of the ball is 6 above the hands.
+   * In a step with `throw`, the ball is in the air.
+   */
+  | { kind: "wallball"; wall: number; target: number }
+  /**
+   * An AbMat on the ground: a small curved pad under the lower back. `x` is its front edge, just behind the hips
+   * of the figure that sits. The pad is 30 long (toward -x) and 6 high. The body hides it when the figure lies.
+   */
+  | { kind: "abmat"; x: number }
+  /**
+   * A rowing machine. The figure sits on its seat and looks at the flywheel (+x). `x` is the x of the ankles
+   * on the foot plates. The places of its parts are in `ROWER` (`machines.ts`). The seat follows the hip,
+   * and the handle with its chain follows the hands.
+   */
+  | { kind: "rower"; x: number }
+  /**
+   * A SkiErg. The figure stands in front of its tower and looks at it (+x). `x` is the x of the tower.
+   * The places of its parts are in `SKIERG` (`machines.ts`). One cord goes from the top to each hand.
+   */
+  | { kind: "skierg"; x: number }
+  /**
+   * An air bike (Echo Bike, Assault Bike). The figure sits on its saddle and looks at the fan (+x).
+   * `x` is the x of the hip joint on the saddle. The places of its parts are in `BIKE` (`machines.ts`).
+   * The cranks follow the feet, and the two levers follow the hands.
+   */
+  | { kind: "bike"; x: number }
+  /** A box on the ground. `x` is its near edge. */
+  | { kind: "box"; x: number; width: number; height: number }
+  /** A climbing rope that hangs at `x`. */
+  | { kind: "rope"; x: number }
+  /**
+   * A pull-up bar. It is fixed in space at `x`, `y` and goes from side to side.
+   * From the side, it is a small circle. The hands hold it: give them the same `x` and `y`.
+   */
+  | { kind: "pullupbar"; x: number; y: number }
+  /**
+   * A jump rope from hand to hand. It turns `turns` times in one loop of the exercise.
+   * `phase` is where it starts, as a part of one turn: 0 is over the head, 0.25 in front, 0.5 under the feet.
+   * `radius` is how far the middle of the rope is from the hands.
+   */
+  | { kind: "jumprope"; turns: number; phase: number; radius: number };
+
+/** A view: from which side the camera looks, and which part of the scene it shows. */
+export type View = {
+  label: string;
+  /** 0: from the side. 90: from the front. */
+  yaw: 0 | 90;
+  /** x, y, width, height of the SVG view box. */
+  box: readonly [number, number, number, number];
+};
+
+export type Exercise = {
+  key: string;
+  title: string;
+  start: Pose;
+  steps: Step[];
+  equipment: Equipment;
+  /** The first view shows first. */
+  views: readonly [View, ...View[]];
+  /**
+   * The camera follows the figure: after one loop, the scene is this far lower.
+   * For the rope climb: the figure climbs, and the rope moves down.
+   */
+  scroll?: number;
+  /** False: there is no ground in the picture (rope climb, pull-up bar). */
+  ground?: boolean;
+};
+
+/** A picture that is much wider than high (a machine) takes two columns. */
+export const isWide = (exercise: Exercise): boolean => {
+  const [, , width, height] = exercise.views[0].box;
+  return width / height > 1.3;
+};
+
+// The top is at -14: a bar overhead is at y = 12, and its plate has the radius 17.
+export const SIDE: View = { label: "Seite", yaw: 0, box: [14, -14, 120, 226] };
+export const FRONT: View = { label: "Vorn", yaw: 90, box: [-60, -14, 120, 226] };

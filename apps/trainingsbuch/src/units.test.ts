@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./catalog.ts";
-import { showLine, type TextDisplay } from "./units.ts";
+import { hasLoadInBothUnits, showLine, type TextDisplay } from "./units.ts";
 
 const WOMEN: TextDisplay = { units: "metric", loadsFor: "women" };
 
@@ -8,6 +8,24 @@ const WOMEN: TextDisplay = { units: "metric", loadsFor: "women" };
 function showUnits(line: string, units: TextDisplay["units"]): string {
   return showLine(line, { units, loadsFor: "men" });
 }
+
+describe("hasLoadInBothUnits", () => {
+  it.each(["Thruster, 43/29 kg (95/65 lb)", "21 kettlebell swings, 24/16 kg (1.5/1 pood)"])(
+    "finds the load in %s",
+    (line) => {
+      expect(hasLoadInBothUnits(line)).toBe(true);
+    },
+  );
+
+  it.each([
+    "100 pull-ups",
+    "400 m run",
+    "1600 m run (1 mile)",
+    "30 box jumps, 60/50 cm (24/20 in)",
+  ])("finds no load in %s", (line) => {
+    expect(hasLoadInBothUnits(line)).toBe(false);
+  });
+});
 
 describe("units in workout texts", () => {
   it("shows the metric or the imperial value", () => {

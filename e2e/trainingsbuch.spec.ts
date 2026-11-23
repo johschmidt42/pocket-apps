@@ -67,6 +67,39 @@ async function setUpAi(page: Page) {
 }
 
 test.describe("trainingsbuch in Chrome and Edge", () => {
+  test("shows moving exercise figures in an opened workout", async ({ page, pageErrors }) => {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await withDataFolder(page);
+    await page.goto(releaseUrl("trainingsbuch.html"));
+    await page.getByRole("button", { name: "Ordner wählen …" }).click();
+    await page.getByRole("button", { name: /^Fran/ }).click();
+
+    const thruster = page.getByRole("button", { name: "Thruster von der Seite anhalten" });
+    await thruster.scrollIntoViewIfNeeded();
+    const first = await thruster.innerHTML();
+    await expect.poll(() => thruster.innerHTML()).not.toBe(first);
+
+    await page
+      .getByRole("radiogroup", { name: "Variante von Pull-up" })
+      .getByRole("radio", { name: "Strict" })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Pull-up Strict von der Seite anhalten" }),
+    ).toBeVisible();
+
+    await thruster.click();
+    const stopped = page.getByRole("button", { name: "Thruster von der Seite abspielen" });
+    const paused = await stopped.innerHTML();
+    await page.waitForTimeout(200);
+    expect(await stopped.innerHTML()).toBe(paused);
+
+    await page.getByRole("button", { name: "Thruster von vorn zeigen" }).click();
+    await expect(page.getByRole("button", { name: "Thruster von vorn abspielen" })).toBeVisible();
+    const width = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(width).toBeLessThanOrEqual(320);
+    expect(pageErrors).toEqual([]);
+  });
+
   test("logs a result for Fran and keeps it after a reload", async ({ page, pageErrors }) => {
     await withDataFolder(page);
     await page.goto(releaseUrl("trainingsbuch.html"));

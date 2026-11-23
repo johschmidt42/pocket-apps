@@ -3,6 +3,19 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-23: Exercise animations in trainingsbuch
+
+- **Context:** The project owner wants self-made animated pictures of the exercises. A throwaway prototype on the branch `prototype/uebungsbilder` tested the techniques and built 22 exercises and 7 variants with the owner. It stays on that branch as the workshop for new exercises.
+- **Decision:** An own small engine in `apps/trainingsbuch/src/figures/`, with no animation library. One 3D skeleton, poses as data, a solver for the knees and the elbows, and flat SVG views from the side and from the front. GSAP and SMIL lost the comparison in the prototype: they cost more (GSAP about 28 kB, the engine less than 1 kB in the first test) and they do not know the path of a joint.
+- **Decision:** The animations show in the section "Ablauf" of an opened workout. An exercise with an animation is a card, the others stay chips. A tap on the figure stops and starts it: the whole figure is the target, which works well on a phone. One small button in a corner of the card changes the speed (1×, 0,5×, 0,25×), another one turns the view. Each card has its own state.
+- **Decision:** The clock of a card runs only while the card is on the screen (`IntersectionObserver`). With "reduced motion" in the system, the figures start paused.
+- **Decision:** All 29 animations of the prototype are in the app, in `figures/exercises/`. The files are copies of the prototype with other import paths, so that a new or a changed exercise can come over in the same way. `figures/exercise-motions.ts` maps the ids of the app to the animations.
+- **Decision:** A general exercise lists its forms, and its card has a switch: Pull-up, Chest-to-bar and Handstand Push-up (Kipping, Strict), Clean & Jerk and Snatch (Power, Squat), Toes-to-bar (Tuck, Straight), Kettlebell Swing (American, Russian). The first form is the one that most athletes do in a workout. If the text of the workout says "strict" (for a pull-up also "weighted" or "L"), the card shows only Strict. The ids in the catalog stay as they are, so the exercise filter does not change. The choice lasts while the workout is open.
+- **Decision:** Only the same movement gets an animation. "Clean" does not show the Clean & Jerk, because the jerk is not part of it. Some workouts have a general id, but their text asks for another movement, for example "burpees over the barbell" or "ring handstand push-ups". They show a chip.
+- **Decision:** The choice between kg and lb shows only for a workout with a load. Without a load, a distance stays in meters, also when the user chose lb in another workout. The choice between Männer and Frauen shows only for a workout with values for both.
+- **Rule:** A port of an exercise must draw the same as the prototype. For all 29, a comparison of the drawn SVG at 60 frames per second in each view found no difference.
+- **Consequence:** trainingsbuch 5.0. The data file does not change.
+
 ## 2026-11-20: Sort with a finger (ui)
 
 - **Context:** The project owner tested the sort on an Android phone. The drag API of the browser needs a long press, shows a blurred picture under the finger and does not scroll the page. It did not feel like the sort in the apps of a phone. Firefox on Android does not support it with touch at all.
