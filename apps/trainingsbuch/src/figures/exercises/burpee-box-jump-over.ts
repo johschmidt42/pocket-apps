@@ -14,23 +14,23 @@ import {
 } from "../skeleton.ts";
 import { floorSteps, standAt } from "./burpee.ts";
 
-const BOX = { x: 224, width: 46, height: 50 };
+export const BOX = { x: 224, width: 46, height: 50 };
 const CENTER = BOX.x + BOX.width / 2;
 /** The ankles of the figure that stands before the box. The figure lies with its head just before the box. */
-const NEAR = 168;
+export const NEAR = 168;
 /** The ankles of the figure after the jump down: as far from the box as before it. */
 const FAR = 2 * CENTER - NEAR;
 /** The height of an ankle on the box. */
-const TOP = GROUND - BOX.height - ANKLE;
+export const TOP = GROUND - BOX.height - ANKLE;
 /** The ankles on the box. */
-const ON_BOX = 246;
-const STAND = standAt(NEAR);
+export const ON_BOX = 246;
+export const STAND = standAt(NEAR);
 const STAND_FAR = standAt(FAR);
 
 const RAD = Math.PI / 180;
 const base = { stance: 7, grip: 15 };
 type Spot = { x: number; y: number };
-const at = (
+export const at = (
   hip: Spot,
   lean: number,
   dx: number,
@@ -102,7 +102,8 @@ const SETTLE = at(settleHip, 30, 34, 50, { head: -18, feet: { x: FAR, y: 200 }, 
 
 const SIDE: View = { label: "Seite", yaw: 0, box: [47, -34, 400, 246] };
 
-const steps: Step[] = [
+/** From the stand before the box, through the burpee, onto the box. The burpee box jump uses it too. */
+export const TO_THE_BOX: Step[] = [
   ...floorSteps(NEAR, 26),
   { to: RISE, seconds: 0.34, label: "Sprung", ease: "in", anchor: "feet" },
   { to: TAKEOFF, seconds: 0.09, ease: "linear", anchor: "feet" },
@@ -110,6 +111,10 @@ const steps: Step[] = [
   { to: TUCK, seconds: AIR * 0.32, ease: "linear", flight: true, legs: "fk" },
   { to: LAND, seconds: AIR * 0.38, ease: "linear", flight: true, legs: "fk" },
   { to: ABSORB, seconds: 0.16, ease: "out", anchor: "feet" },
+];
+
+const steps: Step[] = [
+  ...TO_THE_BOX,
   { to: PUSH, seconds: 0.24, label: "Abspringen", ease: "in", anchor: "feet" },
   { to: OFF, seconds: 0.14, ease: "linear", anchor: "feet" },
   {

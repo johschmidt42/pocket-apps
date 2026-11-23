@@ -5,6 +5,7 @@ import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
+import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
@@ -179,6 +180,12 @@ describe("variantsOf", () => {
 
   it("shows knees-to-elbows", () => {
     expect(motions("knees-to-elbows", ["35 knees-to-elbows"])).toEqual([KNEES_TO_ELBOWS]);
+  });
+
+  it("shows the burpee box jump", () => {
+    expect(motions("burpee-box-jump", ["10 burpee box jumps, 61/51 cm (24/20 in)"])).toEqual([
+      BURPEE_BOX_JUMP,
+    ]);
   });
 
   it("shows the burpee box jump-over", () => {

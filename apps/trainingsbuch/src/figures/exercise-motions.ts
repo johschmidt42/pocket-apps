@@ -8,6 +8,7 @@ import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
+import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { BURPEE } from "./exercises/burpee.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
@@ -98,6 +99,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   bike: only(BIKE_EXERCISE),
   "box-jump": only(BOX_JUMP),
   burpee: only(BURPEE),
+  "burpee-box-jump": only(BURPEE_BOX_JUMP),
   "burpee-box-jump-over": only(BURPEE_BOX_JUMP_OVER),
   "burpee-pull-up": only(BURPEE_PULL_UP),
   "chest-to-bar": [
