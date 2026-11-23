@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { EXERCISE_IDS } from "../exercises.ts";
 import { equipmentParts } from "./equipment-parts.tsx";
 import { runOf, variantsOf } from "./exercise-motions.ts";
-import { isWide, type Equipment, type Exercise } from "./exercise.ts";
+import { dumbbellHand, isWide, type Equipment, type Exercise } from "./exercise.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { ROW } from "./exercises/row.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
@@ -24,8 +24,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 58 animations of the prototype", () => {
-    expect(ALL).toHaveLength(58);
+  it("are all 60 animations of the prototype", () => {
+    expect(ALL).toHaveLength(60);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -57,6 +57,20 @@ describe("the exercises", () => {
       x: 224,
       width: 46,
     });
+  });
+
+  it.each([
+    [0, 0.1, 0],
+    [0, 0.5, 1],
+    [0, 0.9, 0],
+    [1, 0.5, 0],
+    [1, 1.1, 1],
+  ] as const)("gives a dumbbell of hand %s at %s to hand %s", (hand, progress, holder) => {
+    expect(dumbbellHand({ hand, swap: [0.4, 0.8] }, progress)).toBe(holder);
+  });
+
+  it("keeps a dumbbell without a swap in its hand", () => {
+    expect(dumbbellHand({ hand: 1 }, 0.5)).toBe(1);
   });
 
   it("gives a wide picture two columns", () => {

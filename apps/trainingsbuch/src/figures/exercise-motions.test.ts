@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
+import { ALTERNATING_DUMBBELL_SNATCH } from "./exercises/alternating-dumbbell-snatch.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
+import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
@@ -192,6 +194,16 @@ describe("variantsOf", () => {
     expect(motions("burpee-box-jump-over", ["15 burpee box jump-overs"])).toEqual([
       BURPEE_BOX_JUMP_OVER,
     ]);
+  });
+
+  it("shows the burpee over the bar", () => {
+    expect(motions("burpee-over-bar", ["12 burpees over the bar"])).toEqual([BURPEE_OVER_BAR]);
+  });
+
+  it("shows the alternating dumbbell snatch", () => {
+    expect(
+      motions("alternating-dumbbell-snatch", ["22 alternating dumbbell snatches, 22.5/15 kg"]),
+    ).toEqual([ALTERNATING_DUMBBELL_SNATCH]);
   });
 
   it("shows the push press", () => {

@@ -9,8 +9,11 @@ export type Equipment =
    * than the hips.
    */
   | { kind: "barbell"; onBack?: boolean }
-  /** A dumbbell in one hand: 0 is the near hand, 1 the far hand. */
-  | { kind: "dumbbell"; hand: 0 | 1 }
+  /**
+   * A dumbbell in one hand: 0 is the near hand, 1 the far hand. `swap`: between these two parts of
+   * the loop (0 to 1), the other hand holds it. Both hands must be on the dumbbell at these moments.
+   */
+  | { kind: "dumbbell"; hand: 0 | 1; swap?: readonly [number, number] }
   /**
    * Two dumbbells, one in each hand, parallel to the way of the figure (a farmers carry). From the
    * side, each one is a bar with two plates. From the front, it is a circle at the hand.
@@ -133,3 +136,15 @@ export const isWide = (exercise: Exercise): boolean => {
 // The top is at -14: a bar overhead is at y = 12, and its plate has the radius 17.
 export const SIDE: View = { label: "Seite", yaw: 0, box: [14, -14, 120, 226] };
 export const FRONT: View = { label: "Vorn", yaw: 90, box: [-60, -14, 120, 226] };
+
+/** The hand that holds a single dumbbell at this part of the loop. */
+export function dumbbellHand(
+  equipment: { hand: 0 | 1; swap?: readonly [number, number] },
+  progress: number,
+): 0 | 1 {
+  const part = progress - Math.floor(progress);
+  const swapped =
+    equipment.swap !== undefined && part >= equipment.swap[0] && part < equipment.swap[1];
+  if (!swapped) return equipment.hand;
+  return equipment.hand === 0 ? 1 : 0;
+}

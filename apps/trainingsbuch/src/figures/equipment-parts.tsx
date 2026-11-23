@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
-import type { Equipment } from "./exercise.ts";
+import { dumbbellHand, type Equipment } from "./exercise.ts";
 import { BENCH, BIKE, pedalOf, ROWER, SKIERG } from "./machines.ts";
 import {
   BALL,
@@ -582,7 +582,7 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "barbell":
       return barbell(scene, equipment.onBack === true);
     case "dumbbell":
-      return dumbbell(scene, equipment.hand);
+      return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":
       return dumbbells(scene);
     case "kettlebells":

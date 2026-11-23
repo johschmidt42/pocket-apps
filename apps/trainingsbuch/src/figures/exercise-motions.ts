@@ -1,6 +1,7 @@
 import type { ExerciseId } from "../exercises.ts";
 import type { Exercise } from "./exercise.ts";
 import { AIR_SQUAT } from "./exercises/air-squat.ts";
+import { ALTERNATING_DUMBBELL_SNATCH } from "./exercises/alternating-dumbbell-snatch.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
@@ -9,6 +10,7 @@ import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
+import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { BURPEE } from "./exercises/burpee.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
@@ -92,6 +94,7 @@ const DUMBBELL_POWER = form("Power", DUMBBELL_POWER_CLEAN);
 const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "air-squat": only(AIR_SQUAT),
   "air-bike": only(BIKE_EXERCISE),
+  "alternating-dumbbell-snatch": only(ALTERNATING_DUMBBELL_SNATCH),
   "back-squat": only(BACK_SQUAT),
   "bar-facing-burpee": only(BAR_FACING_BURPEE),
   "bar-muscle-up": only(BAR_MUSCLE_UP),
@@ -101,6 +104,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   burpee: only(BURPEE),
   "burpee-box-jump": only(BURPEE_BOX_JUMP),
   "burpee-box-jump-over": only(BURPEE_BOX_JUMP_OVER),
+  "burpee-over-bar": only(BURPEE_OVER_BAR),
   "burpee-pull-up": only(BURPEE_PULL_UP),
   "chest-to-bar": [
     form("Kipping", KIPPING_CHEST_TO_BAR_PULL_UP),
