@@ -18,6 +18,7 @@ import { KETTLEBELL_SWING_RUSSIAN } from "./exercises/kettlebell-swing-russian.t
 import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-pull-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { POWER_SNATCH } from "./exercises/power-snatch.ts";
@@ -80,6 +81,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("American", KETTLEBELL_SWING_AMERICAN),
     form("Russian", KETTLEBELL_SWING_RUSSIAN),
   ],
+  "overhead-squat": only(OVERHEAD_SQUAT),
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
   "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
@@ -113,6 +115,7 @@ const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   burpee: /\bburpees?\b[^,]*\bover\b/i,
   "dumbbell-snatch": /\bsplit snatch/i,
   "handstand-push-up": /\b(?:ring|freestanding)\s+handstand/i,
+  "overhead-squat": /\boverhead squats?\b.*\b(?:left|right) arm\b/i,
   thruster: /\bsquat clean thrusters?\b/i,
 };
 

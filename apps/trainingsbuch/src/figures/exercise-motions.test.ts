@@ -6,6 +6,7 @@ import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
+import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { RUN } from "./exercises/run.ts";
@@ -40,6 +41,10 @@ describe("variantsOf", () => {
   it("shows the back squat and the front squat each with their own motion", () => {
     expect(motions("back-squat", ["5 back squats, 102/70 kg"])).toEqual([BACK_SQUAT]);
     expect(motions("front-squat", ["5 front squats, 61/43 kg"])).toEqual([FRONT_SQUAT]);
+  });
+
+  it("shows the overhead squat with a bar in both hands", () => {
+    expect(motions("overhead-squat", ["15 overhead squats, 43/30 kg"])).toEqual([OVERHEAD_SQUAT]);
   });
 
   it.each([
@@ -79,6 +84,7 @@ describe("variantsOf", () => {
     ["dumbbell-snatch", "10 dumbbell hang split snatches, right arm"],
     ["handstand-push-up", "25 ring handstand push-ups"],
     ["handstand-push-up", "8 freestanding handstand push-ups"],
+    ["overhead-squat", "21 overhead squats, left arm"],
     ["thruster", "2 squat clean thrusters"],
   ] as const)("has no animation for %s in the line: %s", (id, line) => {
     expect(variantsOf(id, [line])).toBeNull();

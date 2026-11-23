@@ -17,7 +17,7 @@ const pull = { feet: FEET, stance: 10, knees: 0.5, grip: GRIP };
 // The feet land a little wider. They stay there until the bar is down again.
 const WIDE = 12.5;
 const wide = { ...pull, stance: WIDE };
-const TALL = standingHipY(WIDE);
+export const TALL = standingHipY(WIDE);
 
 const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
 
@@ -38,7 +38,7 @@ function hang(hip: Spot2, lean: number, x: number, shrug = 0): Spot2 {
 }
 
 /** The hands of straight arms overhead: the bar is `dx` in front of the shoulders. */
-function overhead(hip: Spot2, lean: number, dx: number, shrug = 0): Spot2 {
+export function overhead(hip: Spot2, lean: number, dx: number, shrug = 0): Spot2 {
   const shoulder = joint(hip, lean, shrug);
   return { x: shoulder.x + dx, y: shoulder.y - Math.sqrt(REACH ** 2 - dx ** 2) };
 }
@@ -97,7 +97,7 @@ function squat(y: number): { hip: Spot2; lean: number } {
 }
 
 /** The bar overhead on locked arms, in the squat with the hip at the height `y`. The head is in front of the arms. */
-function locked(y: number): Pose {
+export function locked(y: number): Pose {
   const { hip, lean } = squat(y);
   const deep = (y - TALL) / (174 - TALL);
   return {

@@ -23,8 +23,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 34 animations of the prototype", () => {
-    expect(ALL).toHaveLength(34);
+  it("are all 35 animations of the prototype", () => {
+    expect(ALL).toHaveLength(35);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
