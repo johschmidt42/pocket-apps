@@ -3,6 +3,7 @@ import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
+import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
@@ -72,6 +73,10 @@ describe("variantsOf", () => {
     expect(
       motions("step-up", ["25 box step-ups, 61/51 cm (24/20 in), with a 20 kg (45 lb) backpack"]),
     ).toEqual([STEP_UP]);
+  });
+
+  it("shows the bench press", () => {
+    expect(motions("bench-press", ["10 bench presses, 61/43 kg"])).toEqual([BENCH_PRESS]);
   });
 
   it("shows the push press", () => {

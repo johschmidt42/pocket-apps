@@ -61,6 +61,11 @@ export type Equipment =
    * behind the figure. Only the side view shows it.
    */
   | { kind: "floorbar"; x: number }
+  /**
+   * A flat bench and a barbell in both hands (bench press). `x` is the end of the bench at the
+   * head. The sizes are in `BENCH`. The figure lies on it with the head at -x.
+   */
+  | { kind: "bench"; x: number }
   /** A box on the ground. `x` is its near edge. */
   | { kind: "box"; x: number; width: number; height: number }
   /** A climbing rope that hangs at `x`. */

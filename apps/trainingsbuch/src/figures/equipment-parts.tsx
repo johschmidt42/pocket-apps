@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
 import type { Equipment } from "./exercise.ts";
-import { BIKE, pedalOf, ROWER, SKIERG } from "./machines.ts";
+import { BENCH, BIKE, pedalOf, ROWER, SKIERG } from "./machines.ts";
 import {
   BALL,
   ballCenter,
@@ -148,6 +148,47 @@ function dumbbell({ joints, flat, fromSide }: Scene, handIndex: 0 | 1): Parts {
     bar("handle", flat(hand).depth - 0.5, first, second, 3.5),
     head("head0", first),
     head("head1", second),
+  ];
+}
+
+/** A flat bench, behind the figure and behind the plates. */
+function bench({ fromSide }: Scene, x: number): Parts {
+  const top = GROUND - BENCH.height;
+  const leg = (key: string, at: number) =>
+    part(
+      BEHIND - 1,
+      <line
+        key={key}
+        x1={at}
+        y1={top}
+        x2={at}
+        y2={GROUND}
+        stroke={FAR}
+        strokeWidth={5}
+        strokeLinecap="butt"
+      />,
+    );
+  const left = fromSide ? x : -BENCH.halfWidth;
+  const width = fromSide ? BENCH.length : BENCH.halfWidth * 2;
+  const [first, second]: readonly [number, number] = fromSide
+    ? [x + 16, x + BENCH.length - 16]
+    : [-BENCH.halfWidth + 3, BENCH.halfWidth - 3];
+  return [
+    leg("benchLeg0", first),
+    leg("benchLeg1", second),
+    part(
+      BEHIND - 1,
+      <rect
+        key="benchPad"
+        x={left}
+        y={top}
+        width={width}
+        height={BENCH.pad}
+        rx={3}
+        fill={FAR}
+        stroke="none"
+      />,
+    ),
   ];
 }
 
@@ -525,6 +566,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return skiErg(scene, equipment.x);
     case "bike":
       return airBike(scene, equipment.x);
+    case "bench":
+      return [...bench(scene, equipment.x), ...barbell(scene, false)];
     case "floorbar":
       return floorBar(scene, equipment.x);
     case "box":

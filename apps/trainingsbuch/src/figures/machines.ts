@@ -92,3 +92,6 @@ export function leverHand(x: number, swing: number): Spot2 {
     y: BIKE.lever.y - Math.cos(swing * RAD) * BIKE.lever.length,
   };
 }
+
+/** A flat bench, with the sizes of the IPF rules: at least 1.22 m long, 29 to 32 cm wide, 42 to 45 cm high. */
+export const BENCH = { length: 117, halfWidth: 14.5, height: 42, pad: 7 };
