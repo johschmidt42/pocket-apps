@@ -36,6 +36,7 @@ import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
 import { SNATCH } from "./exercises/snatch.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
+import { STEP_UP } from "./exercises/step-up.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
@@ -105,6 +106,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   snatch: [form("Power", POWER_SNATCH), form("Squat", SNATCH)],
   "squat-clean": only(SQUAT_CLEAN),
   "squat-snatch": only(SNATCH),
+  "step-up": only(STEP_UP),
   "strict-handstand-push-up": only(HANDSTAND_PUSH_UP),
   "strict-pull-up": only(PULL_UP),
   thruster: only(THRUSTER),
@@ -130,6 +132,7 @@ const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   "farmers-carry": /\bbarbell farmers carry\b/i,
   "handstand-push-up": /\b(?:ring|freestanding)\s+handstand/i,
   "overhead-squat": /\boverhead squats?\b.*\b(?:left|right) arm\b/i,
+  "step-up": /\b(?:barbell|dumbbell)\b.*\bstep-ups?\b/i,
   thruster: /\bsquat clean thrusters?\b/i,
 };
 

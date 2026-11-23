@@ -16,6 +16,7 @@ import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { RUN } from "./exercises/run.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
+import { STEP_UP } from "./exercises/step-up.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 
 const motions = (...args: Parameters<typeof variantsOf>) =>
@@ -64,6 +65,13 @@ describe("variantsOf", () => {
 
   it("shows the bar-facing burpee", () => {
     expect(motions("bar-facing-burpee", ["9 bar-facing burpees"])).toEqual([BAR_FACING_BURPEE]);
+  });
+
+  it("shows the step-up, also with a backpack", () => {
+    expect(motions("step-up", ["25 box step-ups, 61/51 cm (24/20 in)"])).toEqual([STEP_UP]);
+    expect(
+      motions("step-up", ["25 box step-ups, 61/51 cm (24/20 in), with a 20 kg (45 lb) backpack"]),
+    ).toEqual([STEP_UP]);
   });
 
   it("shows the push press", () => {
@@ -117,6 +125,9 @@ describe("variantsOf", () => {
     ["handstand-push-up", "25 ring handstand push-ups"],
     ["handstand-push-up", "8 freestanding handstand push-ups"],
     ["overhead-squat", "21 overhead squats, left arm"],
+    ["step-up", "30 barbell step-ups, 61/43 kg, 61/51 cm (24/20 in) box"],
+    ["step-up", "20 barbell back-rack step-ups, 61/51 cm (24/20 in)"],
+    ["step-up", "50 dumbbell box step-ups"],
     ["thruster", "2 squat clean thrusters"],
   ] as const)("has no animation for %s in the line: %s", (id, line) => {
     expect(variantsOf(id, [line])).toBeNull();
