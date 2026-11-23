@@ -148,7 +148,7 @@ export const PASS: Pose = {
   hands: handAt(RACK_HIP, 0, 12, -34),
 };
 // Split: side 0 is the front leg. The back foot is on its toes.
-const SPLIT: Pose = {
+export const SPLIT: Pose = {
   ...base,
   feet: [
     { x: 102, y: 200 },

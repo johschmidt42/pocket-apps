@@ -32,6 +32,7 @@ import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { POWER_SNATCH } from "./exercises/power-snatch.ts";
 import { PULL_UP } from "./exercises/pull-up.ts";
+import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { PUSH_UP } from "./exercises/push-up.ts";
 import { ROPE_CLIMB } from "./exercises/rope-climb.ts";
@@ -40,6 +41,7 @@ import { RUN } from "./exercises/run.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
 import { SNATCH } from "./exercises/snatch.ts";
+import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
@@ -67,8 +69,8 @@ const STRICT_PULL_UP = form("Strict", PULL_UP);
 const STRICT_HANDSTAND_PUSH_UP = form("Strict", HANDSTAND_PUSH_UP);
 const KETTLEBELL_CARRY = form("Kettlebell", FARMERS_CARRY_KETTLEBELL);
 const PLATE_LUNGE = form("Plate", OVERHEAD_LUNGE_PLATE);
-const BARBELL_LUNGE = form("Barbell", OVERHEAD_LUNGE_BARBELL);
-const DUMBBELL_LUNGE = form("Dumbbell", OVERHEAD_LUNGE_DUMBBELL);
+const BARBELL_LUNGE = form("Bar", OVERHEAD_LUNGE_BARBELL);
+const DUMBBELL_LUNGE = form("DB", OVERHEAD_LUNGE_DUMBBELL);
 
 /**
  * The exercises that have an animation. To add one, copy its file from the prototype into
@@ -99,6 +101,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "front-squat": only(FRONT_SQUAT),
   "hand-release-push-up": only(HAND_RELEASE_PUSH_UP),
   "handstand-push-up": [form("Kipping", KIPPING_HANDSTAND_PUSH_UP), STRICT_HANDSTAND_PUSH_UP],
+  jerk: [form("Push", PUSH_JERK), form("Split", SPLIT_JERK)],
   "kettlebell-swing": [
     form("American", KETTLEBELL_SWING_AMERICAN),
     form("Russian", KETTLEBELL_SWING_RUSSIAN),
@@ -108,14 +111,21 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
   "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
+  "push-jerk": only(PUSH_JERK),
   "push-press": only(PUSH_PRESS),
   "push-up": only(PUSH_UP),
   "rope-climb": only(ROPE_CLIMB),
   row: only(ROW),
   run: only(RUN),
+  "shoulder-to-overhead": [
+    form("Press", PUSH_PRESS),
+    form("Push", PUSH_JERK),
+    form("Split", SPLIT_JERK),
+  ],
   "sit-up": only(SIT_UP),
   ski: only(SKI),
   snatch: [form("Power", POWER_SNATCH), form("Squat", SNATCH)],
+  "split-jerk": only(SPLIT_JERK),
   "squat-clean": only(SQUAT_CLEAN),
   "squat-snatch": only(SNATCH),
   "step-up": only(STEP_UP),

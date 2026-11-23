@@ -18,8 +18,10 @@ import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
+import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { RUN } from "./exercises/run.ts";
+import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
@@ -112,6 +114,16 @@ describe("variantsOf", () => {
     expect(motions("overhead-lunge", workout?.lines ?? [])).toEqual([exercise]);
   });
 
+  it("shows the push jerk and the split jerk each with their own motion", () => {
+    expect(motions("push-jerk", ["9 push jerks, 70/48 kg"])).toEqual([PUSH_JERK]);
+    expect(motions("split-jerk", ["5 split jerks"])).toEqual([SPLIT_JERK]);
+    expect(motions("shoulder-to-overhead", ["30 shoulder-to-overheads"])).toEqual([
+      PUSH_PRESS,
+      PUSH_JERK,
+      SPLIT_JERK,
+    ]);
+  });
+
   it("shows the push press", () => {
     expect(motions("push-press", ["15 push presses, 52/35 kg"])).toEqual([PUSH_PRESS]);
   });
@@ -132,7 +144,9 @@ describe("variantsOf", () => {
   it.each([
     ["clean", ["Power", "Squat"]],
     ["farmers-carry", ["Dumbbell", "Kettlebell"]],
-    ["overhead-lunge", ["Plate", "Barbell", "Dumbbell"]],
+    ["jerk", ["Push", "Split"]],
+    ["shoulder-to-overhead", ["Press", "Push", "Split"]],
+    ["overhead-lunge", ["Plate", "Bar", "DB"]],
     ["clean-and-jerk", ["Power", "Squat"]],
     ["snatch", ["Power", "Squat"]],
     ["toes-to-bar", ["Tuck", "Straight"]],

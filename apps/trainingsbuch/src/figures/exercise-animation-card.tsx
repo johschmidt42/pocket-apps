@@ -142,7 +142,7 @@ export function ExerciseAnimationCard({
           variant="outline"
           size="sm"
           aria-label={`Variante von ${name}`}
-          className="grid w-full grid-cols-2"
+          className={variants.length > 2 ? "grid w-full grid-cols-3" : "grid w-full grid-cols-2"}
           value={variant.key}
           onValueChange={(value) => {
             if (value !== "") setChosen(value);
