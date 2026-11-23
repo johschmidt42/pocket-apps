@@ -13,6 +13,7 @@ import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.t
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
+import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
@@ -161,6 +162,10 @@ describe("variantsOf", () => {
       DUMBBELL_HANG_CLEAN,
       DUMBBELL_POWER_CLEAN,
     ]);
+  });
+
+  it("shows the hang power clean", () => {
+    expect(motions("hang-power-clean", ["9 hang power cleans"])).toEqual([HANG_POWER_CLEAN]);
   });
 
   it("shows the push press", () => {

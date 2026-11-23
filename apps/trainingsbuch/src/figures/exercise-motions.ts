@@ -21,6 +21,7 @@ import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
+import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { KETTLEBELL_SWING_AMERICAN } from "./exercises/kettlebell-swing-american.ts";
@@ -109,6 +110,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "farmers-carry": [form("Dumbbell", FARMERS_CARRY), KETTLEBELL_CARRY],
   "front-squat": only(FRONT_SQUAT),
   "hand-release-push-up": only(HAND_RELEASE_PUSH_UP),
+  "hang-power-clean": only(HANG_POWER_CLEAN),
   "handstand-push-up": [form("Kipping", KIPPING_HANDSTAND_PUSH_UP), STRICT_HANDSTAND_PUSH_UP],
   jerk: [form("Push", PUSH_JERK), form("Split", SPLIT_JERK)],
   "kettlebell-swing": [

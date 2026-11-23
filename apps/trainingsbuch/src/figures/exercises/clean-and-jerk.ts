@@ -41,7 +41,7 @@ const REACH = Math.sqrt(61.95 ** 2 - (base.grip - 13) ** 2);
  * A pose of the pull with straight arms: the bar is at `bar`, and the hip is as high as the arms permit.
  * The elbows point out and up: they are above the bar when the arms start to bend.
  */
-function pulled(hipX: number, lean: number, bar: Spot2, head: number): Pose {
+export function pulled(hipX: number, lean: number, bar: Spot2, head: number): Pose {
   const shoulder = shoulderOf({ x: hipX, y: 0 }, lean);
   const hipY = bar.y - Math.sqrt(REACH ** 2 - (bar.x - shoulder.x) ** 2) - shoulder.y;
   return { ...base, hip: { x: hipX, y: hipY }, lean, head, hands: bar, elbowTo: 150, elbowsOut: 3 };
@@ -63,7 +63,7 @@ export const THIGH: Pose = pulled(60, 32, { x: 85, y: 150 }, -15);
 // The same height on the way down: the hips go back first, and the knees stay back until the bar has passed them.
 // The knee then goes back once and forward once. With `THIGH` it went forward, back and forward in 0.1 s
 // (the user saw the thigh shift, 2026-11-22).
-const HINGE: Pose = pulled(59, 34, { x: 85.2, y: 150 }, -17);
+export const HINGE: Pose = pulled(59, 34, { x: 85.2, y: 150 }, -17);
 // The power position: the bar is at the top of the thighs, the arms are long, the knees are a little bent.
 export const POWER: Pose = pulled(67.5, 15, { x: 84.5, y: 140 }, -3);
 /**
