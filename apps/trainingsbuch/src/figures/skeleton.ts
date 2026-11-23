@@ -155,7 +155,7 @@ const mixVec = (a: Vec, b: Vec, t: number): Vec =>
 const direction = (from: Vec, to: Vec): Vec => unit(sub(to, from));
 
 /** The item at an index that the code knows to exist. */
-function item<T>(list: readonly T[], index: number): T {
+export function item<T>(list: readonly T[], index: number): T {
   const value = list[index];
   if (value === undefined) throw new RangeError(`No item at index ${String(index)}`);
   return value;

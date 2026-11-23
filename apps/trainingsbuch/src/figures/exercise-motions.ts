@@ -22,6 +22,7 @@ import { PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_UP } from "./exercises/push-up.ts";
 import { ROPE_CLIMB } from "./exercises/rope-climb.ts";
 import { ROW } from "./exercises/row.ts";
+import { RUN } from "./exercises/run.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
 import { SNATCH } from "./exercises/snatch.ts";
@@ -77,6 +78,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "push-up": only(PUSH_UP),
   "rope-climb": only(ROPE_CLIMB),
   row: only(ROW),
+  run: only(RUN),
   "sit-up": only(SIT_UP),
   ski: only(SKI),
   snatch: [form("Power", POWER_SNATCH), form("Squat", SNATCH)],
@@ -105,8 +107,21 @@ const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   thruster: /\bsquat clean thrusters?\b/i,
 };
 
+/** A run with a load in the hands, or backwards. The animation shows a free run. */
+const OTHER_RUN = /\bruns?\b.*\b(?:with an? (?:plate|medicine ball|empty barbell)|backwards)\b/i;
+const RUN_DISTANCE = /\bm run\b/i;
+
+/** True if the workout has another form of the run and no free run beside it. */
+function onlyOtherRuns(lines: readonly string[]): boolean {
+  return (
+    lines.some((line) => OTHER_RUN.test(line)) &&
+    !lines.some((line) => RUN_DISTANCE.test(line) && !OTHER_RUN.test(line))
+  );
+}
+
 /** The forms of an exercise in a workout with these lines. `null`: it has no animation here. */
 export function variantsOf(id: ExerciseId, lines: readonly string[]): ExerciseVariants | null {
+  if (id === "run" && onlyOtherRuns(lines)) return null;
   const other = OTHER_MOVEMENT[id];
   if (other && lines.some((line) => other.test(line))) return null;
   const strict = STRICT_IN_TEXT[id];

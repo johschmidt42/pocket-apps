@@ -5,6 +5,7 @@ import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
+import { RUN } from "./exercises/run.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 
 const motions = (...args: Parameters<typeof variantsOf>) =>
@@ -71,6 +72,26 @@ describe("variantsOf", () => {
   it("keeps the animation of a plain burpee and a plain dumbbell snatch", () => {
     expect(variantsOf("burpee", ["15 burpees"])).not.toBeNull();
     expect(variantsOf("dumbbell-snatch", ["21 dumbbell snatches"])).not.toBeNull();
+  });
+
+  it.each([
+    "400 m run with a plate, 20/11 kg (45/25 lb)",
+    "1600 m run (1 mile) with a medicine ball",
+    "800 m run with an empty barbell",
+    "200 m run backwards",
+  ])("has no run animation for: %s", (line) => {
+    expect(variantsOf("run", ["3 rounds for time of:", line])).toBeNull();
+  });
+
+  it("keeps the run animation for a free run, also with a vest", () => {
+    expect(motions("run", ["400 m run"])).toEqual([RUN]);
+    expect(motions("run", ["1600 m run", "With a 9/6 kg (20/14 lb) vest for the runs"])).toEqual([
+      RUN,
+    ]);
+  });
+
+  it("keeps the run animation when a free run is beside a run with a load", () => {
+    expect(motions("run", ["800 m run", "400 m run with a plate, 20/11 kg"])).toEqual([RUN]);
   });
 
   it("does not take the word strict of another exercise", () => {
