@@ -2,6 +2,7 @@ import type { ExerciseId } from "../exercises.ts";
 import type { Exercise } from "./exercise.ts";
 import { AIR_SQUAT } from "./exercises/air-squat.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
 import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
@@ -26,6 +27,7 @@ import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { POWER_SNATCH } from "./exercises/power-snatch.ts";
 import { PULL_UP } from "./exercises/pull-up.ts";
+import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { PUSH_UP } from "./exercises/push-up.ts";
 import { ROPE_CLIMB } from "./exercises/rope-climb.ts";
 import { ROW } from "./exercises/row.ts";
@@ -38,7 +40,8 @@ import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
 import { WALL_BALL } from "./exercises/wall-ball.ts";
-import { motion, type Motion } from "./skeleton.ts";
+import type { Motion } from "./skeleton.ts";
+import { motionOf } from "./turning-motion.ts";
 
 /** One form of an exercise. `label` is null when the exercise has only this form. */
 export type ExerciseVariant = { key: string; label: string | null; exercise: Exercise };
@@ -66,6 +69,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "air-squat": only(AIR_SQUAT),
   "air-bike": only(BIKE_EXERCISE),
   "back-squat": only(BACK_SQUAT),
+  "bar-facing-burpee": only(BAR_FACING_BURPEE),
   "bar-muscle-up": only(BAR_MUSCLE_UP),
   bike: only(BIKE_EXERCISE),
   "box-jump": only(BOX_JUMP),
@@ -91,6 +95,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
   "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
+  "push-press": only(PUSH_PRESS),
   "push-up": only(PUSH_UP),
   "rope-climb": only(ROPE_CLIMB),
   row: only(ROW),
@@ -156,7 +161,7 @@ const RUNS = new WeakMap<Exercise, Motion>();
 export function runOf(exercise: Exercise): Motion {
   const known = RUNS.get(exercise);
   if (known) return known;
-  const run = motion(exercise.start, exercise.steps);
+  const run = motionOf(exercise);
   RUNS.set(exercise, run);
   return run;
 }

@@ -151,6 +151,13 @@ function dumbbell({ joints, flat, fromSide }: Scene, handIndex: 0 | 1): Parts {
   ];
 }
 
+/** A barbell on the floor. It stays on its spot when the figure turns around. */
+function floorBar({ fromSide }: Scene, x: number): Parts {
+  if (!fromSide) return [];
+  const center = { x, y: GROUND - PLATE, depth: BEHIND };
+  return [disc("plate", BEHIND, center, PLATE), grip("bar", BEHIND + 1, center, 3, 2)];
+}
+
 function dumbbells({ joints, flat, fromSide }: Scene): Parts {
   return SIDES.flatMap((side) => {
     const hand = joints.arms[side].end;
@@ -518,6 +525,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return skiErg(scene, equipment.x);
     case "bike":
       return airBike(scene, equipment.x);
+    case "floorbar":
+      return floorBar(scene, equipment.x);
     case "box":
       return box(scene, equipment.x, equipment.width, equipment.height);
     case "rope":

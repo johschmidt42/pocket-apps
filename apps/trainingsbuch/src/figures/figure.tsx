@@ -2,7 +2,16 @@ import type { ReactNode } from "react";
 import { drawOrder, type FlatPoint, type Part } from "./draw-order.ts";
 import { BACK, equipmentParts, FAR } from "./equipment-parts.tsx";
 import type { Equipment, View } from "./exercise.ts";
-import { footLine, headOf, shrugOf, SIDES, vec, type Frame, type Vec } from "./skeleton.ts";
+import {
+  footLine,
+  headOf,
+  shrugOf,
+  SIDES,
+  vec,
+  type Facing,
+  type Frame,
+  type Vec,
+} from "./skeleton.ts";
 
 const WIDTH = { thigh: 15, shin: 11, torso: 19, upperArm: 10, forearm: 9, foot: 9 };
 const HEAD = 11;
@@ -15,9 +24,13 @@ const OUTLINE = 1.5;
  */
 const COS_90 = Math.cos(Math.PI / 2);
 
-const project = (yaw: View["yaw"]) =>
+const project = (yaw: View["yaw"], facing: Facing | undefined) =>
   yaw === 0
-    ? (v: Vec): FlatPoint => ({ x: v.x, y: v.y, depth: v.z })
+    ? (v: Vec): FlatPoint => ({
+        x: facing ? facing.offset + facing.scale * v.x : v.x,
+        y: v.y,
+        depth: v.z,
+      })
     : (v: Vec): FlatPoint => ({ x: v.x * COS_90 - v.z, y: v.y, depth: v.x + v.z * COS_90 });
 
 /** Draws the joints as a flat pictogram. Put it into an SVG with `stroke="currentColor"`. */
@@ -31,7 +44,7 @@ export function Figure({
   equipment: Equipment;
 }) {
   const { joints } = frame;
-  const flat = project(yaw);
+  const flat = project(yaw, frame.facing);
   const fromSide = yaw === 0;
   const parts: Part<ReactNode>[] = equipmentParts(equipment, {
     joints,

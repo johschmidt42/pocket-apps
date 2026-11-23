@@ -56,6 +56,11 @@ export type Equipment =
    * The cranks follow the feet, and the two levers follow the hands.
    */
   | { kind: "bike"; x: number }
+  /**
+   * A loaded barbell on the floor at `x`, from side to side (a bar-facing burpee). It is drawn
+   * behind the figure. Only the side view shows it.
+   */
+  | { kind: "floorbar"; x: number }
   /** A box on the ground. `x` is its near edge. */
   | { kind: "box"; x: number; width: number; height: number }
   /** A climbing rope that hangs at `x`. */
@@ -94,6 +99,12 @@ export type Exercise = {
    * For the rope climb: the figure climbs, and the rope moves down.
    */
   scroll?: number;
+  /**
+   * The figure crosses this x in each repetition and turns around (a bar-facing burpee). The steps
+   * are one repetition and end in the start pose. `motionOf()` plays them twice: the second time
+   * mirrored about this x.
+   */
+  turnAxis?: number;
   /** False: there is no ground in the picture (rope climb, pull-up bar). */
   ground?: boolean;
 };

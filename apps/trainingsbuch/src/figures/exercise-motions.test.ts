@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
@@ -12,6 +13,7 @@ import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
+import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { RUN } from "./exercises/run.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
@@ -58,6 +60,14 @@ describe("variantsOf", () => {
       FARMERS_CARRY,
       FARMERS_CARRY_KETTLEBELL,
     ]);
+  });
+
+  it("shows the bar-facing burpee", () => {
+    expect(motions("bar-facing-burpee", ["9 bar-facing burpees"])).toEqual([BAR_FACING_BURPEE]);
+  });
+
+  it("shows the push press", () => {
+    expect(motions("push-press", ["15 push presses, 52/35 kg"])).toEqual([PUSH_PRESS]);
   });
 
   it("shows the burpee pull-up for a plain burpee pull-up", () => {

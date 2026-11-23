@@ -94,14 +94,16 @@ const BOTTOM = onHands(
 
 // ---------- From the feet to the hands, and back ----------
 
-export const STAND: Pose = {
-  hip: { x: FEET_X, y: 120 },
+/** The figure that stands with its ankles at `x`. The bar-facing burpee also stands on the other side of its bar. */
+export const standAt = (x: number): Pose => ({
+  hip: { x, y: 120 },
   lean: 0,
-  feet: FLAT,
+  feet: { x, y: GROUND - 6 },
   stance: STANCE,
   grip: 19,
-  hands: handAt({ x: FEET_X, y: 120 }, 0, 2, 64),
-};
+  hands: handAt({ x, y: 120 }, 0, 2, 64),
+});
+export const STAND: Pose = standAt(FEET_X);
 
 // The hips go back, the torso leans, the hands reach down. The center of mass stays over the feet.
 const foldHip = { x: 138, y: 140 };
@@ -231,37 +233,59 @@ export const ABSORB: Pose = {
   hands: handAt(absorbHip, 10, 44, 40),
 };
 
-/** From the stand to the floor and back to the deep squat. The burpee pull-up uses the same steps. */
-export const TO_THE_FLOOR: Step[] = [
-  // The hip has the same speed on the two sides of each border: `2 * distance / seconds` fits.
-  { to: FOLD, seconds: 0.32, label: "Hände zum Boden", ease: "in", anchor: "feet" },
-  { to: CROUCH, seconds: 0.21, ease: "out", anchor: "feet" },
-  // The hands carry the body: the hip moves on a straight line, and the hands keep their spot.
-  // The feet get faster, then slower. With a constant speed to the plank, the knees whip when the legs get straight.
-  { to: KICK, seconds: 0.26, label: "Füße zurück", ease: "in", arms: "line" },
-  { to: PLANK, seconds: 0.17, ease: "out", arms: "line" },
-  {
-    to: LOW,
-    seconds: 0.5 * PART,
-    label: "Brust zum Boden",
-    ease: "in",
-    anchor: "feet",
-    arms: "line",
-  },
-  { to: BOTTOM, seconds: 0.5 * (1 - PART), ease: "out", anchor: "feet", arms: "line" },
-  {
-    to: LOW,
-    seconds: 0.5 * (1 - PART),
-    label: "Hochdrücken",
-    ease: "in",
-    anchor: "feet",
-    arms: "line",
-  },
-  { to: PLANK, seconds: 0.5 * PART, ease: "out", anchor: "feet", arms: "line" },
-  { to: TUCK, seconds: 0.21, label: "Füße vor", ease: "in", arms: "line" },
-  { to: TOUCH, seconds: 0.14, ease: "linear", arms: "line" },
-  { to: CROUCH, seconds: 0.14, ease: "out", arms: "line" },
-];
+/**
+ * From the stand to the floor and back to the deep squat. The burpee pull-up uses the same steps.
+ * `feetX`: the ankles of the figure that stands. The hands stay on their spot, so a larger value puts the feet nearer to
+ * the hands. `lift`: how many degrees more the head is lifted on the floor. The bar-facing burpee needs both: the
+ * figure must lie in front of the bar.
+ */
+export function floorSteps(feetX = FEET_X, lift = 0): Step[] {
+  const dx = feetX - FEET_X;
+  const feet = { x: feetX, y: FLAT.y };
+  const hipOf = (hip: { x: number; y: number }) => ({ x: hip.x + dx, y: hip.y });
+  const fold: Pose = {
+    ...FOLD,
+    hip: hipOf(foldHip),
+    feet,
+    hands: handAt(hipOf(foldHip), 42, 12, 58),
+  };
+  const crouch: Pose = { ...CROUCH, hip: hipOf(crouchHip), feet };
+  const touch: Pose = { ...TOUCH, hip: hipOf(TOUCH.hip), feet };
+  const low: Pose = { ...LOW, head: -18 - lift };
+  const bottom: Pose = { ...BOTTOM, head: -26 - lift };
+  return [
+    // The hip has the same speed on the two sides of each border: `2 * distance / seconds` fits.
+    { to: fold, seconds: 0.32, label: "Hände zum Boden", ease: "in", anchor: "feet" },
+    { to: crouch, seconds: 0.21, ease: "out", anchor: "feet" },
+    // The hands carry the body: the hip moves on a straight line, and the hands keep their spot.
+    // The feet get faster, then slower. With a constant speed to the plank, the knees whip when the legs get straight.
+    { to: KICK, seconds: 0.26, label: "Füße zurück", ease: "in", arms: "line" },
+    { to: PLANK, seconds: 0.17, ease: "out", arms: "line" },
+    {
+      to: low,
+      seconds: 0.5 * PART,
+      label: "Brust zum Boden",
+      ease: "in",
+      anchor: "feet",
+      arms: "line",
+    },
+    { to: bottom, seconds: 0.5 * (1 - PART), ease: "out", anchor: "feet", arms: "line" },
+    {
+      to: low,
+      seconds: 0.5 * (1 - PART),
+      label: "Hochdrücken",
+      ease: "in",
+      anchor: "feet",
+      arms: "line",
+    },
+    { to: PLANK, seconds: 0.5 * PART, ease: "out", anchor: "feet", arms: "line" },
+    { to: TUCK, seconds: 0.21, label: "Füße vor", ease: "in", arms: "line" },
+    { to: touch, seconds: 0.14, ease: "linear", arms: "line" },
+    { to: crouch, seconds: 0.14, ease: "out", arms: "line" },
+  ];
+}
+
+export const TO_THE_FLOOR: Step[] = floorSteps();
 
 export const BURPEE: Exercise = {
   key: "burpee",

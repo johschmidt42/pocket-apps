@@ -105,6 +105,11 @@ export type Step = {
   /** True: the figure is in the air. The hip moves at a constant speed and falls with gravity. */
   flight?: boolean;
   /**
+   * The figure turns around in this step, on the spot. Use it with `turnAxis` of the exercise. Give
+   * the step the pose on the other side of the axis as `to`, with `legs` and `arms` "carry".
+   */
+  turn?: boolean;
+  /**
    * The ball is in the air in this step (wall ball). It flies with gravity to this point and falls
    * back into the hands by the end of the last step in a row with `throw`.
    */
@@ -113,8 +118,17 @@ export type Step = {
   arms?: Mode | Pair<Mode>;
 };
 
-/** One moment of a loop. `thrown` is the center of the ball while it is in the air. */
-export type Frame = { joints: Joints; progress: number; thrown?: Vec };
+/**
+ * How the side view draws the figure: `x` becomes `offset + scale * x`. A scale of -1 is a figure
+ * that looks to -x. Between 1 and -1, the figure turns around. See `motionOf()`.
+ */
+export type Facing = { scale: number; offset: number };
+
+/**
+ * One moment of a loop. `thrown` is the center of the ball while it is in the air. `facing` is
+ * there when the figure turns around in the exercise.
+ */
+export type Frame = { joints: Joints; progress: number; thrown?: Vec; facing?: Facing };
 
 export type Motion = {
   /** The length of one loop, in seconds. */

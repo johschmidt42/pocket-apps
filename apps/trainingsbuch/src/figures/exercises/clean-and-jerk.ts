@@ -129,10 +129,10 @@ export const CATCH: Pose = {
 const RACK_HIP = { x: 74, y: 120 };
 export const RACK: Pose = { ...base, hip: RACK_HIP, lean: 2, ...rackAt(RACK_HIP, 2) };
 const DIP_HIP = { x: 74, y: 132 };
-const DIP: Pose = { ...base, hip: DIP_HIP, lean: 2, ...rackAt(DIP_HIP, 2) };
+export const DIP: Pose = { ...base, hip: DIP_HIP, lean: 2, ...rackAt(DIP_HIP, 2) };
 // The bar leaves the shoulders: the hands are 20 above the shoulder joints.
 // The bar passes the face: the head goes back out of its way, as in a real press. The check finds a bar in the head.
-const DRIVE: Pose = {
+export const DRIVE: Pose = {
   ...base,
   hip: RACK_HIP,
   lean: 0,
@@ -140,7 +140,7 @@ const DRIVE: Pose = {
   hands: handAt(RACK_HIP, 0, 6, -20),
   elbowTo: 60,
 };
-const PASS: Pose = {
+export const PASS: Pose = {
   ...base,
   hip: RACK_HIP,
   lean: 0,
@@ -164,7 +164,7 @@ const SPLIT: Pose = {
   hands: { x: 74, y: 19 },
   shrug: 3,
 };
-const OVERHEAD: Pose = {
+export const OVERHEAD: Pose = {
   ...base,
   hip: { x: 74, y: 120 },
   lean: 0,
