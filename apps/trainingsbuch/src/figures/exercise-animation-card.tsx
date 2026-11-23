@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import type { View } from "./exercise.ts";
 import { runOf, type ExerciseVariants } from "./exercise-motions.ts";
 import { Figure } from "./figure.tsx";
+import { beltMarks } from "./belt.ts";
 import { GROUND } from "./skeleton.ts";
 import { useAnimationClock } from "./use-animation-clock.ts";
 import { useInView } from "./use-in-view.ts";
@@ -83,6 +84,13 @@ export function ExerciseAnimationCard({
                   y1={GROUND + 1}
                   x2={x + width - 6}
                   y2={GROUND + 1}
+                  stroke="var(--border)"
+                  strokeWidth={2}
+                />
+              )}
+              {exercise.belt !== undefined && view.yaw === 0 && (
+                <path
+                  d={beltMarks(exercise.belt, frame.progress, x + 6, x + width - 6)}
                   stroke="var(--border)"
                   strokeWidth={2}
                 />

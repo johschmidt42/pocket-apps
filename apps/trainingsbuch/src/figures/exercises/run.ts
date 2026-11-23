@@ -219,6 +219,7 @@ export const RUN: Exercise = {
   key: "run",
   title: "Run",
   equipment: { kind: "none" },
+  belt: BELT * LOOP,
   views: [SIDE, FRONT],
   start: START,
   steps,

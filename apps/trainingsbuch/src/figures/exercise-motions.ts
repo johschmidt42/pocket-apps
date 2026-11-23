@@ -42,6 +42,7 @@ import { STEP_UP } from "./exercises/step-up.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
+import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 import { WALL_BALL } from "./exercises/wall-ball.ts";
 import type { Motion } from "./skeleton.ts";
 import { motionOf } from "./turning-motion.ts";
@@ -115,6 +116,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "strict-pull-up": only(PULL_UP),
   thruster: only(THRUSTER),
   "toes-to-bar": [form("Tuck", TOES_TO_BAR_TUCK), form("Straight", TOES_TO_BAR)],
+  "walking-lunge": only(WALKING_LUNGE),
   "wall-ball": only(WALL_BALL),
 };
 
@@ -138,6 +140,7 @@ const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   "overhead-squat": /\boverhead squats?\b.*\b(?:left|right) arm\b/i,
   "step-up": /\b(?:barbell|dumbbell)\b.*\bstep-ups?\b/i,
   thruster: /\bsquat clean thrusters?\b/i,
+  "walking-lunge": /\b(?:weighted|dumbbell) walking lunges?\b|\bwalking lunges? with\b/i,
 };
 
 /** A run with a load in the hands, or backwards. The animation shows a free run. */

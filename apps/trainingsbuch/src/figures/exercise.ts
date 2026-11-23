@@ -105,6 +105,11 @@ export type Exercise = {
    */
   scroll?: number;
   /**
+   * A gait on the spot: the ground moves back this far in one loop, at the speed of the foot on the
+   * ground. The side view shows it with small marks on the ground line.
+   */
+  belt?: number;
+  /**
    * The figure crosses this x in each repetition and turns around (a bar-facing burpee). The steps
    * are one repetition and end in the start pose. `motionOf()` plays them twice: the second time
    * mirrored about this x.

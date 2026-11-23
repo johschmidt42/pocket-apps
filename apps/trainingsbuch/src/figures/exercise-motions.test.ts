@@ -20,6 +20,7 @@ import { RUN } from "./exercises/run.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
+import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 
 const motions = (...args: Parameters<typeof variantsOf>) =>
   variantsOf(...args)?.map((variant) => variant.exercise);
@@ -86,6 +87,14 @@ describe("variantsOf", () => {
     ]);
   });
 
+  it("shows the walking lunge without a load", () => {
+    expect(motions("walking-lunge", ["50 walking lunges"])).toEqual([WALKING_LUNGE]);
+    expect(motions("walking-lunge", ["30 walking lunge steps"])).toEqual([WALKING_LUNGE]);
+    expect(motions("walking-lunge", ["75 m (250 ft) walking lunge (5 × 15 m (50 ft))"])).toEqual([
+      WALKING_LUNGE,
+    ]);
+  });
+
   it("shows the push press", () => {
     expect(motions("push-press", ["15 push presses, 52/35 kg"])).toEqual([PUSH_PRESS]);
   });
@@ -141,6 +150,9 @@ describe("variantsOf", () => {
     ["step-up", "20 barbell back-rack step-ups, 61/51 cm (24/20 in)"],
     ["step-up", "50 dumbbell box step-ups"],
     ["thruster", "2 squat clean thrusters"],
+    ["walking-lunge", "15 m (50 ft) weighted walking lunge"],
+    ["walking-lunge", "20 dumbbell walking lunges, 22.5/15 kg (50/35 lb)"],
+    ["walking-lunge", "20 walking lunges with two kettlebells"],
   ] as const)("has no animation for %s in the line: %s", (id, line) => {
     expect(variantsOf(id, [line])).toBeNull();
   });

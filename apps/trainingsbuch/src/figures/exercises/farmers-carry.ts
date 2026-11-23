@@ -221,6 +221,7 @@ export function farmersCarry(options: {
     key: options.key,
     title: options.title,
     equipment: options.equipment,
+    belt: BELT * LOOP,
     views: [SIDE, FRONT],
     start,
     steps,
