@@ -26,6 +26,7 @@ import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
+import { PISTOL } from "./exercises/pistol.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_JERK } from "./exercises/push-jerk.ts";
@@ -210,6 +211,11 @@ describe("variantsOf", () => {
   it("shows the wall walk, also for wall climbs", () => {
     expect(motions("wall-walk", ["3 wall walks"])).toEqual([WALL_WALK]);
     expect(motions("wall-walk", ["5 wall climbs"])).toEqual([WALL_WALK]);
+  });
+
+  it("shows the pistol, also for alternating legs", () => {
+    expect(motions("pistol", ["10 pistols"])).toEqual([PISTOL]);
+    expect(motions("pistol", ["60 pistols, alternating legs"])).toEqual([PISTOL]);
   });
 
   it("shows the push press", () => {

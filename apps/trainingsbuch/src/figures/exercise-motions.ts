@@ -38,6 +38,7 @@ import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
+import { PISTOL } from "./exercises/pistol.ts";
 import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { POWER_SNATCH } from "./exercises/power-snatch.ts";
@@ -131,6 +132,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   ],
   "overhead-lunge": [PLATE_LUNGE, BARBELL_LUNGE, DUMBBELL_LUNGE],
   "overhead-squat": only(OVERHEAD_SQUAT),
+  pistol: only(PISTOL),
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
   "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
