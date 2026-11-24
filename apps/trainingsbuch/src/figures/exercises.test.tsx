@@ -5,6 +5,7 @@ import { EXERCISE_IDS } from "../exercises.ts";
 import { equipmentParts } from "./equipment-parts.tsx";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { dumbbellHand, floorDumbbellZ, isWide, type Equipment, type Exercise } from "./exercise.ts";
+import { BACK_EXTENSION } from "./exercises/back-extension.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
@@ -45,8 +46,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 84 animations of the prototype", () => {
-    expect(ALL).toHaveLength(84);
+  it("are all 85 animations of the prototype", () => {
+    expect(ALL).toHaveLength(85);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -226,6 +227,26 @@ describe("the exercises", () => {
       thrown: undefined,
     };
     expect(equipmentParts(GHD_SIT_UP.equipment, scene)).toHaveLength(count);
+  });
+
+  it("puts the foot plate of the GHD behind the pad for the back extension", () => {
+    /** How far the foot plate is in front of the middle of the pad (negative: behind it). */
+    const plateAhead = (exercise: Exercise) => {
+      const scene = {
+        joints: runOf(exercise).at(0).joints,
+        flat: (v: Vec) => ({ x: v.x, y: v.y, depth: v.z }),
+        fromSide: true,
+        progress: 0,
+        thrown: undefined,
+      };
+      const plate = equipmentParts(exercise.equipment, scene).find(
+        (part) => (part.node as ReactElement).key === "ghdPlate",
+      );
+      const pad = exercise.equipment.kind === "ghd" ? exercise.equipment.x : Number.NaN;
+      return (plate?.node as ReactElement<{ x: number }>).props.x - pad;
+    };
+    expect(plateAhead(BACK_EXTENSION)).toBeLessThan(0);
+    expect(plateAhead(GHD_SIT_UP)).toBeGreaterThan(0);
   });
 
   it("gives a wide picture two columns", () => {

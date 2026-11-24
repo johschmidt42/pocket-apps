@@ -21,9 +21,11 @@ export type Equipment =
   | { kind: "lines"; x: readonly number[] }
   /**
    * A glute-ham developer (GHD sit-up, back extension). `x` is the middle of the hip pad (see `GHD`
-   * in `machines.ts`).
+   * in `machines.ts`). `mirror`: the foot plate and the rollers are behind the pad (-x), for a
+   * figure that lies face down with the head to +x. `foot`: how far the ankles are from the middle
+   * of the pad (default `GHD.foot.dx`).
    */
-  | { kind: "ghd"; x: number }
+  | { kind: "ghd"; x: number; mirror?: boolean; foot?: number }
   /**
    * A dumbbell in one hand: 0 is the near hand, 1 the far hand. `swap`: between these two parts of
    * the loop (0 to 1), the other hand holds it. Both hands must be on the dumbbell at these moments.

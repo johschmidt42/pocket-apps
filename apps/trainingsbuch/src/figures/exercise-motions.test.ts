@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CATALOG } from "../catalog.ts";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { ALTERNATING_DUMBBELL_SNATCH } from "./exercises/alternating-dumbbell-snatch.ts";
+import { BACK_EXTENSION } from "./exercises/back-extension.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
@@ -261,6 +262,7 @@ describe("variantsOf", () => {
     ["box-jump-over", "Open 22.1", [BOX_JUMP_OVER]],
     ["shuttle-run", "Open 23.2A", [SHUTTLE_RUN]],
     ["ghd-sit-up", "Hansen", [GHD_SIT_UP]],
+    ["back-extension", "Michael", [BACK_EXTENSION]],
     ["shuttle-run", "Santora", [SHUTTLE_RUN]],
     ["box-step-over", "Hammy", [BOX_STEP_OVER]],
     ["burpee-bar-muscle-up", "Barraza", [BURPEE_BAR_MUSCLE_UP]],

@@ -522,9 +522,15 @@ function jumpRope(
  * tube to the front post, a vertical foot plate and two rollers. The rollers are in front of the
  * legs: they hold the ankles. From the front: the pad, the rear post and the beam.
  */
-function ghd({ flat, fromSide }: Scene, x: number): Parts {
-  const at = (dx: number, y: number, z = 0) => flat(vec(x + dx, y, z));
-  const foot = GHD.foot;
+function ghd(
+  { flat, fromSide }: Scene,
+  equipment: { x: number; mirror?: boolean; foot?: number },
+): Parts {
+  const { x } = equipment;
+  // The pad is the same both ways. With `mirror`, all other parts are on the other side of it.
+  const sign = equipment.mirror === true ? -1 : 1;
+  const at = (dx: number, y: number, z = 0) => flat(vec(x + sign * dx, y, z));
+  const foot = { dx: equipment.foot ?? GHD.foot.dx, y: GHD.foot.y };
   const front = foot.dx + 20;
   const tube = GHD.padTop + 42;
   if (!fromSide) {
@@ -564,10 +570,10 @@ function ghd({ flat, fromSide }: Scene, x: number): Parts {
       />,
     );
   };
-  const plate = at(foot.dx + 7, foot.y - 22);
+  const plate = at(foot.dx + 9.5, foot.y - 22);
   // The hip pad: a half round, flat below and arched on top, so the pelvis rolls over its back.
-  const left = at(-GHD.padHalf, GHD.padTop + GHD.padThick);
-  const right = at(GHD.padHalf, GHD.padTop + GHD.padThick);
+  const left = flat(vec(x - GHD.padHalf, GHD.padTop + GHD.padThick, 0));
+  const right = flat(vec(x + GHD.padHalf, GHD.padTop + GHD.padThick, 0));
   const arch = GHD.padThick - 4;
   const roller = (key: string, dx: number, dy: number) => {
     const c = at(foot.dx + dx, foot.y + dy);
@@ -588,7 +594,7 @@ function ghd({ flat, fromSide }: Scene, x: number): Parts {
       BEHIND + 1,
       <rect
         key="ghdPlate"
-        x={plate.x}
+        x={plate.x - 2.5}
         y={plate.y}
         width={5}
         height={40}
@@ -818,7 +824,7 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "lines":
       return lines(scene, equipment.x);
     case "ghd":
-      return ghd(scene, equipment.x);
+      return ghd(scene, equipment);
     case "dumbbell":
       return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":

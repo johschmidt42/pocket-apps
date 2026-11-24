@@ -2,6 +2,7 @@ import type { ExerciseId } from "../exercises.ts";
 import type { Exercise } from "./exercise.ts";
 import { AIR_SQUAT } from "./exercises/air-squat.ts";
 import { ALTERNATING_DUMBBELL_SNATCH } from "./exercises/alternating-dumbbell-snatch.ts";
+import { BACK_EXTENSION } from "./exercises/back-extension.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
@@ -120,6 +121,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "air-squat": only(AIR_SQUAT),
   "air-bike": only(BIKE_EXERCISE),
   "alternating-dumbbell-snatch": only(ALTERNATING_DUMBBELL_SNATCH),
+  "back-extension": only(BACK_EXTENSION),
   "back-squat": only(BACK_SQUAT),
   "bar-facing-burpee": only(BAR_FACING_BURPEE),
   "bar-muscle-up": only(BAR_MUSCLE_UP),
