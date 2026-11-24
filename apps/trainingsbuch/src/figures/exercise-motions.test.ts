@@ -52,6 +52,7 @@ import { RUN_BARBELL } from "./exercises/run-barbell.ts";
 import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
 import { RUN_PLATE } from "./exercises/run-plate.ts";
 import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
+import { SHUTTLE_RUN } from "./exercises/shuttle-run.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
@@ -257,6 +258,8 @@ describe("variantsOf", () => {
 
   it.each([
     ["box-jump-over", "Open 22.1", [BOX_JUMP_OVER]],
+    ["shuttle-run", "Open 23.2A", [SHUTTLE_RUN]],
+    ["shuttle-run", "Santora", [SHUTTLE_RUN]],
     ["box-step-over", "Hammy", [BOX_STEP_OVER]],
     ["burpee-bar-muscle-up", "Barraza", [BURPEE_BAR_MUSCLE_UP]],
     ["burpee-over-dumbbell", "Open 24.1", [BURPEE_OVER_DUMBBELL]],

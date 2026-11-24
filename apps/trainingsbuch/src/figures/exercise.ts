@@ -15,6 +15,11 @@ export type Equipment =
    */
   | { kind: "medicineball" }
   /**
+   * Lines on the floor at these x (a shuttle run). From the side, each is a short flat mark on the
+   * ground; from the front, a line across. They stay on their spots when the figure turns around.
+   */
+  | { kind: "lines"; x: readonly number[] }
+  /**
    * A dumbbell in one hand: 0 is the near hand, 1 the far hand. `swap`: between these two parts of
    * the loop (0 to 1), the other hand holds it. Both hands must be on the dumbbell at these moments.
    */

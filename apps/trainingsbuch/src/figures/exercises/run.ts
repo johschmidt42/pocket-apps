@@ -4,7 +4,16 @@
 // In the swing, the leg comes from two angles (thigh and knee) on smooth curves through measured values.
 import type { Equipment, Exercise, View } from "../exercise.ts";
 import { armAt, shoulderOf } from "../poses.ts";
-import { GRAVITY, item, tiptoeFromToe, up, type Pose, type Step } from "../skeleton.ts";
+import {
+  GRAVITY,
+  item,
+  tiptoeFromToe,
+  up,
+  type Pair,
+  type Pose,
+  type Spot,
+  type Step,
+} from "../skeleton.ts";
 
 const RAD = Math.PI / 180;
 /** The time of one loop (one stride), in seconds. */
@@ -258,3 +267,23 @@ export function inFront(
     y: neck.y - along.y * below + along.x * ahead,
   };
 }
+
+/** The time of one stride of the run (two steps), in seconds, and its speed over the ground, in units per second. */
+export const RUN_STRIDE = { seconds: LOOP, speed: BELT };
+
+/**
+ * The pose of the run at the part `part` of its loop (the near foot lands at 0 and 1, the far foot at 0.5), as a run
+ * over the ground: the whole pose moves forward at the speed of the run, so a foot on the ground stays on its spot.
+ * `start` is the x by which the pose at part 0 is moved.
+ */
+export function runOver(part: number, start: number): Pose {
+  const p = pose(part - Math.floor(part));
+  const dx = start + BELT * LOOP * part;
+  const move = (s: Spot): Spot => ({ ...s, x: s.x + dx });
+  const pair = (spots: Spot | Pair<Spot>): Spot | Pair<Spot> =>
+    "x" in spots ? move(spots) : [move(spots[0]), move(spots[1])];
+  return { ...p, hip: move(p.hip), feet: pair(p.feet), hands: pair(p.hands) };
+}
+
+/** True if no foot is on the ground at the part `part` of the loop. */
+export const runInFlight = (part: number) => wrap(part * 2) / 2 >= STANCE - 1e-9;

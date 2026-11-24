@@ -16,6 +16,7 @@ import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { ROW } from "./exercises/row.ts";
 import { RUN_BARBELL } from "./exercises/run-barbell.ts";
 import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
+import { SHUTTLE_RUN } from "./exercises/shuttle-run.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
 import { RINGS, ringAnchor, strapOf } from "./machines.ts";
@@ -43,8 +44,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 82 animations of the prototype", () => {
-    expect(ALL).toHaveLength(82);
+  it("are all 83 animations of the prototype", () => {
+    expect(ALL).toHaveLength(83);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -196,8 +197,23 @@ describe("the exercises", () => {
     expect(ball.props.cy).toBeCloseTo(hands - 6);
   });
 
+  it.each([true, false])(
+    "draws one mark for each line of the shuttle run (from the side: %s)",
+    (fromSide) => {
+      const scene = {
+        joints: runOf(SHUTTLE_RUN).at(0).joints,
+        flat: (v: Vec) => ({ x: -v.z, y: v.y, depth: v.x }),
+        fromSide,
+        progress: 0,
+        thrown: undefined,
+      };
+      expect(equipmentParts(SHUTTLE_RUN.equipment, scene)).toHaveLength(2);
+    },
+  );
+
   it("gives a wide picture two columns", () => {
     expect(isWide(ROW)).toBe(true);
+    expect(isWide(SHUTTLE_RUN)).toBe(true);
     expect(isWide(THRUSTER)).toBe(false);
   });
 

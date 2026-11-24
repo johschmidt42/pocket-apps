@@ -517,6 +517,29 @@ function jumpRope(
   ];
 }
 
+/** Marks on the floor. From the side, they stay on their spots when the figure turns around. */
+function lines({ flat, fromSide }: Scene, at: readonly number[]): Parts {
+  return at.map((x, index) => {
+    const key = `line${String(index)}`;
+    if (fromSide) {
+      return part(
+        BEHIND,
+        <rect
+          key={key}
+          x={x - 5}
+          y={GROUND - 1.5}
+          width={10}
+          height={3}
+          rx={1}
+          fill={COLOR}
+          stroke="none"
+        />,
+      );
+    }
+    return bar(key, BEHIND, flat(vec(x, GROUND, -40)), flat(vec(x, GROUND, 40)), 3);
+  });
+}
+
 function box({ flat, fromSide }: Scene, x: number, width: number, height: number): Parts {
   // From the side, the box stays on its spot when the figure turns around.
   const corners = [x, x + width].flatMap((edge) =>
@@ -698,6 +721,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return barbell(scene, equipment.onBack === true, equipment.empty === true);
     case "medicineball":
       return medicineBall(scene);
+    case "lines":
+      return lines(scene, equipment.x);
     case "dumbbell":
       return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":

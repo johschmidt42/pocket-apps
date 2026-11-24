@@ -69,6 +69,7 @@ import { RUN_BARBELL } from "./exercises/run-barbell.ts";
 import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
 import { RUN_PLATE } from "./exercises/run-plate.ts";
 import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
+import { SHUTTLE_RUN } from "./exercises/shuttle-run.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
 import { SNATCH } from "./exercises/snatch.ts";
@@ -167,6 +168,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "rope-climb": only(ROPE_CLIMB),
   row: only(ROW),
   run: only(RUN),
+  "shuttle-run": only(SHUTTLE_RUN),
   "shoulder-to-overhead": [
     form("Press", PUSH_PRESS),
     form("Push", PUSH_JERK),
