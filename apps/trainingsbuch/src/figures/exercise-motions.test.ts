@@ -34,6 +34,7 @@ import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
 import { RING_MUSCLE_UP } from "./exercises/ring-muscle-up.ts";
 import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
+import { RING_ROW } from "./exercises/ring-row.ts";
 import { RUN } from "./exercises/run.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
@@ -232,6 +233,10 @@ describe("variantsOf", () => {
 
   it("shows the ring push-up", () => {
     expect(motions("ring-push-up", ["10 ring push-ups"])).toEqual([RING_PUSH_UP]);
+  });
+
+  it("shows the ring row", () => {
+    expect(motions("ring-row", ["35 ring rows"])).toEqual([RING_ROW]);
   });
 
   it("shows the push press", () => {
