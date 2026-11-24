@@ -8,6 +8,7 @@ import { dumbbellHand, floorDumbbellZ, isWide, type Equipment, type Exercise } f
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
+import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
 import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { KETTLEBELL_THRUSTER_SINGLE_ARM } from "./exercises/kettlebell-thruster-single-arm.ts";
 import { KETTLEBELL_THRUSTER } from "./exercises/kettlebell-thruster.ts";
@@ -44,8 +45,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 83 animations of the prototype", () => {
-    expect(ALL).toHaveLength(83);
+  it("are all 84 animations of the prototype", () => {
+    expect(ALL).toHaveLength(84);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -210,6 +211,22 @@ describe("the exercises", () => {
       expect(equipmentParts(SHUTTLE_RUN.equipment, scene)).toHaveLength(2);
     },
   );
+
+  it.each([
+    [true, 11],
+    [false, 3],
+  ] as const)("draws the GHD (from the side: %s) in %i parts", (fromSide, count) => {
+    const scene = {
+      joints: runOf(GHD_SIT_UP).at(0).joints,
+      flat: fromSide
+        ? (v: Vec) => ({ x: v.x, y: v.y, depth: v.z })
+        : (v: Vec) => ({ x: -v.z, y: v.y, depth: v.x }),
+      fromSide,
+      progress: 0,
+      thrown: undefined,
+    };
+    expect(equipmentParts(GHD_SIT_UP.equipment, scene)).toHaveLength(count);
+  });
 
   it("gives a wide picture two columns", () => {
     expect(isWide(ROW)).toBe(true);

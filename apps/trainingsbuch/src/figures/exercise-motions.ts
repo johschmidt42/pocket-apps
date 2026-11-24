@@ -31,6 +31,7 @@ import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
+import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
 import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { HANDSTAND } from "./exercises/handstand.ts";
@@ -195,6 +196,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "burpee-over-dumbbell": only(BURPEE_OVER_DUMBBELL),
   "dumbbell-deadlift": only(DUMBBELL_DEADLIFT),
   "dumbbell-squat": only(DUMBBELL_FRONT_SQUAT),
+  "ghd-sit-up": only(GHD_SIT_UP),
   "goblet-squat": only(GOBLET_SQUAT),
   handstand: only(HANDSTAND),
   "hang-clean": only(HANG_CLEAN),

@@ -181,3 +181,14 @@ export function strapOf(rings: Spot2, joints: Joints, side: 0 | 1): { points: Ve
   }
   return { points, up };
 }
+
+/**
+ * A glute-ham developer (GHD), built like the Rogue GH-1, Titan and Rep GHDs: a beam on the floor with feet, a rear post
+ * with a hip pad that is a half round from the side (flat below, arched on top), a front post with a vertical foot plate
+ * and two padded rollers before it, and a tube between the posts. `x` of the equipment is the middle of the hip pad.
+ * The top of the pad is 100 cm above the floor: at 109 cm (the GH-1) the hands of the figure do not reach the floor
+ * behind it; many GHDs can be set lower. The pad is 44 long and 18 high in the middle. The ankles are `foot.dx` in
+ * front of the middle of the pad, at the height `foot.y`: with the hip over the back of the pad, the knees are bent
+ * about 45 degrees.
+ */
+export const GHD = { padTop: GROUND - 96, padHalf: 22, padThick: 18, foot: { dx: 60, y: 106 } };

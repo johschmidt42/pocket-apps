@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
 import { dumbbellHand, floorDumbbellZ, type Equipment } from "./exercise.ts";
-import { BENCH, BIKE, pedalOf, RINGS, ROWER, SKIERG, strapOf } from "./machines.ts";
+import { BENCH, BIKE, GHD, pedalOf, RINGS, ROWER, SKIERG, strapOf } from "./machines.ts";
 import {
   BALL,
   ballCenter,
@@ -517,6 +517,100 @@ function jumpRope(
   ];
 }
 
+/**
+ * A glute-ham developer. From the side: a beam with feet, a rear post with the half round hip pad, a
+ * tube to the front post, a vertical foot plate and two rollers. The rollers are in front of the
+ * legs: they hold the ankles. From the front: the pad, the rear post and the beam.
+ */
+function ghd({ flat, fromSide }: Scene, x: number): Parts {
+  const at = (dx: number, y: number, z = 0) => flat(vec(x + dx, y, z));
+  const foot = GHD.foot;
+  const front = foot.dx + 20;
+  const tube = GHD.padTop + 42;
+  if (!fromSide) {
+    const a = at(-GHD.padHalf, GHD.padTop, -24);
+    const b = at(GHD.padHalf, GHD.padTop + GHD.padThick, 24);
+    return [
+      part(
+        BEHIND + 2,
+        <rect
+          key="ghdPad"
+          x={Math.min(a.x, b.x)}
+          y={a.y}
+          width={Math.abs(b.x - a.x)}
+          height={GHD.padThick}
+          rx={GHD.padThick / 2}
+          fill={COLOR}
+          stroke="none"
+        />,
+      ),
+      bar("ghdRearPost", BEHIND, at(0, GROUND - 4), at(0, GHD.padTop + GHD.padThick), 7, "butt"),
+      bar("ghdBeam", BEHIND, at(0, GROUND - 4, -30), at(0, GROUND - 4, 30), 6, "butt"),
+    ];
+  }
+  const rubber = (key: string, dx: number) => {
+    const p = at(dx, GROUND - 3);
+    return part(
+      BEHIND + 1,
+      <rect
+        key={key}
+        x={p.x - 5}
+        y={p.y - 1}
+        width={10}
+        height={4}
+        rx={1.5}
+        fill={COLOR}
+        stroke="none"
+      />,
+    );
+  };
+  const plate = at(foot.dx + 7, foot.y - 22);
+  // The hip pad: a half round, flat below and arched on top, so the pelvis rolls over its back.
+  const left = at(-GHD.padHalf, GHD.padTop + GHD.padThick);
+  const right = at(GHD.padHalf, GHD.padTop + GHD.padThick);
+  const arch = GHD.padThick - 4;
+  const roller = (key: string, dx: number, dy: number) => {
+    const c = at(foot.dx + dx, foot.y + dy);
+    return part(
+      IN_FRONT - 1,
+      <circle key={key} cx={c.x} cy={c.y} r={6} fill={COLOR} stroke="none" />,
+    );
+  };
+  return [
+    bar("ghdBeam", BEHIND, at(-72, GROUND - 4), at(front + 14, GROUND - 4), 6, "butt"),
+    rubber("ghdFootBack", -72),
+    rubber("ghdFootFront", front + 14),
+    bar("ghdRearPost", BEHIND, at(0, GROUND - 4), at(0, GHD.padTop + GHD.padThick - 2), 7, "butt"),
+    bar("ghdTube", BEHIND, at(0, tube), at(front, tube), 6, "butt"),
+    bar("ghdFrontPost", BEHIND, at(front, GROUND - 4), at(front, foot.y + 18), 6, "butt"),
+    bar("ghdBracket", BEHIND, at(front, foot.y + 18), at(foot.dx - 8, foot.y + 18), 4, "butt"),
+    part(
+      BEHIND + 1,
+      <rect
+        key="ghdPlate"
+        x={plate.x}
+        y={plate.y}
+        width={5}
+        height={40}
+        rx={1.5}
+        fill={COLOR}
+        stroke="none"
+      />,
+    ),
+    part(
+      BEHIND + 2,
+      <path
+        key="ghdPad"
+        d={`M ${String(left.x)} ${String(left.y)} L ${String(right.x)} ${String(right.y)} L ${String(right.x)} ${String(right.y - 4)} A ${String(GHD.padHalf)} ${String(arch)} 0 0 0 ${String(left.x)} ${String(left.y - 4)} Z`}
+        fill={COLOR}
+        stroke="none"
+      />,
+    ),
+    roller("ghdRollerTop", -1, -11),
+    roller("ghdRollerLow", -3, 11),
+  ];
+}
+
 /** Marks on the floor. From the side, they stay on their spots when the figure turns around. */
 function lines({ flat, fromSide }: Scene, at: readonly number[]): Parts {
   return at.map((x, index) => {
@@ -723,6 +817,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return medicineBall(scene);
     case "lines":
       return lines(scene, equipment.x);
+    case "ghd":
+      return ghd(scene, equipment.x);
     case "dumbbell":
       return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":

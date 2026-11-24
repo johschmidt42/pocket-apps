@@ -22,6 +22,7 @@ import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
+import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
 import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { HANDSTAND } from "./exercises/handstand.ts";
@@ -66,7 +67,7 @@ const motions = (...args: Parameters<typeof variantsOf>) =>
 
 describe("variantsOf", () => {
   it("has no animation for an exercise without one", () => {
-    expect(variantsOf("ghd-sit-up", [])).toBeNull();
+    expect(variantsOf("bear-crawl", [])).toBeNull();
   });
 
   it("offers Kipping first and Strict for a plain pull-up", () => {
@@ -259,6 +260,7 @@ describe("variantsOf", () => {
   it.each([
     ["box-jump-over", "Open 22.1", [BOX_JUMP_OVER]],
     ["shuttle-run", "Open 23.2A", [SHUTTLE_RUN]],
+    ["ghd-sit-up", "Hansen", [GHD_SIT_UP]],
     ["shuttle-run", "Santora", [SHUTTLE_RUN]],
     ["box-step-over", "Hammy", [BOX_STEP_OVER]],
     ["burpee-bar-muscle-up", "Barraza", [BURPEE_BAR_MUSCLE_UP]],
