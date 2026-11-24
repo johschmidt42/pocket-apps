@@ -94,10 +94,13 @@ function handsMiddle({ joints }: Scene): Vec {
   return vec((near.end.x + far.end.x) / 2, (near.end.y + far.end.y) / 2, 0);
 }
 
-function barbell(scene: Scene, onBack: boolean): Parts {
+function barbell(scene: Scene, onBack: boolean, empty = false): Parts {
   const { flat, fromSide, joints } = scene;
   const middle = flat(handsMiddle(scene));
-  if (fromSide) return [disc("plate", BEHIND, middle, PLATE), grip("bar", IN_FRONT, middle, 3, 2)];
+  if (fromSide) {
+    const end = grip("bar", IN_FRONT, middle, 3, 2);
+    return empty ? [end] : [disc("plate", BEHIND, middle, PLATE), end];
+  }
   // The plates are outside the hands: with a wide grip, the bar is longer.
   const center = handsMiddle(scene);
   const reach = Math.max(
@@ -109,6 +112,8 @@ function barbell(scene: Scene, onBack: boolean): Parts {
     const z = side === 0 ? 1 : -1;
     const plate = flat(vec(center.x, center.y, z * reach));
     const end = flat(vec(center.x, center.y, z * (reach + 6)));
+    const rod = bar(`bar${String(side)}`, onBack ? BEHIND + 1 : middle.depth - 0.5, middle, end, 4);
+    if (empty) return [rod];
     return [
       part(
         BEHIND,
@@ -123,7 +128,7 @@ function barbell(scene: Scene, onBack: boolean): Parts {
           stroke="none"
         />,
       ),
-      bar(`bar${String(side)}`, onBack ? BEHIND + 1 : middle.depth - 0.5, middle, end, 4),
+      rod,
     ];
   });
 }
@@ -153,6 +158,13 @@ function dumbbell({ joints, flat, fromSide }: Scene, handIndex: 0 | 1): Parts {
     head("head0", first),
     head("head1", second),
   ];
+}
+
+/** A medicine ball in both hands: its center is above the middle of the hands. */
+function medicineBall(scene: Scene): Parts {
+  const middle = handsMiddle(scene);
+  const ball = scene.flat(vec(middle.x, middle.y - BALL.above, 0));
+  return [disc("medicineball", ball.depth, ball, BALL.radius)];
 }
 
 /** A plate in both hands: a thin bar from the side, a circle with a hole from the front. */
@@ -683,7 +695,9 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "none":
       return [];
     case "barbell":
-      return barbell(scene, equipment.onBack === true);
+      return barbell(scene, equipment.onBack === true, equipment.empty === true);
+    case "medicineball":
+      return medicineBall(scene);
     case "dumbbell":
       return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":

@@ -48,6 +48,10 @@ import { RING_MUSCLE_UP } from "./exercises/ring-muscle-up.ts";
 import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { RING_ROW } from "./exercises/ring-row.ts";
 import { RUN } from "./exercises/run.ts";
+import { RUN_BARBELL } from "./exercises/run-barbell.ts";
+import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
+import { RUN_PLATE } from "./exercises/run-plate.ts";
+import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
@@ -350,13 +354,27 @@ describe("variantsOf", () => {
     expect(variantsOf("dumbbell-snatch", ["21 dumbbell snatches"])).not.toBeNull();
   });
 
+  it("has no run animation for a run backwards", () => {
+    expect(variantsOf("run", ["3 rounds for time of:", "200 m run backwards"])).toBeNull();
+  });
+
   it.each([
-    "400 m run with a plate, 20/11 kg (45/25 lb)",
-    "1600 m run (1 mile) with a medicine ball",
-    "800 m run with an empty barbell",
-    "200 m run backwards",
-  ])("has no run animation for: %s", (line) => {
-    expect(variantsOf("run", ["3 rounds for time of:", line])).toBeNull();
+    ["400 m run with a plate, 20/11 kg (45/25 lb)", RUN_PLATE],
+    ["200 m run with a plate overhead, 20/11 kg (45/25 lb)", RUN_PLATE_OVERHEAD],
+    ["1600 m run (1 mile) with a medicine ball", RUN_MEDICINE_BALL],
+    ["800 m run with an empty barbell", RUN_BARBELL],
+  ] as const)("shows the run with its load for: %s", (line, exercise) => {
+    expect(motions("run", ["3 rounds for time of:", line])).toEqual([exercise]);
+  });
+
+  it.each([
+    ["Nutts", RUN_PLATE],
+    ["Walsh", RUN_PLATE_OVERHEAD],
+    ["Del", RUN_MEDICINE_BALL],
+    ["Dae Han", RUN_BARBELL],
+  ] as const)("shows the run with its load in %s", (name, exercise) => {
+    const workout = CATALOG.find((item) => item.name === name);
+    expect(motions("run", workout?.lines ?? [])).toEqual([exercise]);
   });
 
   it("keeps the run animation for a free run, also with a vest", () => {
@@ -366,8 +384,10 @@ describe("variantsOf", () => {
     ]);
   });
 
-  it("keeps the run animation when a free run is beside a run with a load", () => {
-    expect(motions("run", ["800 m run", "400 m run with a plate, 20/11 kg"])).toEqual([RUN]);
+  it("offers the free run and the run with a load when a workout has both", () => {
+    const lines = ["800 m run", "400 m run with a plate, 20/11 kg"];
+    expect(variantsOf("run", lines)?.map((variant) => variant.label)).toEqual(["Free", "Plate"]);
+    expect(motions("run", lines)).toEqual([RUN, RUN_PLATE]);
   });
 
   it("does not take the word strict of another exercise", () => {

@@ -65,6 +65,10 @@ import { RING_ROW } from "./exercises/ring-row.ts";
 import { ROPE_CLIMB } from "./exercises/rope-climb.ts";
 import { ROW } from "./exercises/row.ts";
 import { RUN } from "./exercises/run.ts";
+import { RUN_BARBELL } from "./exercises/run-barbell.ts";
+import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
+import { RUN_PLATE } from "./exercises/run-plate.ts";
+import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
 import { SNATCH } from "./exercises/snatch.ts";
@@ -240,21 +244,38 @@ const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   "walking-lunge": /\b(?:weighted|dumbbell) walking lunges?\b|\bwalking lunges? with\b/i,
 };
 
-/** A run with a load in the hands, or backwards. The animation shows a free run. */
+/** A run with a load in the hands, or backwards. */
 const OTHER_RUN = /\bruns?\b.*\b(?:with an? (?:plate|medicine ball|empty barbell)|backwards)\b/i;
 const RUN_DISTANCE = /\bm run\b/i;
 
-/** True if the workout has another form of the run and no free run beside it. */
-function onlyOtherRuns(lines: readonly string[]): boolean {
-  return (
-    lines.some((line) => OTHER_RUN.test(line)) &&
-    !lines.some((line) => RUN_DISTANCE.test(line) && !OTHER_RUN.test(line))
-  );
+const FREE_RUN = form("Free", RUN);
+/** The forms of a run with a load, by the words of the workout. "plate overhead" comes before "plate". */
+const LOADED_RUNS: readonly { pattern: RegExp; variant: ExerciseVariant }[] = [
+  {
+    pattern: /\bruns?\b.*\bwith a plate overhead\b/i,
+    variant: form("Overhead", RUN_PLATE_OVERHEAD),
+  },
+  { pattern: /\bruns?\b.*\bwith a plate\b(?! overhead)/i, variant: form("Plate", RUN_PLATE) },
+  { pattern: /\bruns?\b.*\bwith a medicine ball\b/i, variant: form("Ball", RUN_MEDICINE_BALL) },
+  { pattern: /\bruns?\b.*\bwith an empty barbell\b/i, variant: form("Bar", RUN_BARBELL) },
+];
+
+/**
+ * The forms of the run in a workout with these lines: each run with a load that the workout names,
+ * and the free run when the workout also has a free run. `null`: only a run backwards (no animation).
+ */
+function runVariants(lines: readonly string[]): ExerciseVariants | null {
+  const loaded = LOADED_RUNS.filter(({ pattern }) => lines.some((line) => pattern.test(line)));
+  const free = lines.some((line) => RUN_DISTANCE.test(line) && !OTHER_RUN.test(line));
+  const other = lines.some((line) => OTHER_RUN.test(line));
+  if (loaded.length === 0) return other && !free ? null : only(RUN);
+  const [first, ...rest] = [...(free ? [FREE_RUN] : []), ...loaded.map(({ variant }) => variant)];
+  return first === undefined ? null : [first, ...rest];
 }
 
 /** The forms of an exercise in a workout with these lines. `null`: it has no animation here. */
 export function variantsOf(id: ExerciseId, lines: readonly string[]): ExerciseVariants | null {
-  if (id === "run" && onlyOtherRuns(lines)) return null;
+  if (id === "run") return runVariants(lines);
   const other = OTHER_MOVEMENT[id];
   if (other && lines.some((line) => other.test(line))) return null;
   const named = FORMS_IN_TEXT[id]?.find(({ pattern }) => lines.some((line) => pattern.test(line)));

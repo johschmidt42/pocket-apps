@@ -6,9 +6,14 @@ export type Equipment =
   /**
    * A barbell in both hands. `onBack`: the bar lies on the upper back (back squat). The front view
    * then draws it behind the body, also when the torso leans and the bar is nearer to the camera
-   * than the hips.
+   * than the hips. `empty`: a bar without plates (a run with an empty barbell).
    */
-  | { kind: "barbell"; onBack?: boolean }
+  | { kind: "barbell"; onBack?: boolean; empty?: boolean }
+  /**
+   * A medicine ball in both hands (radius 17). Its center is 6 above the middle of the hands, as in
+   * the wall ball.
+   */
+  | { kind: "medicineball" }
   /**
    * A dumbbell in one hand: 0 is the near hand, 1 the far hand. `swap`: between these two parts of
    * the loop (0 to 1), the other hand holds it. Both hands must be on the dumbbell at these moments.

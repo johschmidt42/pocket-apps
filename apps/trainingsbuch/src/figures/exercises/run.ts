@@ -2,9 +2,9 @@
 // One function makes a pose from the part of the loop. The loop is one stride: two steps.
 // While a foot is on the ground, its toe is on the belt, which moves back at a constant speed.
 // In the swing, the leg comes from two angles (thigh and knee) on smooth curves through measured values.
-import type { Exercise, View } from "../exercise.ts";
-import { armAt } from "../poses.ts";
-import { GRAVITY, item, tiptoeFromToe, type Pose, type Step } from "../skeleton.ts";
+import type { Equipment, Exercise, View } from "../exercise.ts";
+import { armAt, shoulderOf } from "../poses.ts";
+import { GRAVITY, item, tiptoeFromToe, up, type Pose, type Step } from "../skeleton.ts";
 
 const RAD = Math.PI / 180;
 /** The time of one loop (one stride), in seconds. */
@@ -170,13 +170,22 @@ function ankleOf(part: number, hip: { x: number; y: number }): { x: number; y: n
 /** How far forward an arm is: 0 is back (the leg of its side is in front), 1 is forward (the leg is back). */
 const swingOf = (part: number) => (1 - Math.cos(2 * Math.PI * (part - 0.9))) / 2;
 
+/**
+ * How the hands hold a load in a run with a load (`run-plate.ts` and the others): the hands, the grip and the elbows,
+ * from the hip and the lean of the pose. The arms then do not swing.
+ */
+export type Hold = (
+  hip: { x: number; y: number },
+  lean: number,
+) => Pick<Pose, "hands" | "grip" | "elbowTo" | "elbowsOut" | "shrug">;
+
 /** The pose at one part of the loop. The near leg lands at 0, the far leg lands at 0.5. */
-function pose(part: number): Pose {
+function pose(part: number, hold?: Hold): Pose {
   const hip = hipOf(part);
   // The body leans from the ankles. A very small wave: a little more lean after each landing.
   const lean = 7 + 0.8 * Math.cos(4 * Math.PI * (part - 0.1));
   const hand = (p: number) => armAt(hip, lean, -36 + 60 * swingOf(p), 56 + 52 * swingOf(p)).hands;
-  return {
+  const legs: Omit<Pose, "hands"> = {
     hip,
     lean,
     head: -6,
@@ -184,13 +193,10 @@ function pose(part: number): Pose {
     toes: [toesOf(part), toesOf(part + 0.5)],
     stance: 6,
     knees: 0.08,
-    hands: [hand(part), hand(part + 0.5)],
-    grip: 15,
-    elbowTo: -30,
   };
+  if (hold !== undefined) return { ...legs, ...hold(hip, lean) };
+  return { ...legs, hands: [hand(part), hand(part + 0.5)], grip: 15, elbowTo: -30 };
 }
-
-const START = pose(0);
 
 /** True if no foot is on the ground in the whole step that ends at the pose `i`. */
 const inFlight = (i: number) => {
@@ -198,18 +204,23 @@ const inFlight = (i: number) => {
   return from >= STANCE - 1e-9;
 };
 
-const steps: Step[] = [];
-for (let i = 1; i <= POSES; i++) {
-  steps.push({
-    to: i === POSES ? START : pose(i / POSES),
-    seconds: LOOP / POSES,
-    ...(i === 1 ? { label: "Rechter Schritt" } : {}),
-    ...(i === POSES / 2 + 1 ? { label: "Linker Schritt" } : {}),
-    ease: "linear",
-    legs: "line",
-    arms: "fk",
-    ...(inFlight(i) ? { flight: true } : {}),
-  });
+/** The steps of the loop: 40 poses, one after the other. */
+function stepsOf(hold?: Hold): Step[] {
+  const start = pose(0, hold);
+  const steps: Step[] = [];
+  for (let i = 1; i <= POSES; i++) {
+    steps.push({
+      to: i === POSES ? start : pose(i / POSES, hold),
+      seconds: LOOP / POSES,
+      ...(i === 1 ? { label: "Rechter Schritt" } : {}),
+      ...(i === POSES / 2 + 1 ? { label: "Linker Schritt" } : {}),
+      ease: "linear",
+      legs: "line",
+      arms: "fk",
+      ...(inFlight(i) ? { flight: true } : {}),
+    });
+  }
+  return steps;
 }
 
 const SIDE: View = { label: "Seite", yaw: 0, box: [4, 22, 150, 190] };
@@ -221,6 +232,29 @@ export const RUN: Exercise = {
   equipment: { kind: "none" },
   belt: BELT * LOOP,
   views: [SIDE, FRONT],
-  start: START,
-  steps,
+  start: pose(0),
+  steps: stepsOf(),
 };
+
+/** A run with a load in the hands: the legs and the torso of the run, the hands of `hold`. */
+export function loadedRun(key: string, title: string, equipment: Equipment, hold: Hold): Exercise {
+  return { ...RUN, key, title, equipment, start: pose(0, hold), steps: stepsOf(hold) };
+}
+
+/**
+ * A spot in front of the torso: `below` the base of the neck along the torso, and `ahead` in front of the line of the
+ * torso (the chest is 9.5 in front of it). It turns with the lean.
+ */
+export function inFront(
+  hip: { x: number; y: number },
+  lean: number,
+  below: number,
+  ahead: number,
+): { x: number; y: number } {
+  const neck = shoulderOf(hip, lean);
+  const along = up(lean);
+  return {
+    x: neck.x - along.x * below - along.y * ahead,
+    y: neck.y - along.y * below + along.x * ahead,
+  };
+}

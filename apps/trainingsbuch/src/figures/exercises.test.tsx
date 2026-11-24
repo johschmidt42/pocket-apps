@@ -14,6 +14,8 @@ import { KETTLEBELL_THRUSTER } from "./exercises/kettlebell-thruster.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
 import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { ROW } from "./exercises/row.ts";
+import { RUN_BARBELL } from "./exercises/run-barbell.ts";
+import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
 import { RINGS, ringAnchor, strapOf } from "./machines.ts";
@@ -21,19 +23,28 @@ import { BELL, bellCenter, BODY, heldBell, solve, type Vec } from "./skeleton.ts
 
 const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 
+/** Lines of a workout with each form of the run: the forms with a load show only for such lines. */
+const LOADED_RUNS = [
+  "400 m run",
+  "400 m run with a plate",
+  "200 m run with a plate overhead",
+  "400 m run with a medicine ball",
+  "800 m run with an empty barbell",
+];
+
 /** Each animated exercise once, with all forms. */
 const ALL: [string, Exercise][] = [
   ...new Map(
-    EXERCISE_IDS.flatMap((id) => variantsOf(id, []) ?? []).map((variant) => [
-      variant.exercise.key,
-      variant.exercise,
-    ]),
+    [
+      ...EXERCISE_IDS.flatMap((id) => variantsOf(id, []) ?? []),
+      ...(variantsOf("run", LOADED_RUNS) ?? []),
+    ].map((variant) => [variant.exercise.key, variant.exercise]),
   ).entries(),
 ];
 
 describe("the exercises", () => {
-  it("are all 78 animations of the prototype", () => {
-    expect(ALL).toHaveLength(78);
+  it("are all 82 animations of the prototype", () => {
+    expect(ALL).toHaveLength(82);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -149,6 +160,40 @@ describe("the exercises", () => {
     expect(floorDumbbellZ(equipment, ((first?.[0] ?? 0) + (first?.[1] ?? 0)) / 2)).toBeCloseTo(0);
     expect(floorDumbbellZ(equipment, ((first?.[1] ?? 0) + (second?.[0] ?? 0)) / 2)).toBe(-34);
     expect(floorDumbbellZ(equipment, 0.999)).toBe(34);
+  });
+
+  it.each([true, false])(
+    "draws an empty barbell without plates (from the side: %s)",
+    (fromSide) => {
+      const scene = {
+        joints: runOf(RUN_BARBELL).at(0).joints,
+        flat: fromSide
+          ? (v: Vec) => ({ x: v.x, y: v.y, depth: v.z })
+          : (v: Vec) => ({ x: -v.z, y: v.y, depth: v.x }),
+        fromSide,
+        progress: 0,
+        thrown: undefined,
+      };
+      const empty = equipmentParts(RUN_BARBELL.equipment, scene);
+      const loaded = equipmentParts({ kind: "barbell", onBack: true }, scene);
+      expect(empty.length).toBeLessThan(loaded.length);
+    },
+  );
+
+  it("holds the medicine ball above the middle of the hands", () => {
+    const { joints } = runOf(RUN_MEDICINE_BALL).at(0);
+    const scene = {
+      joints,
+      flat: (v: Vec) => ({ x: v.x, y: v.y, depth: v.z }),
+      fromSide: true,
+      progress: 0,
+      thrown: undefined,
+    };
+    const parts = equipmentParts(RUN_MEDICINE_BALL.equipment, scene);
+    expect(parts).toHaveLength(1);
+    const ball = parts[0]?.node as ReactElement<{ cy: number }>;
+    const hands = (joints.arms[0].end.y + joints.arms[1].end.y) / 2;
+    expect(ball.props.cy).toBeCloseTo(hands - 6);
   });
 
   it("gives a wide picture two columns", () => {
