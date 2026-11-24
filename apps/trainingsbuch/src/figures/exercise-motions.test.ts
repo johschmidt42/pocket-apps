@@ -5,20 +5,32 @@ import { ALTERNATING_DUMBBELL_SNATCH } from "./exercises/alternating-dumbbell-sn
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
-import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
+import { BOX_JUMP_OVER } from "./exercises/box-jump-over.ts";
+import { BOX_STEP_OVER } from "./exercises/box-step-over.ts";
+import { BURPEE_BAR_MUSCLE_UP } from "./exercises/burpee-bar-muscle-up.ts";
 import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
+import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
+import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
+import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
+import { DUMBBELL_SQUAT } from "./exercises/dumbbell-squat.ts";
 import { DUMBBELL_SQUAT_CLEAN } from "./exercises/dumbbell-squat-clean.ts";
 import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
-import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
+import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
+import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
-import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
+import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
+import { HANG_CLEAN } from "./exercises/hang-clean.ts";
+import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
+import { HANG_POWER_SNATCH } from "./exercises/hang-power-snatch.ts";
+import { KETTLEBELL_THRUSTER } from "./exercises/kettlebell-thruster.ts";
+import { KETTLEBELL_THRUSTER_SINGLE_ARM } from "./exercises/kettlebell-thruster-single-arm.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
@@ -239,6 +251,30 @@ describe("variantsOf", () => {
     expect(motions("ring-row", ["35 ring rows"])).toEqual([RING_ROW]);
   });
 
+  it.each([
+    ["box-jump-over", "Open 22.1", [BOX_JUMP_OVER]],
+    ["box-step-over", "Hammy", [BOX_STEP_OVER]],
+    ["burpee-bar-muscle-up", "Barraza", [BURPEE_BAR_MUSCLE_UP]],
+    ["burpee-over-dumbbell", "Open 24.1", [BURPEE_OVER_DUMBBELL]],
+    ["dumbbell-deadlift", "Ricky", [DUMBBELL_DEADLIFT]],
+    ["dumbbell-squat", "Open 18.2", [DUMBBELL_SQUAT]],
+    ["goblet-squat", "Garbo", [GOBLET_SQUAT]],
+    ["handstand", "Maxim 56", [HANDSTAND]],
+    ["hang-clean", "Tiff", [HANG_CLEAN]],
+    ["hang-power-snatch", "Andi", [HANG_POWER_SNATCH]],
+    ["kettlebell-thruster", "Strange", [KETTLEBELL_THRUSTER, KETTLEBELL_THRUSTER_SINGLE_ARM]],
+    ["kettlebell-thruster", "Bowen", [KETTLEBELL_THRUSTER_SINGLE_ARM]],
+  ] as const)("shows %s in %s", (id, name, exercises) => {
+    const workout = CATALOG.find((item) => item.name === name);
+    expect(motions(id, workout?.lines ?? [])).toEqual(exercises);
+  });
+
+  it("has no animation for the medicine-ball box step-overs of Open 26.1", () => {
+    const workout = CATALOG.find((item) => item.name === "Open 26.1");
+    expect(variantsOf("box-step-over", workout?.lines ?? [])).toBeNull();
+    expect(motions("box-jump-over", workout?.lines ?? [])).toEqual([BOX_JUMP_OVER]);
+  });
+
   it("shows the push press", () => {
     expect(motions("push-press", ["15 push presses, 52/35 kg"])).toEqual([PUSH_PRESS]);
   });
@@ -269,6 +305,7 @@ describe("variantsOf", () => {
     ["kettlebell-swing", ["American", "Russian"]],
     ["handstand-push-up", ["Kipping", "Strict"]],
     ["chest-to-bar", ["Kipping", "Strict"]],
+    ["kettlebell-thruster", ["Zwei", "Einarmig"]],
   ] as const)("offers the forms of %s", (id, labels) => {
     expect(variantsOf(id, [])?.map((variant) => variant.label)).toEqual(labels);
   });

@@ -447,12 +447,31 @@ function touchTime(from: { y: number }, wall: { y: number }, seconds: number): n
 /** The radius of the ball of the kettlebell, and how far its center is from the hands. */
 export const BELL = { radius: 10, away: 16 };
 
-/** The center of the ball of a kettlebell in both hands. It is in line with the forearms. */
-export function bellCenter(joints: Joints): Vec {
+/**
+ * The center of the ball of a kettlebell in both hands. It is in line with the forearms. With
+ * `hangs`, the bell hangs straight below the hands (a goblet hold: the hands hold the horns in
+ * front of the chest).
+ */
+export function bellCenter(joints: Joints, hangs = false): Vec {
   const [near, far] = joints.arms;
   const hand = mul(add(near.end, far.end), 0.5);
+  if (hangs) return add(hand, vec(0, BELL.away, 0));
   const elbow = mul(add(near.mid, far.mid), 0.5);
   return add(hand, mul(unit(sub(hand, elbow)), BELL.away));
+}
+
+/**
+ * The center of the ball of a kettlebell in one hand (`kettlebells`). It hangs straight below a
+ * hand that hangs (a farmers carry). When the forearm points up (a rack, overhead), the bell lies
+ * on the outside of the forearm: it goes out to the side by 14 and is only 8 below the hand, so it
+ * is not in the upper arm or the shoulder.
+ */
+export function heldBell(arm: Limb): Vec {
+  const hand = arm.end;
+  const forearm = unit(sub(hand, arm.mid));
+  const upward = Math.min(Math.max(-forearm.y, 0), 1);
+  const out = hand.z < 0 ? -1 : 1;
+  return add(hand, vec(0, BELL.away - 8 * upward, out * 14 * upward));
 }
 
 /**

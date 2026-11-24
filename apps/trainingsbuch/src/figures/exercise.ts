@@ -19,13 +19,18 @@ export type Equipment =
    * side, each one is a bar with two plates. From the front, it is a circle at the hand.
    */
   | { kind: "dumbbells" }
-  /** Two kettlebells, one in each hand. Each bell hangs straight below its hand (a farmers carry). */
-  | { kind: "kettlebells" }
+  /**
+   * Two kettlebells, one in each hand. Each bell hangs straight below its hand (a farmers carry). In
+   * a rack and overhead, the bell lies on the outside of the forearm (`heldBell`). `hand`: only this
+   * hand holds a bell (a single-arm lift).
+   */
+  | { kind: "kettlebells"; hand?: 0 | 1 }
   /**
    * A kettlebell in both hands. Give the two hands one spot and a small `grip` (2 to 3).
    * The bell is in line with the forearms: it hangs below hands that hang, and it is above hands that are overhead.
+   * `hangs: true`: the bell hangs straight below the hands, whatever the forearms do (the goblet squat).
    */
-  | { kind: "kettlebell" }
+  | { kind: "kettlebell"; hangs?: boolean }
   /**
    * A wall at `x = wall`, to the right of the figure.
    * In a handstand push-up, the back of the figure is at the wall, and the heels touch it.
@@ -95,7 +100,19 @@ export type Equipment =
    * `phase` is where it starts, as a part of one turn: 0 is over the head, 0.25 in front, 0.5 under the feet.
    * `radius` is how far the middle of the rope is from the hands.
    */
-  | { kind: "jumprope"; turns: number; phase: number; radius: number };
+  | { kind: "jumprope"; turns: number; phase: number; radius: number }
+  /**
+   * A dumbbell on the floor beside the figure, for a lateral jump over it (a lateral burpee over the
+   * dumbbell). The figure cannot move to the side, so the dumbbell does: it lies at `z = side` at
+   * the start, and in each part of the loop in `crossings` (from, to) it goes under the figure to
+   * the other side. Its handle goes along x, at `x`.
+   */
+  | {
+      kind: "floordumbbell";
+      x: number;
+      side: number;
+      crossings: readonly (readonly [number, number])[];
+    };
 
 /** A view: from which side the camera looks, and which part of the scene it shows. */
 export type View = {
@@ -143,6 +160,23 @@ export const isWide = (exercise: Exercise): boolean => {
 // The top is at -14: a bar overhead is at y = 12, and its plate has the radius 17.
 export const SIDE: View = { label: "Seite", yaw: 0, box: [14, -14, 120, 226] };
 export const FRONT: View = { label: "Vorn", yaw: 90, box: [-60, -14, 120, 226] };
+
+/** The z of a dumbbell on the floor at this part of the loop. It crosses with a smooth start and end. */
+export function floorDumbbellZ(
+  equipment: { side: number; crossings: readonly (readonly [number, number])[] },
+  progress: number,
+): number {
+  const part = progress - Math.floor(progress);
+  let z = equipment.side;
+  for (const [from, to] of equipment.crossings) {
+    if (part >= to) z = -z;
+    else if (part > from) {
+      const t = (part - from) / (to - from);
+      return z - 2 * z * t * t * (3 - 2 * t);
+    }
+  }
+  return z;
+}
 
 /** The hand that holds a single dumbbell at this part of the loop. */
 export function dumbbellHand(

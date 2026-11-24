@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
-import { dumbbellHand, type Equipment } from "./exercise.ts";
+import { dumbbellHand, floorDumbbellZ, type Equipment } from "./exercise.ts";
 import { BENCH, BIKE, pedalOf, RINGS, ROWER, SKIERG, strapOf } from "./machines.ts";
 import {
   BALL,
@@ -8,6 +8,7 @@ import {
   BELL,
   bellCenter,
   GROUND,
+  heldBell,
   item,
   SIDES,
   up,
@@ -264,10 +265,11 @@ function dumbbells({ joints, flat, fromSide }: Scene): Parts {
   });
 }
 
-function kettlebells({ joints, flat, fromSide }: Scene): Parts {
+function kettlebells({ joints, flat, fromSide }: Scene, hand: 0 | 1 | undefined): Parts {
   return SIDES.flatMap((side) => {
+    if (hand !== undefined && side !== hand) return [];
     const end = joints.arms[side].end;
-    const ball = flat(vec(end.x, end.y + BELL.away, end.z));
+    const ball = flat(heldBell(joints.arms[side]));
     return [
       bar(`handle${String(side)}`, ball.depth - 0.5, flat(end), ball, fromSide ? 4 : 7, "butt"),
       disc(`bell${String(side)}`, ball.depth, ball, BELL.radius),
@@ -275,12 +277,12 @@ function kettlebells({ joints, flat, fromSide }: Scene): Parts {
   });
 }
 
-function kettlebell({ joints, flat, fromSide }: Scene): Parts {
+function kettlebell({ joints, flat, fromSide }: Scene, hangs: boolean): Parts {
   const [near, far] = joints.arms;
   const hand = flat(
     vec((near.end.x + far.end.x) / 2, (near.end.y + far.end.y) / 2, (near.end.z + far.end.z) / 2),
   );
-  const ball = flat(bellCenter(joints));
+  const ball = flat(bellCenter(joints, hangs));
   // The handle goes from the hands to the ball. From the front, it is as wide as the two hands.
   return [
     bar("handle", ball.depth - 0.5, hand, ball, fromSide ? 4 : 11, "butt"),
@@ -429,6 +431,41 @@ function rings(scene: Scene, at: { x: number; y: number }): Parts {
     };
     return [...pieces, ring];
   });
+}
+
+/**
+ * A dumbbell on the floor, as a dumbbell in the hand: the handle goes along x, a head (radius 7) at
+ * each end. It goes under the figure to the other side in the parts of the loop in `crossings`.
+ */
+function floorDumbbell(
+  { flat, fromSide, progress }: Scene,
+  equipment: { x: number; side: number; crossings: readonly (readonly [number, number])[] },
+): Parts {
+  const z = floorDumbbellZ(equipment, progress);
+  const y = GROUND - 7;
+  const back = flat(vec(equipment.x - 9, y, z));
+  const front = flat(vec(equipment.x + 9, y, z));
+  const head = (key: string, end: FlatPoint) =>
+    fromSide
+      ? part(
+          end.depth,
+          <rect
+            key={key}
+            x={end.x - 3.5}
+            y={end.y - 7}
+            width={7}
+            height={14}
+            rx={2.5}
+            fill={COLOR}
+            stroke="none"
+          />,
+        )
+      : disc(key, end.depth, end, 7);
+  return [
+    bar("floorHandle", flat(vec(equipment.x, y, z)).depth - 0.5, back, front, 3.5),
+    head("floorBack", back),
+    head("floorFront", front),
+  ];
 }
 
 function jumpRope(
@@ -652,9 +689,9 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "dumbbells":
       return dumbbells(scene);
     case "kettlebells":
-      return kettlebells(scene);
+      return kettlebells(scene, equipment.hand);
     case "kettlebell":
-      return kettlebell(scene);
+      return kettlebell(scene, equipment.hangs === true);
     case "wall":
       return scene.fromSide
         ? [wallLine(equipment.side === "left" ? equipment.wall - 6 : equipment.wall)]
@@ -685,5 +722,7 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return rings(scene, equipment);
     case "jumprope":
       return jumpRope(scene, equipment.turns, equipment.phase, equipment.radius);
+    case "floordumbbell":
+      return floorDumbbell(scene, equipment);
   }
 }

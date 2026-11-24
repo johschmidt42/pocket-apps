@@ -4,15 +4,20 @@ import { describe, expect, it } from "vitest";
 import { EXERCISE_IDS } from "../exercises.ts";
 import { equipmentParts } from "./equipment-parts.tsx";
 import { runOf, variantsOf } from "./exercise-motions.ts";
-import { dumbbellHand, isWide, type Equipment, type Exercise } from "./exercise.ts";
+import { dumbbellHand, floorDumbbellZ, isWide, type Equipment, type Exercise } from "./exercise.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
+import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
+import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
+import { KETTLEBELL_THRUSTER_SINGLE_ARM } from "./exercises/kettlebell-thruster-single-arm.ts";
+import { KETTLEBELL_THRUSTER } from "./exercises/kettlebell-thruster.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
 import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { ROW } from "./exercises/row.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
 import { RINGS, ringAnchor, strapOf } from "./machines.ts";
-import { BODY, solve, type Vec } from "./skeleton.ts";
+import { BELL, bellCenter, BODY, heldBell, solve, type Vec } from "./skeleton.ts";
 
 const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 
@@ -27,8 +32,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 66 animations of the prototype", () => {
-    expect(ALL).toHaveLength(66);
+  it("are all 78 animations of the prototype", () => {
+    expect(ALL).toHaveLength(78);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -105,6 +110,45 @@ describe("the exercises", () => {
       (part) => part.id === undefined,
     );
     expect(rings.map((part) => part.over)).toEqual([["forearm0"], ["forearm1"]]);
+  });
+
+  it("lays a racked kettlebell on the outside of the forearm, and lets it hang in a carry", () => {
+    const rack = runOf(KETTLEBELL_THRUSTER).at(0).joints.arms[0];
+    expect(heldBell(rack).z).toBeGreaterThan(rack.mid.z + 10);
+    const carry = runOf(FARMERS_CARRY_KETTLEBELL).at(0).joints.arms[0];
+    expect(heldBell(carry)).toEqual({ x: carry.end.x, y: carry.end.y + BELL.away, z: carry.end.z });
+  });
+
+  it("hangs the bell of the goblet squat below the hands", () => {
+    const { joints } = runOf(GOBLET_SQUAT).at(0);
+    const bell = bellCenter(joints, true);
+    expect(bell.y - joints.arms[0].end.y).toBeCloseTo(BELL.away, 0);
+    expect(bellCenter(joints).y).toBeLessThan(bell.y);
+  });
+
+  it("draws one kettlebell in the single-arm thruster and two in the other form", () => {
+    const parts = (exercise: Exercise) => {
+      const scene = {
+        joints: runOf(exercise).at(0).joints,
+        flat: (v: Vec) => ({ x: v.x, y: v.y, depth: v.z }),
+        fromSide: true,
+        progress: 0,
+        thrown: undefined,
+      };
+      return equipmentParts(exercise.equipment, scene).length;
+    };
+    expect(parts(KETTLEBELL_THRUSTER)).toBe(4);
+    expect(parts(KETTLEBELL_THRUSTER_SINGLE_ARM)).toBe(2);
+  });
+
+  it("moves the dumbbell on the floor to the other side and back in the burpee over the dumbbell", () => {
+    const equipment = BURPEE_OVER_DUMBBELL.equipment;
+    if (equipment.kind !== "floordumbbell") throw new Error("no dumbbell on the floor");
+    const [first, second] = equipment.crossings;
+    expect(floorDumbbellZ(equipment, 0)).toBe(34);
+    expect(floorDumbbellZ(equipment, ((first?.[0] ?? 0) + (first?.[1] ?? 0)) / 2)).toBeCloseTo(0);
+    expect(floorDumbbellZ(equipment, ((first?.[1] ?? 0) + (second?.[0] ?? 0)) / 2)).toBe(-34);
+    expect(floorDumbbellZ(equipment, 0.999)).toBe(34);
   });
 
   it("gives a wide picture two columns", () => {

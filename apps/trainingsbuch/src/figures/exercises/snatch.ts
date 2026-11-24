@@ -44,7 +44,7 @@ export function overhead(hip: Spot2, lean: number, dx: number, shrug = 0): Spot2
 }
 
 /** A pose of the pull with straight arms: the bar is at `bar`, and the hip is as high as the arms permit. */
-function pulled(hipX: number, lean: number, bar: Spot2): Pose {
+export function pulled(hipX: number, lean: number, bar: Spot2): Pose {
   const shoulder = shoulderOf({ x: hipX, y: 0 }, lean);
   const hipY = bar.y - Math.sqrt(REACH ** 2 - (bar.x - shoulder.x) ** 2) - shoulder.y;
   return { ...pull, hip: { x: hipX, y: hipY }, lean, hands: bar, elbowTo: 150, elbowsOut: 3 };
@@ -60,11 +60,11 @@ const START: Pose = { ...pulled(48.5, 52, { x: 84, y: 189 }), head: -32 };
 const SHIN: Pose = { ...pulled(48.6, 51, { x: 85.7, y: 175 }), head: -32 };
 const KNEE: Pose = { ...pulled(50.2, 50, { x: 85.5, y: 161 }), head: -32 };
 // The middle of the transition: the knees come forward under the bar, the hip does not rise.
-const THIGH: Pose = { ...pulled(61, 33, { x: 84, y: 149 }), head: -20 };
+export const THIGH: Pose = { ...pulled(61, 33, { x: 84, y: 149 }), head: -20 };
 // The bar is as high as straight arms permit: at the top of the thighs. The torso is nearly vertical,
 // the knees are under the bar again and bent a little.
 const POWER_HIP = { x: 71, y: 123.5 };
-const POWER: Pose = {
+export const POWER: Pose = {
   ...pull,
   hip: POWER_HIP,
   lean: 9,
@@ -78,7 +78,7 @@ const POWER: Pose = {
 const EXTEND_HIP = { x: 77, y: 113 };
 // 1.2 inside the reach: the elbows start to bend.
 const EXTEND_BAR = { x: 86.4, y: hang(EXTEND_HIP, -5, 86.4, SHRUG.pull).y - 1.2 };
-const EXTEND: Pose = {
+export const EXTEND: Pose = {
   ...pull,
   feet: tiptoe(75, 125),
   toes: 125,

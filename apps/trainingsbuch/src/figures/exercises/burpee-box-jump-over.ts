@@ -47,7 +47,7 @@ export const at = (
 
 // ---------- The jump onto the box ----------
 const riseHip = { x: NEAR + 2, y: 130 };
-const RISE = at(riseHip, 22, 54, -14, { head: -12, feet: { x: NEAR, y: 200 } });
+export const RISE = at(riseHip, 22, 54, -14, { head: -12, feet: { x: NEAR, y: 200 } });
 const TAKE_TOES = 128;
 const takeAnkle = tiptoeFromToe(NEAR + 15, TAKE_TOES);
 const takeHip = {

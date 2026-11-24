@@ -5,14 +5,14 @@ import { handAt } from "../poses.ts";
 import { ANKLE, GROUND, tiptoeFromToe, type Pose, type Step } from "../skeleton.ts";
 
 /** A box of 50 cm (20 in), the height of most workouts. */
-const BOX = { x: 106, width: 54, height: 50 };
-const TOP = GROUND - BOX.height - ANKLE;
+export const BOX = { x: 106, width: 54, height: 50 };
+export const TOP = GROUND - BOX.height - ANKLE;
 
 type Spot = { x: number; y: number };
 
 /** The ankles on the floor and on the box. */
-const FLOOR: Spot = { x: 75, y: 200 };
-const ON: Spot = { x: 124, y: TOP };
+export const FLOOR: Spot = { x: 75, y: 200 };
+export const ON: Spot = { x: 124, y: TOP };
 /** A foot that goes up in front of the box: its toe stays before the edge. */
 const RISE: Spot = { x: 74, y: 160 };
 /** A foot above the edge of the box. */
@@ -21,7 +21,7 @@ const OVER: Spot = { x: 97, y: TOP - 17 };
 type Legs = { lead: Spot; trail: Spot; leadToes?: number; trailToes?: number };
 
 /** A pose. `first` is the side of the leg that goes first. */
-function pose(first: 0 | 1, hip: Spot, lean: number, legs: Legs, head = 0): Pose {
+export function pose(first: 0 | 1, hip: Spot, lean: number, legs: Legs, head = 0): Pose {
   const { lead, trail, leadToes = 90, trailToes = 90 } = legs;
   return {
     hip,

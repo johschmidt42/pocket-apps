@@ -14,8 +14,8 @@ const LINE = LEG + BODY.torso;
  * The hands stay on this spot in the whole loop. They are 22 in front of the wall and wider than the shoulders
  * (the shoulder joint is at z = 13): at the bottom, the forearms are then nearly vertical in the front view.
  */
-const HANDS = { x: WALL - 22, y: GROUND - 4.5 };
-const GRIP = 28;
+export const HANDS = { x: WALL - 22, y: GROUND - 4.5 };
+export const GRIP = 28;
 /**
  * The elbows point back to the wall (90 in the side view, the figure looks to -x) and out to the sides.
  * With these two values, the upper arm is about 45 degrees away from the body at the bottom.
