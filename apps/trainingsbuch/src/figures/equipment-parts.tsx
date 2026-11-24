@@ -370,7 +370,7 @@ function pullUpBar({ flat, fromSide }: Scene, x: number, y: number): Parts {
  * Two gymnastic rings. The hand holds the bottom of the ring, and the ring hangs in the line of its strap. Its
  * plane goes from the front to the back of the body (a neutral grip): from the side it is a circle, from the
  * front a bar. Each piece of the strap is compared with the body parts where they overlap: the near strap goes
- * over the near arm, the far strap behind the body.
+ * over the near arm, the far strap behind the body. Each ring is drawn over the forearm of its side.
  */
 function rings(scene: Scene, at: { x: number; y: number }): Parts {
   const { flat, joints } = scene;
@@ -411,17 +411,22 @@ function rings(scene: Scene, at: { x: number; y: number }): Parts {
         shape: { a, b, half: 1.5 },
       };
     });
-    const ring = part(
-      flat(hand).depth + 0.5,
-      <polygon
-        key={`ring${String(side)}`}
-        points={points.join(" ")}
-        fill="none"
-        stroke={COLOR}
-        strokeWidth={RINGS.thick}
-        strokeLinejoin="round"
-      />,
-    );
+    // The ring is always outside its forearm, like the strap: it is drawn over the forearm of its side. Only by
+    // depth, it would change sides when the elbow goes out (the bottom of a ring push-up).
+    const ring: Part<ReactNode> = {
+      ...part(
+        flat(hand).depth + 0.5,
+        <polygon
+          key={`ring${String(side)}`}
+          points={points.join(" ")}
+          fill="none"
+          stroke={COLOR}
+          strokeWidth={RINGS.thick}
+          strokeLinejoin="round"
+        />,
+      ),
+      over: [`forearm${String(side)}`],
+    };
     return [...pieces, ring];
   });
 }

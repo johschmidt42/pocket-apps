@@ -14,14 +14,14 @@ export const HAND_Y = GROUND - 4.5;
  * joints, the elbows can only go straight out to the side: a T (the user saw it, 2026-11-23). With this grip, the
  * forearm is nearly vertical at the bottom, and the upper arm can be 45 degrees away from the body.
  */
-const GRIP = 21;
+export const GRIP = 21;
 
 /**
  * The body as one straight line from the ankles to the shoulders. `tilt` is the angle of this line above
  * the floor, in degrees. `toes` is the angle of the feet: 180 points straight down.
  * The toe stays on its spot, so the ankle moves a little when the foot turns.
  */
-function body(tilt: number, toes: number) {
+export function body(tilt: number, toes: number) {
   const foot = up(toes);
   // `tiptoe()` takes the x of the ankle. The toe is 15 along the foot and 1.5 below its line.
   const ankle = tiptoe(TOE_X - foot.x * 15 + foot.y * 1.5, toes);
@@ -32,7 +32,7 @@ function body(tilt: number, toes: number) {
 }
 
 /** The tilt at which the shoulders are at the height `y`. */
-function tiltFor(shoulderY: number, toes: number): number {
+export function tiltFor(shoulderY: number, toes: number): number {
   const ankle = tiptoe(0, toes);
   return Math.asin((ankle.y - shoulderY) / (LEG + BODY.torso)) / RAD;
 }

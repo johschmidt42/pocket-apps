@@ -33,6 +33,7 @@ import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
 import { RING_MUSCLE_UP } from "./exercises/ring-muscle-up.ts";
+import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { RUN } from "./exercises/run.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
@@ -227,6 +228,10 @@ describe("variantsOf", () => {
   it("shows the ring muscle-up, also for a plain muscle-up", () => {
     expect(motions("ring-muscle-up", ["8 ring muscle-ups"])).toEqual([RING_MUSCLE_UP]);
     expect(motions("ring-muscle-up", ["Muscle-up"])).toEqual([RING_MUSCLE_UP]);
+  });
+
+  it("shows the ring push-up", () => {
+    expect(motions("ring-push-up", ["10 ring push-ups"])).toEqual([RING_PUSH_UP]);
   });
 
   it("shows the push press", () => {

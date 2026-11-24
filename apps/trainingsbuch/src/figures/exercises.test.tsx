@@ -7,6 +7,7 @@ import { runOf, variantsOf } from "./exercise-motions.ts";
 import { dumbbellHand, isWide, type Equipment, type Exercise } from "./exercise.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
+import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { ROW } from "./exercises/row.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
@@ -26,8 +27,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 64 animations of the prototype", () => {
-    expect(ALL).toHaveLength(64);
+  it("are all 65 animations of the prototype", () => {
+    expect(ALL).toHaveLength(65);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -90,6 +91,20 @@ describe("the exercises", () => {
     expect(near.points.length).toBeGreaterThan(2);
     expect(Math.max(...near.points.map((p) => p.z))).toBeGreaterThan(bottom.arms[0].end.z + 2);
     expect(Math.min(...far.points.map((p) => p.z))).toBeLessThan(bottom.arms[1].end.z - 2);
+  });
+
+  it("draws each ring over the forearm of its side, also when the elbow goes out", () => {
+    const scene = {
+      joints: runOf(RING_PUSH_UP).at(0.9).joints,
+      flat: (v: Vec) => ({ x: v.x, y: v.y, depth: v.z }),
+      fromSide: true,
+      progress: 0,
+      thrown: undefined,
+    };
+    const rings = equipmentParts(RING_PUSH_UP.equipment, scene).filter(
+      (part) => part.id === undefined,
+    );
+    expect(rings.map((part) => part.over)).toEqual([["forearm0"], ["forearm1"]]);
   });
 
   it("gives a wide picture two columns", () => {
