@@ -1,6 +1,6 @@
-// The three machines: where their parts are, and helpers that put the figure on them.
+// The machines and the rings: where their parts are, and helpers that put the figure on them.
 // All places are relative to the `x` of the equipment. The y values are absolute (the ground is at y = 206).
-import { GROUND, up } from "./skeleton.ts";
+import { GROUND, item, up, vec, type Joints, type Vec } from "./skeleton.ts";
 
 const RAD = Math.PI / 180;
 type Spot2 = { x: number; y: number };
@@ -95,3 +95,89 @@ export function leverHand(x: number, swing: number): Spot2 {
 
 /** A flat bench, with the sizes of the IPF rules: at least 1.22 m long, 29 to 32 cm wide, 42 to 45 cm high. */
 export const BENCH = { length: 117, halfWidth: 14.5, height: 42, pad: 7 };
+
+/**
+ * Gymnastic rings, with the sizes of the FIG norm: 18 cm inside, 2.8 cm thick. `radius` is the middle line of the
+ * ring. The two straps hang 50 cm apart (`half` to each side) and are about 3 m long (`strap`, to the grip).
+ */
+export const RINGS = { radius: 10, thick: 2.7, half: 24, strap: 288 };
+
+/**
+ * The point where the strap of the ring in `hand` hangs from. `x` and `y` of the equipment are the grip when the
+ * straps hang straight down. The side of the hand (its `z`) picks the strap.
+ */
+export function ringAnchor(rings: Spot2, hand: Vec): Vec {
+  return vec(rings.x, rings.y - RINGS.strap, hand.z < 0 ? -RINGS.half : RINGS.half);
+}
+
+const minus = (a: Vec, b: Vec): Vec => vec(a.x - b.x, a.y - b.y, a.z - b.z);
+const plus = (a: Vec, b: Vec): Vec => vec(a.x + b.x, a.y + b.y, a.z + b.z);
+const times = (a: Vec, k: number): Vec => vec(a.x * k, a.y * k, a.z * k);
+const norm = (a: Vec): Vec => times(a, 1 / (Math.hypot(a.x, a.y, a.z) || 1));
+
+/**
+ * How far a point must go out to the side (in z, away from the middle of the body) so that it is out of a
+ * limb. The limb is a thick line, `radius` to each side. 0: the point is not in the limb, or it cannot go out
+ * by z alone.
+ */
+function outOf(point: Vec, a: Vec, b: Vec, radius: number, out: number): number {
+  const ab = minus(b, a);
+  const length2 = ab.x * ab.x + ab.y * ab.y + ab.z * ab.z;
+  const along = (point.x - a.x) * ab.x + (point.y - a.y) * ab.y + (point.z - a.z) * ab.z;
+  const nearest = plus(a, times(ab, Math.min(Math.max(along / (length2 || 1), 0), 1)));
+  const flat = Math.hypot(point.x - nearest.x, point.y - nearest.y);
+  if (flat >= radius) return 0;
+  return Math.max(Math.sqrt(radius * radius - flat * flat) - (point.z - nearest.z) * out, 0);
+}
+
+/** The upper hull of points (distance along the strap, push): a tight rope touches the highest ones. */
+function upperHull(points: readonly (readonly [number, number])[]): [number, number][] {
+  const hull: [number, number][] = [];
+  for (const [s, push] of points) {
+    while (hull.length >= 2) {
+      const [as, ap] = item(hull, hull.length - 2);
+      const [bs, bp] = item(hull, hull.length - 1);
+      if ((bs - as) * (push - ap) - (bp - ap) * (s - as) < 0) break;
+      hull.pop();
+    }
+    hull.push([s, push]);
+  }
+  return hull;
+}
+
+/**
+ * The strap of the ring in the hand of `side`, from the top of the ring to its anchor. The strap is a tight
+ * rope: where the arm of the same side is in its way, the arm pushes it out to the side, and the rope goes in
+ * straight lines around it. The radii are half the widths of the drawn arm plus half the strap. `up` is the
+ * direction from the hand to the top of the ring: the ring hangs in the line of the lowest piece.
+ */
+export function strapOf(rings: Spot2, joints: Joints, side: 0 | 1): { points: Vec[]; up: Vec } {
+  const arm = joints.arms[side];
+  const anchor = ringAnchor(rings, arm.end);
+  const out = arm.end.z < 0 ? -1 : 1;
+  const limbs: [Vec, Vec, number][] = [
+    [arm.root, arm.mid, 5 + 1.5],
+    [arm.mid, arm.end, 4.5 + 1.5],
+  ];
+  let up = norm(minus(anchor, arm.end));
+  let points: Vec[] = [];
+  // Twice: the first pass finds where the rope bends, the second hangs the ring in the line of the lowest piece.
+  for (let pass = 0; pass < 2; pass++) {
+    const top = plus(arm.end, times(up, 2 * RINGS.radius));
+    const along = norm(minus(anchor, top));
+    const length = Math.hypot(anchor.x - top.x, anchor.y - top.y, anchor.z - top.z);
+    // How far each point of a straight strap must go out. The body is at most 150 above the ring.
+    const pushed: [number, number][] = [[0, 0]];
+    for (let s = 1; s < Math.min(150, length); s += 1) {
+      const point = plus(top, times(along, s));
+      const push = Math.max(...limbs.map(([a, b, radius]) => outOf(point, a, b, radius, out)));
+      if (push > 0) pushed.push([s, push]);
+    }
+    pushed.push([length, 0]);
+    points = upperHull(pushed).map(([s, push]) =>
+      plus(plus(top, times(along, s)), vec(0, 0, push * out)),
+    );
+    up = norm(minus(item(points, 1), arm.end));
+  }
+  return { points, up };
+}

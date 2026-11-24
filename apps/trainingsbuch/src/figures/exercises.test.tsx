@@ -6,9 +6,11 @@ import { equipmentParts } from "./equipment-parts.tsx";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { dumbbellHand, isWide, type Equipment, type Exercise } from "./exercise.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { RING_DIP } from "./exercises/ring-dip.ts";
 import { ROW } from "./exercises/row.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { Figure } from "./figure.tsx";
+import { RINGS, ringAnchor, strapOf } from "./machines.ts";
 import { BODY, solve, type Vec } from "./skeleton.ts";
 
 const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
@@ -24,8 +26,8 @@ const ALL: [string, Exercise][] = [
 ];
 
 describe("the exercises", () => {
-  it("are all 62 animations of the prototype", () => {
-    expect(ALL).toHaveLength(62);
+  it("are all 63 animations of the prototype", () => {
+    expect(ALL).toHaveLength(63);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -71,6 +73,23 @@ describe("the exercises", () => {
 
   it("keeps a dumbbell without a swap in its hand", () => {
     expect(dumbbellHand({ hand: 1 }, 0.5)).toBe(1);
+  });
+
+  it("hangs the rings straight in the support and lets the arm push the strap out at the bottom", () => {
+    const rings = { x: 80, y: 92 };
+    const top = runOf(RING_DIP).at(0).joints;
+    for (const side of [0, 1] as const) {
+      const strap = strapOf(rings, top, side);
+      const hand = top.arms[side].end;
+      expect(distance(hand, ringAnchor(rings, hand))).toBeLessThanOrEqual(RINGS.strap + 1);
+      expect(strap.points.at(-1)).toEqual(ringAnchor(rings, hand));
+    }
+    const bottom = runOf(RING_DIP).at(1.25).joints;
+    const near = strapOf(rings, bottom, 0);
+    const far = strapOf(rings, bottom, 1);
+    expect(near.points.length).toBeGreaterThan(2);
+    expect(Math.max(...near.points.map((p) => p.z))).toBeGreaterThan(bottom.arms[0].end.z + 2);
+    expect(Math.min(...far.points.map((p) => p.z))).toBeLessThan(bottom.arms[1].end.z - 2);
   });
 
   it("gives a wide picture two columns", () => {

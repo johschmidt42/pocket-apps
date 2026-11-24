@@ -31,6 +31,7 @@ import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
+import { RING_DIP } from "./exercises/ring-dip.ts";
 import { RUN } from "./exercises/run.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
@@ -216,6 +217,10 @@ describe("variantsOf", () => {
   it("shows the pistol, also for alternating legs", () => {
     expect(motions("pistol", ["10 pistols"])).toEqual([PISTOL]);
     expect(motions("pistol", ["60 pistols, alternating legs"])).toEqual([PISTOL]);
+  });
+
+  it("shows the ring dip", () => {
+    expect(motions("ring-dip", ["10 strict ring dips"])).toEqual([RING_DIP]);
   });
 
   it("shows the push press", () => {

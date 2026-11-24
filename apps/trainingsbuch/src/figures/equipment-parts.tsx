@@ -1,13 +1,14 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
 import { dumbbellHand, type Equipment } from "./exercise.ts";
-import { BENCH, BIKE, pedalOf, ROWER, SKIERG } from "./machines.ts";
+import { BENCH, BIKE, pedalOf, RINGS, ROWER, SKIERG, strapOf } from "./machines.ts";
 import {
   BALL,
   ballCenter,
   BELL,
   bellCenter,
   GROUND,
+  item,
   SIDES,
   up,
   vec,
@@ -365,6 +366,66 @@ function pullUpBar({ flat, fromSide }: Scene, x: number, y: number): Parts {
   return [bar("pullupbar", center.depth - 0.5, flat(vec(x, y, -48)), flat(vec(x, y, 48)), 5)];
 }
 
+/**
+ * Two gymnastic rings. The hand holds the bottom of the ring, and the ring hangs in the line of its strap. Its
+ * plane goes from the front to the back of the body (a neutral grip): from the side it is a circle, from the
+ * front a bar. Each piece of the strap is compared with the body parts where they overlap: the near strap goes
+ * over the near arm, the far strap behind the body.
+ */
+function rings(scene: Scene, at: { x: number; y: number }): Parts {
+  const { flat, joints } = scene;
+  return SIDES.flatMap((side) => {
+    const hand = joints.arms[side].end;
+    const strap = strapOf(at, joints, side);
+    const rise = strap.up;
+    // In the plane of the ring: `rise` along the strap, and the forward direction at a right angle to it.
+    const ahead = vec(1 - rise.x * rise.x, -rise.x * rise.y, -rise.x * rise.z);
+    const size = Math.hypot(ahead.x, ahead.y, ahead.z) || 1;
+    const forward = vec(ahead.x / size, ahead.y / size, ahead.z / size);
+    const { radius } = RINGS;
+    const center = vec(
+      hand.x + rise.x * radius,
+      hand.y + rise.y * radius,
+      hand.z + rise.z * radius,
+    );
+    const points = Array.from({ length: 24 }, (_, index) => {
+      const angle = (index / 24) * 2 * Math.PI;
+      const cos = Math.cos(angle) * radius;
+      const sin = Math.sin(angle) * radius;
+      const p = flat(
+        vec(
+          center.x + forward.x * cos + rise.x * sin,
+          center.y + forward.y * cos + rise.y * sin,
+          center.z + forward.z * cos + rise.z * sin,
+        ),
+      );
+      return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+    });
+    const pieces = strap.points.slice(1).map((to, index): Part<ReactNode> => {
+      const a = flat(item(strap.points, index));
+      const b = flat(to);
+      const id = `strap${String(side)}-${String(index)}`;
+      return {
+        ...bar(id, (a.depth + b.depth) / 2, a, b, 3, "butt"),
+        id,
+        shape: { a, b, half: 1.5 },
+      };
+    });
+    const ring = part(
+      flat(hand).depth + 0.5,
+      <polygon
+        key={`ring${String(side)}`}
+        points={points.join(" ")}
+        fill="none"
+        stroke={COLOR}
+        strokeWidth={RINGS.thick}
+        strokeLinejoin="round"
+      />,
+    );
+    return [...pieces, ring];
+  });
+}
+
 function jumpRope(
   { joints, flat, fromSide, progress }: Scene,
   turns: number,
@@ -615,6 +676,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return rope(scene, equipment.x);
     case "pullupbar":
       return pullUpBar(scene, equipment.x, equipment.y);
+    case "rings":
+      return rings(scene, equipment);
     case "jumprope":
       return jumpRope(scene, equipment.turns, equipment.phase, equipment.radius);
   }

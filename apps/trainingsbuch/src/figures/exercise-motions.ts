@@ -46,6 +46,7 @@ import { PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { PUSH_UP } from "./exercises/push-up.ts";
+import { RING_DIP } from "./exercises/ring-dip.ts";
 import { ROPE_CLIMB } from "./exercises/rope-climb.ts";
 import { ROW } from "./exercises/row.ts";
 import { RUN } from "./exercises/run.ts";
@@ -139,6 +140,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "push-jerk": only(PUSH_JERK),
   "push-press": only(PUSH_PRESS),
   "push-up": only(PUSH_UP),
+  "ring-dip": only(RING_DIP),
   "rope-climb": only(ROPE_CLIMB),
   row: only(ROW),
   run: only(RUN),

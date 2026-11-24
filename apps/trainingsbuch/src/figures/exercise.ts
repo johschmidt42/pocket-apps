@@ -86,6 +86,11 @@ export type Equipment =
    */
   | { kind: "pullupbar"; x: number; y: number }
   /**
+   * Two gymnastic rings, one in each hand (see `RINGS` in `machines.ts`). `x` and `y` are the grip when the
+   * straps hang straight down. The hand holds the bottom of the ring: the ring is above the hand.
+   */
+  | { kind: "rings"; x: number; y: number }
+  /**
    * A jump rope from hand to hand. It turns `turns` times in one loop of the exercise.
    * `phase` is where it starts, as a part of one turn: 0 is over the head, 0.25 in front, 0.5 under the feet.
    * `radius` is how far the middle of the rope is from the hands.
