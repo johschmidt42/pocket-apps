@@ -19,8 +19,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  github-pages:
-    name: Publish on GitHub Pages
+  prepare:
+    name: Prepare the release files
     # Only after a successful push to main of this repository. Not for pull requests or forks.
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
@@ -30,15 +30,9 @@ jobs:
     runs-on: ubuntu-latest
     # The check waits up to 10 minutes for the other CI pipelines.
     timeout-minutes: 20
-    # Only this job may publish on GitHub Pages.
     permissions:
       contents: read
       actions: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       # Publish only the newest state of main, and only if all CI pipelines passed for it.
       # A re-run of an old run must not overwrite newer files.
@@ -88,26 +82,22 @@ jobs:
         with:
           path: release
 
-      # The upload is finished, but the artifact list of GitHub can show the artifact some seconds
-      # later. "deploy-pages" asks for it at once and then fails with "Found 0 artifact(s)".
-      - name: Wait until GitHub lists the Pages artifact
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          for attempt in $(seq 1 24); do
-            count=$(gh api "repos/${REPO}/actions/runs/${RUN_ID}/artifacts?name=github-pages" --jq '.total_count')
-            if [ "$count" -gt 0 ]; then
-              echo "GitHub lists the artifact github-pages."
-              exit 0
-            fi
-            echo "Waiting for the artifact list (attempt ${attempt}/24) ..."
-            sleep 5
-          done
-          echo "::error::GitHub did not list the artifact github-pages after 2 minutes."
-          exit 1
-
+  # A separate job, as in the Pages template of GitHub: "deploy-pages" lists the artifacts of the
+  # run through the artifact service, and in the job that uploaded the artifact, that list can
+  # still be empty ("Found 0 artifact(s)").
+  github-pages:
+    name: Publish on GitHub Pages
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only this job may publish on GitHub Pages.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
       - name: Publish on GitHub Pages
         id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
