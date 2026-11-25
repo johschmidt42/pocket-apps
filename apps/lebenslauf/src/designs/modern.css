@@ -141,6 +141,14 @@ h3 {
   stroke-width: 2;
 }
 
+/* The profile: a short text under the head, a little larger than the body text. */
+.cv-profile {
+  margin-bottom: 5mm;
+  font-size: 9.5pt;
+  line-height: 1.4;
+  break-inside: avoid;
+}
+
 /* Sections: a title in the accent color and a thin line to the right. */
 
 .cv-section + .cv-section {

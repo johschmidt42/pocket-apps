@@ -24,6 +24,7 @@ const DATA: LebenslaufData = {
       design: "klassisch",
       language: "en",
       photo: null,
+      profile: "",
       sections: [
         {
           id: "work",
@@ -56,7 +57,15 @@ const DATA: LebenslaufData = {
         },
       ],
     },
-    { id: "v2", name: "Firma X", design: "klassisch", language: "de", photo: null, sections: [] },
+    {
+      id: "v2",
+      name: "Firma X",
+      design: "klassisch",
+      language: "de",
+      photo: null,
+      profile: "",
+      sections: [],
+    },
   ],
 };
 
@@ -214,6 +223,10 @@ describe("Lebenslauf", () => {
       entries: [
         {
           title: "Shop",
+          role: "",
+          client: "",
+          from: null,
+          to: null,
           description: "Ein Online-Shop",
           tasks: ["APIs", "Tests"],
           tools: ["Python", "Docker"],
@@ -452,6 +465,127 @@ describe("Lebenslauf", () => {
     expect(screen.getByRole("option", { name: /Standard \(Kopie\)/, selected: true })).toBeTruthy();
   });
 
+  it("adds a role, a client and a time range to a project", async () => {
+    const { folder, user } = await openApp();
+    await addSection(user, "Projekte", "projects");
+    await user.click(screen.getByRole("button", { name: "Eintrag hinzufügen" }));
+    await user.type(screen.getByLabelText("Titel"), "Shop");
+
+    await user.type(screen.getByLabelText("Bis"), "2024-06");
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    expect(screen.getByText("Bitte einen Start eingeben, oder das Ende leeren.")).toBeVisible();
+
+    await user.type(screen.getByLabelText("Von"), "2024-09");
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    expect(screen.getByText("Das Ende darf nicht vor dem Start liegen.")).toBeVisible();
+
+    await user.clear(screen.getByLabelText("Von"));
+    await user.click(screen.getByLabelText(/Bis heute/));
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    expect(
+      screen.getByText("Bitte einen Start eingeben, oder „bis heute“ abwählen."),
+    ).toBeVisible();
+
+    await user.type(screen.getByLabelText("Von"), "2024-09");
+    await user.type(screen.getByLabelText("Rolle"), "Lead Engineer");
+    await user.type(screen.getByLabelText("Kunde"), "Medienkonzern");
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+
+    expect(cv().getByText("Seit 09/2024")).toBeTruthy();
+    expect(cv().getByText("Lead Engineer")).toBeTruthy();
+    expect(cv().getByText("Medienkonzern")).toBeTruthy();
+    expect((await saved(folder)).variants[0]!.sections[0]).toMatchObject({
+      entries: [{ role: "Lead Engineer", client: "Medienkonzern", from: "2024-09", to: null }],
+    });
+
+    await user.click(editButton(/^Shop/));
+    expect(screen.getByLabelText(/Bis heute/)).toBeChecked();
+    await user.click(screen.getByLabelText(/Bis heute/));
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    expect(screen.getByText("Bitte ein Ende eingeben, oder „bis heute“ wählen.")).toBeVisible();
+    await user.type(screen.getByLabelText("Bis"), "2025-02");
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    expect(cv().getByText("09/2024 – 02/2025")).toBeTruthy();
+
+    await user.click(editButton(/^Shop/));
+    await user.clear(screen.getByLabelText("Von"));
+    await user.clear(screen.getByLabelText("Bis"));
+    await user.click(screen.getByRole("button", { name: "Speichern" }));
+    expect(cv().queryByText("09/2024 – 02/2025")).toBeNull();
+    expect((await saved(folder)).variants[0]!.sections[0]).toMatchObject({
+      entries: [{ from: null, to: null }],
+    });
+  });
+
+  it("shows the example in the design projektprofil", async () => {
+    const { user } = await openApp();
+    await user.click(screen.getByRole("button", { name: "Beispiel laden" }));
+
+    await user.click(screen.getByRole("radio", { name: "Projektprofil" }));
+
+    expect(screen.getByRole("radio", { name: "Projektprofil" })).toBeChecked();
+    expect(cv().getByRole("heading", { level: 3, name: "Order Analytics Platform" })).toBeTruthy();
+    expect(cv().getByText("Seit 03/2024")).toBeTruthy();
+    expect(cv().getByText("01/2023 – 12/2023")).toBeTruthy();
+    expect(cv().getByText("Lead Backend Engineer")).toBeTruthy();
+    expect(cv().getByText("Online retailer")).toBeTruthy();
+    expect(
+      within(cv().getAllByRole("list", { name: "Tools" })[0]!)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Python", "FastAPI", "PostgreSQL", "Docker", "GitHub Actions"]);
+    expect(cv().getByText("Master thesis: Image segmentation with neural networks")).toBeTruthy();
+  });
+
+  it("shows the profile of the active variant under the head", async () => {
+    const { folder, user } = await openApp(DATA);
+
+    await user.type(screen.getByLabelText("Profiltext"), "Backend engineer for AI platforms.");
+
+    expect(cv().getByText("Backend engineer for AI platforms.")).toBeTruthy();
+    expect((await saved(folder)).variants[0]?.profile).toBe("Backend engineer for AI platforms.");
+
+    await user.selectOptions(screen.getByLabelText("Variante"), "v2");
+    expect(screen.getByLabelText("Profiltext")).toHaveValue("");
+    expect(cv().queryByText("Backend engineer for AI platforms.")).toBeNull();
+  });
+
+  it("shows long list values one per line in the design projektprofil", async () => {
+    const certificates = ["AZ-204: Microsoft Azure Developer Associate", "AZ-900"];
+    const variant = DATA.variants[0]!;
+    const { user } = await openApp({
+      ...DATA,
+      variants: [
+        {
+          ...variant,
+          sections: [
+            {
+              id: "skills",
+              title: "Skills",
+              kind: "list",
+              entries: [
+                { id: "l1", label: "Languages", items: ["German", "English"] },
+                { id: "l2", label: "Certifications", items: certificates },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    await user.click(screen.getByRole("radio", { name: "Projektprofil" }));
+
+    // The first list of the CV holds the contact lines.
+    const [languages, certifications] = cv().getAllByRole("list").slice(-2);
+    expect(languages).not.toHaveClass("cv-list-stacked");
+    expect(certifications).toHaveClass("cv-list-stacked");
+    expect(
+      within(certifications!)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(certificates);
+  });
+
   it("shows the projects of the example in the design modern", async () => {
     const { user } = await openApp();
     await user.click(screen.getByRole("button", { name: "Beispiel laden" }));
@@ -493,7 +627,7 @@ describe("Lebenslauf", () => {
       sections: DATA.variants[0]!.sections,
     });
     const envelope = JSON.parse(folder.files.get(FILE)?.text ?? "") as { schemaVersion: number };
-    expect(envelope.schemaVersion).toBe(2);
+    expect(envelope.schemaVersion).toBe(3);
     // The file of version 1 stays as a backup.
     expect(folder.files.has("lebenslauf/lebenslauf.backup-v1.json")).toBe(true);
   });

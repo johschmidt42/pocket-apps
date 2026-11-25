@@ -1,0 +1,368 @@
+/*
+ * The design "projektprofil". This CSS applies only inside the CV frame (an iframe), never to
+ * the app. A project profile for freelance bids: a dark head card (ink blue), one accent color
+ * (burnt orange), and two columns per entry: the time range, the role and the client on the
+ * left, the title, the text, the tasks and the tools as chips on the right.
+ *
+ * As in "klassisch": the page has no margin, so that Chrome prints no headers and footers.
+ * The padding of `.cv` (12 mm, `pageMargin` in designs.ts) makes the space at the top and the
+ * bottom of each page, and print repeats it on each page (box-decoration-break: clone).
+ */
+
+/* eslint-disable-next-line css/use-baseline -- the apps support only Chrome and Edge, which print with @page */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+:root {
+  --cv-ink: #172033;
+  --cv-accent: #c2410c;
+  --cv-accent-light: #fb923c;
+  --cv-text: #1e293b;
+  --cv-muted: #64748b;
+  --cv-line: #e2e8f0;
+  --cv-head-text: #cbd5e1;
+  --cv-chip: #fff7ed;
+  --cv-chip-text: #9a3412;
+  --cv-chip-line: #fed7aa;
+
+  color-scheme: light;
+  background: #d6d3d1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--cv-text);
+  font-family: "Helvetica Neue", Helvetica, "Segoe UI", Arial, sans-serif;
+  font-size: 8.6pt;
+  line-height: 1.3;
+  /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; else the head card and the chips lose their colors in print */
+  print-color-adjust: exact;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+p,
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+.cv {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  padding: 12mm 14mm;
+  background: #fff;
+}
+
+/* Head: a dark card with the name, the contact lines and the photo on the right. */
+
+.cv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8mm;
+  margin-bottom: 4.5mm;
+  padding: 5mm 7mm;
+  border-radius: 2.5mm;
+  background: var(--cv-ink);
+  color: #fff;
+}
+
+.cv-head-text {
+  min-width: 0;
+}
+
+.cv-name {
+  font-size: 22pt;
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.cv-name-last {
+  font-weight: 700;
+}
+
+/* A short accent line under the name. */
+.cv-name::after {
+  display: block;
+  width: 14mm;
+  height: 0.9mm;
+  margin-top: 2.5mm;
+  border-radius: 0.5mm;
+  background: var(--cv-accent-light);
+  content: "";
+}
+
+.cv-contacts {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 1.6mm 7mm;
+  margin-top: 3.5mm;
+  padding: 0;
+  color: var(--cv-head-text);
+  font-size: 8.3pt;
+  list-style: none;
+}
+
+.cv-contacts li {
+  display: flex;
+  align-items: center;
+  gap: 1.8mm;
+}
+
+.cv-contacts svg {
+  flex: none;
+  width: 3.4mm;
+  height: 3.4mm;
+  color: var(--cv-accent-light);
+  stroke-width: 2;
+}
+
+.cv-photo {
+  display: flex;
+  flex: 0 0 25mm;
+  align-items: center;
+  justify-content: center;
+  height: 31mm;
+  overflow: hidden;
+  border: 0.7mm solid #fff;
+  border-radius: 2mm;
+  background: #334155;
+  color: #94a3b8;
+}
+
+.cv-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cv-photo svg {
+  width: 12mm;
+  height: 12mm;
+  stroke-width: 1.2;
+}
+
+/* The profile: a short text under the head card, a little larger than the body text. */
+.cv-profile {
+  margin-bottom: 4.5mm;
+  color: var(--cv-ink);
+  font-size: 9.4pt;
+  line-height: 1.4;
+  break-inside: avoid;
+}
+
+/* Sections: an orange mark, an upper-case title in ink blue and a thin line to the right. */
+
+.cv-section + .cv-section {
+  margin-top: 4mm;
+}
+
+.cv-section-title {
+  display: flex;
+  align-items: center;
+  gap: 2.5mm;
+  margin-bottom: 2mm;
+  color: var(--cv-ink);
+  font-size: 10.5pt;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; keeps a title with its first entry */
+  break-after: avoid;
+}
+
+.cv-section-title::before {
+  flex: none;
+  width: 1.2mm;
+  height: 4mm;
+  border-radius: 0.4mm;
+  background: var(--cv-accent);
+  content: "";
+}
+
+.cv-section-title::after {
+  flex: 1;
+  height: 0.3mm;
+  background: var(--cv-line);
+  content: "";
+}
+
+/* Entries: two columns. A thin line separates two entries. */
+
+.cv-entry {
+  display: grid;
+  grid-template-columns: 30mm 1fr;
+  gap: 4mm;
+  break-inside: avoid;
+}
+
+.cv-entry + .cv-entry {
+  margin-top: 2mm;
+  padding-top: 2mm;
+  border-top: 0.2mm solid var(--cv-line);
+}
+
+.cv-meta {
+  min-width: 0;
+}
+
+.cv-date {
+  color: var(--cv-ink);
+  font-size: 8.3pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cv-role {
+  margin-top: 0.8mm;
+  color: var(--cv-accent);
+  font-size: 8.3pt;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cv-client {
+  margin-top: 0.8mm;
+  color: var(--cv-muted);
+  font-size: 8pt;
+  line-height: 1.25;
+}
+
+.cv-body {
+  min-width: 0;
+}
+
+.cv-entry-title {
+  color: var(--cv-ink);
+  font-size: 10.5pt;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cv-subtitle {
+  margin-top: 0.3mm;
+  color: var(--cv-muted);
+  font-size: 8.5pt;
+}
+
+.cv-description {
+  margin-top: 0.8mm;
+  color: var(--cv-muted);
+}
+
+.cv-bullets {
+  margin-top: 1.2mm;
+  padding-left: 3.5mm;
+  list-style: none;
+}
+
+.cv-bullets li {
+  position: relative;
+}
+
+.cv-bullets li + li {
+  margin-top: 0.2mm;
+}
+
+/* An orange dash before each task. A text character, not a box: a box of 0.45 mm falls on
+   parts of a pixel, and the browser then draws the dashes in different widths. */
+.cv-bullets li::before {
+  position: absolute;
+  top: 0;
+  left: -3.4mm;
+  color: var(--cv-accent);
+  font-weight: 700;
+  content: "–";
+}
+
+/* The tools of a project as chips. */
+
+.cv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1mm;
+  margin-top: 1.6mm;
+  padding: 0;
+  list-style: none;
+}
+
+.cv-chips li {
+  padding: 0.2mm 1.6mm;
+  border: 0.2mm solid var(--cv-chip-line);
+  border-radius: 1mm;
+  background: var(--cv-chip);
+  color: var(--cv-chip-text);
+  font-size: 7.4pt;
+  line-height: 1.4;
+}
+
+/* Lists (for example languages and certificates): the label on the left, the values in a line. */
+
+.cv-list-row + .cv-list-row {
+  margin-top: 1.2mm;
+  padding-top: 1.2mm;
+}
+
+.cv-list-label {
+  color: var(--cv-ink);
+  font-size: 8.8pt;
+  font-weight: 700;
+}
+
+.cv-list-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6mm 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A dot after each value but the last. Thus a line never starts with a dot. */
+.cv-list-items li:not(:last-child)::after {
+  margin: 0 2mm;
+  color: var(--cv-accent);
+  content: "·";
+}
+
+/* A row with long values: one value per line, without dots. */
+.cv-list-stacked {
+  flex-direction: column;
+}
+
+.cv-list-stacked li:not(:last-child)::after {
+  content: none;
+}
+
+@media print {
+  :root {
+    background: none;
+  }
+
+  /* Without a photo, the PDF keeps the place free but shows no placeholder. */
+  .cv-photo-empty {
+    visibility: hidden;
+  }
+
+  /* The padding repeats at the top and the bottom of each page (box-decoration-break: clone). */
+  .cv {
+    width: auto;
+    min-height: 0;
+    /* eslint-disable-next-line css/use-baseline -- Chrome and Edge only; repeats the padding on each page */
+    box-decoration-break: clone;
+  }
+}

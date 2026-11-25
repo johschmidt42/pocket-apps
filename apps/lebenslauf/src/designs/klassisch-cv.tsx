@@ -2,7 +2,7 @@ import { UserRound } from "lucide-react";
 import { Fragment } from "react";
 import { CONTACT_ICONS } from "../contact-kinds.ts";
 import type { ListRow, Person, Project, Section, Station, Variant } from "../schema.ts";
-import { contactHref, formatMonth, keyedLines } from "../text.ts";
+import { contactHref, formatMonth, formatRange, keyedLines } from "../text.ts";
 import { CV_LABELS, type CvLabels } from "./labels.ts";
 
 export type KlassischCvProps = {
@@ -56,6 +56,11 @@ export function KlassischCv({ person, variant, photoUrl }: KlassischCvProps) {
           </div>
         )}
       </header>
+      {variant.profile.trim() !== "" && (
+        <p className="cv-profile" data-page-unit="">
+          {variant.profile.trim()}
+        </p>
+      )}
       {variant.sections.map((section) => (
         <section key={section.id} className="cv-section" data-section-id={section.id}>
           <h2 className="cv-section-title" data-page-unit="keep-with-next">
@@ -96,10 +101,29 @@ function SectionEntries({ section, labels }: { section: Section; labels: CvLabel
 }
 
 function ProjectBlock({ project, labels }: { project: Project; labels: CvLabels }) {
+  const range = formatRange(project.from, project.to, labels.since);
   return (
     <div className="cv-project" data-page-unit="" data-entry-id={project.id}>
       <h3 className="cv-project-title">{project.title}</h3>
       <dl className="cv-rows">
+        {range !== null && (
+          <div className="cv-row">
+            <dt>{labels.period}</dt>
+            <dd>{range}</dd>
+          </div>
+        )}
+        {project.role.trim() !== "" && (
+          <div className="cv-row">
+            <dt>{labels.role}</dt>
+            <dd>{project.role}</dd>
+          </div>
+        )}
+        {project.client.trim() !== "" && (
+          <div className="cv-row">
+            <dt>{labels.client}</dt>
+            <dd>{project.client}</dd>
+          </div>
+        )}
         {project.description.trim() !== "" && (
           <div className="cv-row">
             <dt>{labels.description}</dt>

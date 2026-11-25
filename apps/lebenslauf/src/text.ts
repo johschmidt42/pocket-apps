@@ -31,6 +31,13 @@ export function keyedLines(lines: readonly string[]): { key: string; text: strin
   });
 }
 
+/** "Erika Maria Mustermann" → ["Erika Maria", "Mustermann"], for a design with a bold last name. */
+export function splitName(name: string): [string, string] {
+  const words = name.trim().split(/\s+/);
+  const last = words.pop() ?? "";
+  return [words.join(" "), last];
+}
+
 /** True for a month like "2024-01". */
 export function isMonth(text: string): boolean {
   return MONTH_PATTERN.test(text);
@@ -40,6 +47,17 @@ export function isMonth(text: string): boolean {
 export function formatMonth(month: string): string {
   const [year = "", number = ""] = month.split("-");
   return `${number}/${year}`;
+}
+
+/**
+ * The time range of a project: "01/2024 – 06/2024", "Since 01/2024" (`since` is the fixed word
+ * of the language), or `null` for a project without a start.
+ */
+export function formatRange(from: string | null, to: string | null, since: string): string | null {
+  if (from === null) return null;
+  return to === null
+    ? `${since} ${formatMonth(from)}`
+    : `${formatMonth(from)} – ${formatMonth(to)}`;
 }
 
 /**

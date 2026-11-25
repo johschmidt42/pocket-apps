@@ -50,7 +50,7 @@ export type NewVariant = Pick<Variant, "id" | "name" | "design" | "language">;
 export function addVariant(data: LebenslaufData, variant: NewVariant): LebenslaufData {
   return {
     ...data,
-    variants: [...data.variants, { ...variant, photo: null, sections: [] }],
+    variants: [...data.variants, { ...variant, photo: null, profile: "", sections: [] }],
     activeVariantId: variant.id,
   };
 }

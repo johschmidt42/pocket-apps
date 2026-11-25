@@ -24,11 +24,36 @@ function withStation(station: object) {
   };
 }
 
+const PROJECT = {
+  id: "p",
+  title: "Shop",
+  role: "",
+  client: "",
+  from: "2024-01",
+  to: "2024-06",
+  description: "",
+  tasks: [],
+  tools: [],
+};
+
+function withProject(project: object) {
+  const data = initialData("v");
+  return {
+    ...data,
+    variants: [
+      {
+        ...data.variants[0],
+        sections: [{ id: "x", title: "Projects", kind: "projects", entries: [project] }],
+      },
+    ],
+  };
+}
+
 describe("lebenslauf schema", () => {
   it("starts at version 1 with one empty variant", () => {
     const data = schema.initial();
 
-    expect(currentVersion(schema)).toBe(2);
+    expect(currentVersion(schema)).toBe(3);
     expect(data.person).toEqual({ name: "", contacts: [] });
     expect(data.variants).toHaveLength(1);
     expect(data.variants[0]).toMatchObject({
@@ -66,5 +91,15 @@ describe("lebenslauf schema", () => {
     expect(schema.validate.safeParse(withStation({ ...STATION, from: "2021-13" })).success).toBe(
       false,
     );
+  });
+
+  it("accepts a project without a time range or without an end, and refuses a wrong range", () => {
+    const valid = (project: object) => schema.validate.safeParse(withProject(project)).success;
+
+    expect(valid(PROJECT)).toBe(true);
+    expect(valid({ ...PROJECT, to: null })).toBe(true);
+    expect(valid({ ...PROJECT, from: null, to: null })).toBe(true);
+    expect(valid({ ...PROJECT, from: null })).toBe(false);
+    expect(valid({ ...PROJECT, to: "2023-12" })).toBe(false);
   });
 });

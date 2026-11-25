@@ -1,6 +1,7 @@
 import { createDataFileStore, defineDataSchema } from "@pocket-apps/core/data-file";
 import { z } from "zod";
 import { toV2 } from "./migrations/to-v2.ts";
+import { toV3 } from "./migrations/to-v3.ts";
 
 /** The languages of the fixed words of a design, for example "Description" or "Beschreibung". */
 export const LANGUAGES = ["de", "en"] as const;
@@ -41,13 +42,28 @@ const personSchema = z.object({
   contacts: z.array(contactSchema),
 });
 
-const projectSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().trim().min(1),
-  description: z.string(),
-  tasks: linesSchema,
-  tools: linesSchema,
-});
+const projectSchema = z
+  .object({
+    id: z.string().min(1),
+    title: z.string().trim().min(1),
+    /** For example "Lead Backend Engineer". Can be empty. */
+    role: z.string(),
+    /** For example "International media group". Can be empty. */
+    client: z.string(),
+    /** `null`: the project has no time range in the CV. */
+    from: monthSchema.nullable(),
+    /** `null` with a start: the project did not end yet ("Since 01/2024"). */
+    to: monthSchema.nullable(),
+    description: z.string(),
+    tasks: linesSchema,
+    tools: linesSchema,
+  })
+  .refine((project) => project.from !== null || project.to === null, {
+    message: "A project with an end needs a start.",
+  })
+  .refine((project) => project.from === null || project.to === null || project.to >= project.from, {
+    message: "The end must not be before the start.",
+  });
 
 const stationSchema = z
   .object({
@@ -87,10 +103,12 @@ const variantFields = {
    * `null`. A file without the field has no photo.
    */
   photo: z.string().min(1).nullable().default(null),
+  /** A short profile under the head of the CV, for example the role and the core skills. Can be empty. */
+  profile: z.string(),
 };
 
 /** The designs of the CV. Each design shows the same sections in its own look. */
-export const DESIGN_NAMES = ["klassisch", "modern"] as const;
+export const DESIGN_NAMES = ["klassisch", "modern", "projektprofil"] as const;
 
 /**
  * A variant of the CV, for example for one job ad. All designs use the same sections, so a
@@ -137,6 +155,7 @@ export function initialData(id: string = crypto.randomUUID()): LebenslaufData {
         language: "de",
         design: "klassisch",
         photo: null,
+        profile: "",
         sections: [],
       },
     ],
@@ -149,7 +168,7 @@ export const schema = defineDataSchema<LebenslaufData>({
   validate: lebenslaufSchema,
   initial: () => initialData(),
   // Append new migrations at the end. Never change old ones.
-  migrations: [toV2],
+  migrations: [toV2, toV3],
 });
 
 export const { DataFileProvider, useDataFile } = createDataFileStore(schema, {
