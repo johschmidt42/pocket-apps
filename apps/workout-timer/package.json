@@ -1,0 +1,32 @@
+{
+  "name": "workout-timer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Timer für For Time, AMRAP, EMOM und Tabata. Mit Vorlauf, Pieptönen und Rundenzähler.",
+  "pocketApp": {
+    "title": "Workout Timer",
+    "emoji": "⏱️",
+    "stateful": false,
+    "network": false
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@pocket-apps/core": "workspace:*",
+    "@pocket-apps/ui": "workspace:*",
+    "lucide-react": "1.70.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@pocket-apps/vite-config": "workspace:*",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.7"
+  }
+}
