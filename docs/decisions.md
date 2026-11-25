@@ -3,6 +3,12 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-25: CD - Release waits for the Pages artifact (ci)
+
+- **Context:** `CD - Release` failed five times in a row with "Found 0 artifact(s)". The step "Prepare the Pages artifact" had finished the upload. The artifact list of the GitHub API showed the artifact about one second later, but `deploy-pages` asked for it at once.
+- **Decision:** A step before "Publish on GitHub Pages" asks the GitHub API every 5 seconds for the artifact `github-pages` of the run, for at most 2 minutes. Then `deploy-pages` starts. The step uses `gh` and the token of the job, which has `actions: read`.
+- **Rejected:** A fixed `sleep` (too short on a slow day, too long on a fast day) and only re-running the failed run (the failure repeated).
+
 ## 2026-11-25: Third CV design "projektprofil" and project fields (lebenslauf)
 
 - **Context:** The user wanted a CV for freelance bids. A freelance profile shows the time range, the role and the client of each project. Before, a project had only a title, a description, tasks and tools.

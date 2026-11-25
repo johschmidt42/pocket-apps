@@ -88,6 +88,26 @@ jobs:
         with:
           path: release
 
+      # The upload is finished, but the artifact list of GitHub can show the artifact some seconds
+      # later. "deploy-pages" asks for it at once and then fails with "Found 0 artifact(s)".
+      - name: Wait until GitHub lists the Pages artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          for attempt in $(seq 1 24); do
+            count=$(gh api "repos/${REPO}/actions/runs/${RUN_ID}/artifacts?name=github-pages" --jq '.total_count')
+            if [ "$count" -gt 0 ]; then
+              echo "GitHub lists the artifact github-pages."
+              exit 0
+            fi
+            echo "Waiting for the artifact list (attempt ${attempt}/24) ..."
+            sleep 5
+          done
+          echo "::error::GitHub did not list the artifact github-pages after 2 minutes."
+          exit 1
+
       - name: Publish on GitHub Pages
         id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
