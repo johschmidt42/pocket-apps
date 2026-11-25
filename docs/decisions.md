@@ -3,11 +3,11 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
-## 2026-11-25: CD - Release waits for the Pages artifact (ci)
+## 2026-11-25: CD - Release publishes in a second job (ci)
 
-- **Context:** `CD - Release` failed five times in a row with "Found 0 artifact(s)". The step "Prepare the Pages artifact" had finished the upload. The artifact list of the GitHub API showed the artifact about one second later, but `deploy-pages` asked for it at once.
-- **Decision:** A step before "Publish on GitHub Pages" asks the GitHub API every 5 seconds for the artifact `github-pages` of the run, for at most 2 minutes. Then `deploy-pages` starts. The step uses `gh` and the token of the job, which has `actions: read`.
-- **Rejected:** A fixed `sleep` (too short on a slow day, too long on a fast day) and only re-running the failed run (the failure repeated).
+- **Context:** `CD - Release` failed six times in a row with "Found 0 artifact(s)". The step "Prepare the Pages artifact" had finished the upload. `deploy-pages` lists the artifacts of the run through the artifact service of Actions (`listArtifacts`), not through the REST API. In the job that uploaded the artifact, this list was still empty. A step that waited until the REST API listed the artifact did not help.
+- **Decision:** Two jobs, as in the Pages template of GitHub. The job `prepare` checks the CI pipelines, downloads the tested files and uploads the Pages artifact. The job `github-pages` needs `prepare` and only runs `deploy-pages`. Only this job has `pages: write` and `id-token: write`.
+- **Rejected:** A wait step that asks the REST API (it saw the artifact, but `deploy-pages` did not) and only re-running the failed run (the failure repeated).
 
 ## 2026-11-25: Third CV design "projektprofil" and project fields (lebenslauf)
 
