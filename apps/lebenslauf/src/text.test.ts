@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   contactHref,
   formatMonth,
+  formatRange,
   fromLines,
   isMonth,
   keyedLines,
+  splitName,
   toLines,
   toTools,
 } from "./text.ts";
@@ -35,6 +37,17 @@ describe("months", () => {
     expect(isMonth("2024-13")).toBe(false);
     expect(isMonth("")).toBe(false);
     expect(formatMonth("2024-01")).toBe("01/2024");
+  });
+
+  it("splits a name into the first names and the last name", () => {
+    expect(splitName(" Erika Maria  Mustermann ")).toEqual(["Erika Maria", "Mustermann"]);
+    expect(splitName("Erika")).toEqual(["", "Erika"]);
+  });
+
+  it("formats the time range of a project", () => {
+    expect(formatRange("2024-01", "2024-06", "Since")).toBe("01/2024 – 06/2024");
+    expect(formatRange("2024-01", null, "Seit")).toBe("Seit 01/2024");
+    expect(formatRange(null, null, "Since")).toBeNull();
   });
 });
 

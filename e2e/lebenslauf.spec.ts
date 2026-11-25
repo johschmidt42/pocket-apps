@@ -431,6 +431,32 @@ test.describe("lebenslauf in Chrome and Edge", () => {
     expect(pageErrors).toEqual([]);
   });
 
+  test("switches to the design projektprofil with its own look", async ({ page, pageErrors }) => {
+    await page.setViewportSize({ width: 1400, height: 1000 });
+    await openWithFolder(page);
+    await page.getByRole("button", { name: "Beispiel laden" }).click();
+
+    await page.getByRole("radio", { name: "Projektprofil" }).click();
+
+    // The head card is ink blue, and the role of a project is burnt orange.
+    await expect(cv(page).locator("header")).toHaveCSS("background-color", "rgb(23, 32, 51)");
+    await expect(cv(page).getByText("Lead Backend Engineer")).toHaveCSS(
+      "color",
+      "rgb(194, 65, 12)",
+    );
+    const firstTool = cv(page)
+      .getByRole("list", { name: "Tools" })
+      .first()
+      .getByRole("listitem")
+      .first();
+    await expect(firstTool).toHaveText("Python");
+    await expect(firstTool).toHaveCSS("background-color", "rgb(255, 247, 237)");
+    await expect(frame(page).locator(".cv-sheet")).toHaveCount(1);
+    const saved = await savedFile(page);
+    expect(saved.data.variants[0]).toMatchObject({ design: "projektprofil" });
+    expect(pageErrors).toEqual([]);
+  });
+
   test("prints only the CV", async ({ page, pageErrors }) => {
     await openWithFolder(page);
     await page.getByRole("button", { name: "Beispiel laden" }).click();

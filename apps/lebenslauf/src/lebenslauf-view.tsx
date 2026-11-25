@@ -24,6 +24,7 @@ import { useDataFile, type Section } from "./schema.ts";
 import { SectionCard } from "./section-card.tsx";
 import { SectionDialog } from "./section-dialog.tsx";
 import { PhotoCard } from "./photo-card.tsx";
+import { ProfileCard } from "./profile-card.tsx";
 import { PhotoError } from "./photo.ts";
 import { moveById, moveTo, useDragSort } from "@pocket-apps/ui/drag-sort";
 import { SortHint } from "@pocket-apps/ui/sort-hint";
@@ -305,6 +306,15 @@ export function LebenslaufView({ preparePhoto }: LebenslaufViewProps) {
             }}
             onRemove={() => {
               void removePhoto();
+            }}
+          />
+
+          <ProfileCard
+            profile={variant.profile}
+            onChange={(profile) => {
+              update((current) =>
+                updateActiveVariant(current, (active) => ({ ...active, profile })),
+              );
             }}
           />
 

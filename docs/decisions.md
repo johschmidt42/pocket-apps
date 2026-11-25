@@ -3,6 +3,17 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-25: Third CV design "projektprofil" and project fields (lebenslauf)
+
+- **Context:** The user wanted a CV for freelance bids. A freelance profile shows the time range, the role and the client of each project. Before, a project had only a title, a description, tasks and tools.
+- **Decision:** A project has four more fields. `role` and `client` are text and can be empty. `from` and `to` are months and can be `null`. Without `from`, the CV shows no time range. With `from` and without `to`, the CV shows "Since 01/2024", like a station. The schema refuses an end without a start. It also refuses an end before the start.
+- **Decision:** Each variant has a `profile`: a short text under the head of the CV, for example the role, the experience and the core skills. It belongs to the variant, not to `person`, because each language and each bid needs its own text. The card "Profil" in the editor changes it. All designs show it as one paragraph under the head. An empty profile shows nothing.
+- **Decision:** The project form has the fields "Rolle", "Kunde", "Von" and "Bis", and the checkbox "Bis heute". All designs show the new fields. "klassisch" shows the rows "Zeitraum", "Rolle" and "Kunde". "modern" shows the time range on the right and "role · client" under the title. The list of entries in the editor shows the time range before the tools.
+- **Decision:** The design "projektprofil" (`designs/projektprofil-cv.tsx`, `designs/projektprofil.css`) has a dark head card in ink blue (`#172033`). The card holds the name, the contact lines in two columns and a photo with the ratio 4 : 5. The accent color is burnt orange (`#c2410c`, contrast 5.2 : 1 on white). Section titles are upper case and start with an orange mark. Each entry has two columns. The left column shows the time range, the role and the client. The right column shows the title, the text, the tasks and the tools as chips. Stations use the same two columns. A list row shows its values in one line, with a dot after each value but the last. A row with a value of more than 30 characters (for example a certificate) shows one value per line, without dots: a dot at the end of a wrapped line separates nothing. The dash before a task is a text character, not a box: a box of 0.45 mm falls on parts of a pixel, and the browser then draws the dashes in different widths.
+- **Decision:** The old CV of the user fits on 2 pages in all three designs. The freelance variants of the user also fit on 2 pages, in English and in German: page 1 holds the head, the profile and the projects, page 2 the rest.
+- **Decision:** One migration `toV3` adds the profile, the project fields and the design. Old variants get an empty profile. Old projects get an empty role and client and no time range. An older app version sees "file from a newer app version". App version 4.0.
+- **Rejected:** Role, client and time range as text in the description. The designs could not give them a fixed place, and the app could not check the time range.
+
 ## 2026-11-23: Exercise animations in trainingsbuch
 
 - **Context:** The project owner wants self-made animated pictures of the exercises. A throwaway prototype on the branch `prototype/uebungsbilder` tested the techniques and built 22 exercises and 7 variants with the owner. It stays on that branch as the workshop for new exercises.
@@ -300,7 +311,7 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Detail:** `useWidth()` moved from `zeitstrahl` to `packages/core` (`@pocket-apps/core/use-width`), because two apps use it now.
 - **Add a design** (updated with the design "modern"):
   1. `schema.ts`: add the name to `DESIGN_NAMES`. If the design needs other fields, `variantSchema` must become a union with the field `design` again.
-  2. Add a migration that does not change the data (like `migrations/to-v2.ts`): an older app version must see "newer app version", not an unknown design. Update the test of `currentVersion(schema)` and increase the first number of the app version.
+  2. Add a migration (like `migrations/to-v2.ts`): an older app version must see "newer app version", not an unknown design. If the same version also adds fields, one migration does both (like `migrations/to-v3.ts`). Update the test of `currentVersion(schema)` and increase the first number of the app version.
   3. `src/designs/<name>.css` and `src/designs/<name>-cv.tsx` (the markup). The CSS needs `@page { size: A4; margin: 0 }`, `print-color-adjust`, `box-decoration-break: clone` on `.cv` in print, and `break-after: avoid` on titles. Each of them needs an `eslint-disable` comment for `css/use-baseline`, as in `modern.css`. The markup marks the blocks for the pages (`data-page-unit`, see "Decision (pages)"), and each section and entry for the highlight (`data-section-id`, `data-entry-id`, see "Decision (highlight)").
   4. `src/designs/designs.ts`: add the label, the CSS and the page margin to `DESIGN_INFO`. The page margin is a number in mm (for example `12`), and it must be the top and bottom padding of `.cv` in the CSS.
   5. `src/designs/cv-document.tsx`: add a case to the `switch` on `variant.design`.

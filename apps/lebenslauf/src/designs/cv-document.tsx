@@ -1,6 +1,7 @@
 import type { Person, Variant } from "../schema.ts";
 import { KlassischCv } from "./klassisch-cv.tsx";
 import { ModernCv } from "./modern-cv.tsx";
+import { ProjektprofilCv } from "./projektprofil-cv.tsx";
 
 export type CvDocumentProps = {
   person: Person;
@@ -16,5 +17,7 @@ export function CvDocument({ person, variant, photoUrl }: CvDocumentProps) {
       return <KlassischCv person={person} variant={variant} photoUrl={photoUrl} />;
     case "modern":
       return <ModernCv person={person} variant={variant} photoUrl={photoUrl} />;
+    case "projektprofil":
+      return <ProjektprofilCv person={person} variant={variant} photoUrl={photoUrl} />;
   }
 }

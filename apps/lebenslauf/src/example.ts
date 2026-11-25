@@ -14,6 +14,10 @@ export function exampleSections(id: () => string): Section[] {
         {
           id: id(),
           title: "Order Analytics Platform",
+          role: "Lead Backend Engineer",
+          client: "Online retailer",
+          from: "2024-03",
+          to: null,
           description:
             "Designing and developing a platform that analyzes the orders of an online shop.",
           tasks: [
@@ -26,6 +30,10 @@ export function exampleSections(id: () => string): Section[] {
         {
           id: id(),
           title: "Cloud Migration",
+          role: "Cloud Engineer",
+          client: "Logistics company",
+          from: "2023-01",
+          to: "2023-12",
           description: "Moving the data processing of a customer into the cloud.",
           tasks: ["Provisioning the infrastructure as code", "Monitoring and alerting"],
           tools: ["Terraform", "Azure", "Grafana"],

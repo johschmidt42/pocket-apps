@@ -144,6 +144,12 @@ h3 {
   stroke-width: 1.5;
 }
 
+/* The profile: a short text under the head, with the same indent as the section bodies. */
+.cv-profile {
+  margin: 0 20mm 5mm 18mm;
+  break-inside: avoid;
+}
+
 /* Sections: a gray band with a blue title over the full width. */
 
 .cv-section + .cv-section {

@@ -1,5 +1,5 @@
 import type { Section } from "./schema.ts";
-import { formatMonth } from "./text.ts";
+import { formatMonth, formatRange } from "./text.ts";
 
 /** One line per entry for the list in the editor. */
 export type EntrySummary = { id: string; title: string; detail: string };
@@ -11,7 +11,9 @@ export function entrySummaries(section: Section): EntrySummary[] {
       return section.entries.map((project) => ({
         id: project.id,
         title: project.title,
-        detail: project.tools.join(", "),
+        detail: [formatRange(project.from, project.to, "seit"), project.tools.join(", ")]
+          .filter((text) => text !== null && text !== "")
+          .join(" · "),
       }));
     case "stations":
       return section.entries.map((station) => ({

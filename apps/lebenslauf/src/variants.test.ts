@@ -33,11 +33,14 @@ const LIST: Section = {
   ],
 };
 
+/** A project without a role, a client and a time range. */
+const NO_META = { role: "", client: "", from: null, to: null };
+
 const PROJECTS: Section = {
   id: "projects",
   title: "Projects",
   kind: "projects",
-  entries: [{ id: "p", title: "Shop", description: "", tasks: [], tools: [] }],
+  entries: [{ id: "p", title: "Shop", ...NO_META, description: "", tasks: [], tools: [] }],
 };
 
 const STATIONS: Section = {
@@ -139,7 +142,7 @@ describe("sections and entries", () => {
     const row = { id: "c", label: "Hobbys", items: [] };
     expect(upsertEntry(LIST, { kind: "list", entry: row }).entries).toHaveLength(3);
 
-    const project = { id: "p", title: "Shop 2", description: "", tasks: [], tools: [] };
+    const project = { id: "p", title: "Shop 2", ...NO_META, description: "", tasks: [], tools: [] };
     expect(upsertEntry(PROJECTS, { kind: "projects", entry: project }).entries).toEqual([project]);
 
     const station = { ...STATIONS.entries[0]!, title: "Job 2" };

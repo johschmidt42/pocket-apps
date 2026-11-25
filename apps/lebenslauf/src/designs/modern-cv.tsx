@@ -1,7 +1,7 @@
 import { UserRound } from "lucide-react";
 import { CONTACT_ICONS } from "../contact-kinds.ts";
 import type { ListRow, Person, Project, Section, Station, Variant } from "../schema.ts";
-import { contactHref, formatMonth, keyedLines } from "../text.ts";
+import { contactHref, formatRange, keyedLines, splitName } from "../text.ts";
 import { CV_LABELS, type CvLabels } from "./labels.ts";
 
 export type ModernCvProps = {
@@ -10,13 +10,6 @@ export type ModernCvProps = {
   /** The photo as a data URL, or `null`. */
   photoUrl: string | null;
 };
-
-/** "Erika Maria Mustermann" → ["Erika Maria", "Mustermann"]. The last name is bold. */
-function splitName(name: string): [string, string] {
-  const words = name.trim().split(/\s+/);
-  const last = words.pop() ?? "";
-  return [words.join(" "), last];
-}
 
 /**
  * The design "modern": a sans-serif font, one accent color, a round photo, section titles
@@ -69,6 +62,11 @@ export function ModernCv({ person, variant, photoUrl }: ModernCvProps) {
           )}
         </div>
       </header>
+      {variant.profile.trim() !== "" && (
+        <p className="cv-profile" data-page-unit="">
+          {variant.profile.trim()}
+        </p>
+      )}
       {variant.sections.map((section) => (
         <section key={section.id} className="cv-section" data-section-id={section.id}>
           <h2 className="cv-section-title" data-page-unit="keep-with-next">
@@ -97,9 +95,15 @@ function SectionEntries({ section, labels }: { section: Section; labels: CvLabel
 }
 
 function ProjectBlock({ project, labels }: { project: Project; labels: CvLabels }) {
+  const range = formatRange(project.from, project.to, labels.since);
+  const meta = [project.role, project.client].filter((text) => text.trim() !== "").join(" · ");
   return (
     <div className="cv-entry cv-project" data-page-unit="" data-entry-id={project.id}>
-      <h3 className="cv-entry-title">{project.title}</h3>
+      <div className="cv-entry-head">
+        <h3 className="cv-entry-title">{project.title}</h3>
+        {range !== null && <span className="cv-entry-date">{range}</span>}
+      </div>
+      {meta !== "" && <p className="cv-entry-subtitle">{meta}</p>}
       {project.description.trim() !== "" && <p className="cv-description">{project.description}</p>}
       {project.tasks.length > 0 && <Bullets items={project.tasks} />}
       {project.tools.length > 0 && (
@@ -114,14 +118,11 @@ function ProjectBlock({ project, labels }: { project: Project; labels: CvLabels 
 }
 
 function StationBlock({ station, labels }: { station: Station; labels: CvLabels }) {
-  const from = formatMonth(station.from);
   return (
     <div className="cv-entry cv-station" data-page-unit="" data-entry-id={station.id}>
       <div className="cv-entry-head">
         <h3 className="cv-entry-title">{station.title}</h3>
-        <span className="cv-entry-date">
-          {station.to === null ? `${labels.since} ${from}` : `${from} – ${formatMonth(station.to)}`}
-        </span>
+        <span className="cv-entry-date">{formatRange(station.from, station.to, labels.since)}</span>
       </div>
       {station.subtitle.trim() !== "" && <p className="cv-entry-subtitle">{station.subtitle}</p>}
       {station.bullets.length > 0 && <Bullets items={station.bullets} />}
