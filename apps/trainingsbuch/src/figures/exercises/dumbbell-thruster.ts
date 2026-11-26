@@ -17,7 +17,7 @@ export function rack(x: number, y: number, lean: number, head: number): Pose {
 }
 
 /** Locked arms overhead, the hands over the shoulders. */
-function locked(x: number, y: number, lean: number): Pose {
+export function locked(x: number, y: number, lean: number): Pose {
   const hip = { x, y };
   const neck = shoulderOf(hip, lean);
   const along = up(lean);
@@ -40,7 +40,7 @@ export const LOW = rack(59, 154, 21, -10);
 // Below parallel: the hip is lower than the knee.
 export const BOTTOM = rack(55, 169, 27, -14);
 // The bar of the legs is nearly done, and the arms start to press.
-const DRIVE: Pose = {
+export const DRIVE: Pose = {
   ...base,
   hip: { x: 73, y: 122 },
   lean: 3,
@@ -49,7 +49,7 @@ const DRIVE: Pose = {
   elbowTo: 75,
   elbowsOut: 0.5,
 };
-const PRESS: Pose = {
+export const PRESS: Pose = {
   ...base,
   hip: { x: 74, y: 120.1 },
   lean: 0,
@@ -58,7 +58,7 @@ const PRESS: Pose = {
   elbowTo: 65,
   elbowsOut: 1.2,
 };
-const TOP = locked(74, 120.1, 0);
+export const TOP = locked(74, 120.1, 0);
 
 export const DUMBBELL_THRUSTER: Exercise = {
   key: "dumbbell-thruster",

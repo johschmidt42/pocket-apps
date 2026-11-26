@@ -317,6 +317,7 @@ describe("variantsOf", () => {
     ["handstand-push-up", ["Kipping", "Strict"]],
     ["chest-to-bar", ["Kipping", "Strict"]],
     ["kettlebell-thruster", ["Zwei", "Einarmig"]],
+    ["devil-press", ["Snatch", "Clean"]],
   ] as const)("offers the forms of %s", (id, labels) => {
     expect(variantsOf(id, [])?.map((variant) => variant.label)).toEqual(labels);
   });

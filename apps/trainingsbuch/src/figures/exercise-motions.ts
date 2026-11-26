@@ -21,6 +21,8 @@ import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
 import { CLEAN_AND_JERK } from "./exercises/clean-and-jerk.ts";
 import { DEADLIFT } from "./exercises/deadlift.ts";
+import { DEVIL_PRESS } from "./exercises/devil-press.ts";
+import { DEVIL_PRESS_CLEAN } from "./exercises/devil-press-clean.ts";
 import { DOUBLE_UNDER } from "./exercises/double-under.ts";
 import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
@@ -140,6 +142,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   clean: [form("Power", POWER_CLEAN), form("Squat", SQUAT_CLEAN)],
   "clean-and-jerk": [form("Power", POWER_CLEAN_AND_JERK), form("Squat", CLEAN_AND_JERK)],
   deadlift: only(DEADLIFT),
+  "devil-press": [form("Snatch", DEVIL_PRESS), form("Clean", DEVIL_PRESS_CLEAN)],
   "double-under": only(DOUBLE_UNDER),
   "dumbbell-clean": [DUMBBELL_SQUAT, DUMBBELL_HANG, DUMBBELL_POWER],
   "dumbbell-snatch": only(DUMBBELL_SNATCH),

@@ -18,7 +18,7 @@ const mix = (a: number, b: number, t: number): number => a + (b - a) * t;
 /**
  * A pose of the pull with straight arms: the dumbbell is at `bell`, and the hip is as high as the arms permit.
  */
-function pulled(hipX: number, lean: number, bell: Spot2, head: number): Pose {
+export function pulled(hipX: number, lean: number, bell: Spot2, head: number): Pose {
   const joint = shoulderOf({ x: hipX, y: 0 }, lean);
   const hipY = bell.y - Math.sqrt(REACH ** 2 - (bell.x - joint.x) ** 2) - joint.y;
   return {
@@ -38,13 +38,13 @@ const FLOOR = pulled(42, 55, { x: 77, y: 199 }, -30);
 // The legs push: the dumbbells are at the knees. The torso keeps its angle for the most part.
 const KNEE = pulled(50, 46, { x: 82, y: 170 }, -26);
 // The hang: the dumbbells are at the middle of the thighs, on their outside.
-const HANG = pulled(62, 26, { x: 83, y: 148 }, -10);
+export const HANG = pulled(62, 26, { x: 83, y: 148 }, -10);
 // The power position: the knees are a little bent, the arms are long. The torso still leans 17 degrees: with 12,
 // the lean changed at 382 degrees/s at the end of the pull, and the hip speed fell from 226 to 71 at the border.
-const POWER = pulled(66.5, 17, { x: 82.5, y: 141.5 }, -5);
+export const POWER = pulled(66.5, 17, { x: 82.5, y: 141.5 }, -5);
 // Full extension of hips and knees, on the toes, with a shrug. The arms are still nearly straight.
 // The legs are 79.6 long (80 is fully straight): the hip follows from the ankle of the foot on its toes.
-const EXTEND: Pose = (() => {
+export const EXTEND: Pose = (() => {
   const toes = 124;
   const feet = tiptoe(75, toes);
   const hip = {
@@ -69,7 +69,7 @@ const DIP = pulled(58, 33, { x: 83, y: 155 }, -15);
  * forward under the dumbbells. The upper arm stays at least 28 degrees below level in the front view: an elbow at
  * shoulder height with the hand at the chest is a "chicken wing". The elbows reach their high place in front in the catch.
  */
-function turnover(from: Spot2 & { lean: number }, land: Pose): Pose[] {
+export function turnover(from: Spot2 & { lean: number }, land: Pose): Pose[] {
   const at = (t: number, dx: number, dy: number, rest: Partial<Pose>): Pose => {
     const hip = { x: mix(from.x, land.hip.x, t), y: mix(from.y, land.hip.y, t) };
     const lean = mix(from.lean, land.lean, t);
@@ -102,7 +102,7 @@ function turnover(from: Spot2 & { lean: number }, land: Pose): Pose[] {
  * The way down from the stand to the hang: the dumbbells go forward off the shoulders and down in an arc in front of
  * the body, as in a curl in reverse. The hip sinks a very little in each pose: so the knee starts early and slowly.
  */
-function lowered(): Pose[] {
+export function lowered(): Pose[] {
   const hip = RACK.hip;
   return [
     {
