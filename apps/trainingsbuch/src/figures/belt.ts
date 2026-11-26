@@ -7,7 +7,9 @@ const HEIGHT = 4;
 
 /** An SVG path with one short mark for each place on the ground between `left` and `right`. */
 export function beltMarks(distance: number, progress: number, left: number, right: number): string {
-  const gap = distance / Math.max(1, Math.round(distance / GAP));
+  // The marks move to -x for a positive distance, to +x for a negative one (a figure that walks to
+  // -x, as in the handstand walk).
+  const gap = Math.abs(distance) / Math.max(1, Math.round(Math.abs(distance) / GAP));
   const shift = (((-distance * progress) % gap) + gap) % gap;
   const marks: string[] = [];
   for (let x = Math.ceil((left - shift) / gap) * gap + shift; x <= right; x += gap) {

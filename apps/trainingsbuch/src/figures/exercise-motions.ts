@@ -43,6 +43,7 @@ import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
+import { HANDSTAND_WALK } from "./exercises/handstand-walk.ts";
 import { HANG_CLEAN } from "./exercises/hang-clean.ts";
 import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANG_POWER_SNATCH } from "./exercises/hang-power-snatch.ts";
@@ -221,6 +222,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "ghd-sit-up": only(GHD_SIT_UP),
   "goblet-squat": only(GOBLET_SQUAT),
   handstand: only(HANDSTAND),
+  "handstand-walk": only(HANDSTAND_WALK),
   "hang-clean": only(HANG_CLEAN),
   "hang-power-snatch": only(HANG_POWER_SNATCH),
   "kettlebell-thruster": [form("Zwei", KETTLEBELL_THRUSTER), SINGLE_ARM_THRUSTER],

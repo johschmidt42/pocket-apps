@@ -54,19 +54,19 @@ const THRUSTER = "Thruster von der Seite anhalten";
 
 describe("ExerciseSection", () => {
   it("shows an animation for known exercises and a chip for the others", () => {
-    render(<ExerciseSection exercises={["thruster", "pull-up", "handstand-walk"]} lines={[]} />);
+    render(<ExerciseSection exercises={["thruster", "pull-up", "turkish-get-up"]} lines={[]} />);
     const cards = screen.getByRole("list", { name: "Animationen der Übungen" });
     expect(within(cards).getByRole("button", { name: THRUSTER })).toBeInTheDocument();
     expect(
       within(cards).getByRole("button", { name: "Pull-up Kipping von der Seite anhalten" }),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByRole("list", { name: "Übungen" })).getByText("Handstand Walk"),
+      within(screen.getByRole("list", { name: "Übungen" })).getByText("Turkish Get-up"),
     ).toBeVisible();
   });
 
   it("shows only chips and no controls without an animation", () => {
-    render(<ExerciseSection exercises={["handstand-walk"]} lines={[]} />);
+    render(<ExerciseSection exercises={["turkish-get-up"]} lines={[]} />);
     expect(screen.queryByRole("list", { name: "Animationen der Übungen" })).toBeNull();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });

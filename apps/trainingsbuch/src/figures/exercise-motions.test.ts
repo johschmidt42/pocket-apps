@@ -31,6 +31,7 @@ import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
 import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
+import { HANDSTAND_WALK } from "./exercises/handstand-walk.ts";
 import { HANG_CLEAN } from "./exercises/hang-clean.ts";
 import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANG_POWER_SNATCH } from "./exercises/hang-power-snatch.ts";
@@ -75,7 +76,7 @@ const motions = (...args: Parameters<typeof variantsOf>) =>
 
 describe("variantsOf", () => {
   it("has no animation for an exercise without one", () => {
-    expect(variantsOf("handstand-walk", [])).toBeNull();
+    expect(variantsOf("turkish-get-up", [])).toBeNull();
   });
 
   it("offers Kipping first and Strict for a plain pull-up", () => {
@@ -286,6 +287,7 @@ describe("variantsOf", () => {
     ["lunge", "Swift 1-1", [LUNGE_DUMBBELL]],
     ["lunge", "Luke", [LUNGE_FRONT_RACK]],
     ["front-rack-lunge", "Daniel Ray", [FRONT_RACK_LUNGE]],
+    ["handstand-walk", "Open 19.3", [HANDSTAND_WALK]],
     ["dumbbell-clean-and-jerk", "Josh-O", [DUMBBELL_CLEAN_AND_JERK]],
     ["dumbbell-clean-and-jerk", "Open 18.1", [DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM]],
     ["dumbbell-clean-and-jerk", "Open 25.1", [DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM]],

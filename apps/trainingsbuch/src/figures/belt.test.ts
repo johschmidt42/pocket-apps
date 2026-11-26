@@ -18,13 +18,19 @@ describe("beltMarks", () => {
     expect(later).toBeCloseTo(first! - 1.68, 1);
   });
 
-  it.each([172.8, 115, 168])("has no jump where the loop of %d starts again", (distance) => {
+  it.each([172.8, 115, 168, -34])("has no jump where the loop of %d starts again", (distance) => {
     const start = places(beltMarks(distance, 0, 20, 150));
     const end = places(beltMarks(distance, 0.999999, 20, 150));
     expect(end).toHaveLength(start.length);
     end.forEach((x, index) => {
       expect(x).toBeCloseTo(start[index]!, 1);
     });
+  });
+
+  it("moves the marks forward for a negative distance", () => {
+    const [first] = places(beltMarks(-34, 0.1, 20, 150));
+    const [later] = places(beltMarks(-34, 0.11, 20, 150));
+    expect(later).toBeCloseTo(first! + 0.34, 1);
   });
 
   it("keeps moving after the first loop", () => {
