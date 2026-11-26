@@ -68,7 +68,7 @@ const motions = (...args: Parameters<typeof variantsOf>) =>
 
 describe("variantsOf", () => {
   it("has no animation for an exercise without one", () => {
-    expect(variantsOf("bear-crawl", [])).toBeNull();
+    expect(variantsOf("handstand-walk", [])).toBeNull();
   });
 
   it("offers Kipping first and Strict for a plain pull-up", () => {

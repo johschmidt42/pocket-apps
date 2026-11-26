@@ -6,6 +6,7 @@ import { BACK_EXTENSION } from "./exercises/back-extension.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
+import { BEAR_CRAWL } from "./exercises/bear-crawl.ts";
 import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
@@ -127,6 +128,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "back-squat": only(BACK_SQUAT),
   "bar-facing-burpee": only(BAR_FACING_BURPEE),
   "bar-muscle-up": only(BAR_MUSCLE_UP),
+  "bear-crawl": only(BEAR_CRAWL),
   "bench-press": only(BENCH_PRESS),
   bike: only(BIKE_EXERCISE),
   "box-jump": only(BOX_JUMP),
