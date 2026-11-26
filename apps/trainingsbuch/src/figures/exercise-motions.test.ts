@@ -22,6 +22,7 @@ import { DUMBBELL_SQUAT_CLEAN } from "./exercises/dumbbell-squat-clean.ts";
 import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
+import { FRONT_RACK_LUNGE } from "./exercises/front-rack-lunge.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
 import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
@@ -36,6 +37,9 @@ import { KETTLEBELL_THRUSTER_SINGLE_ARM } from "./exercises/kettlebell-thruster-
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
+import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
+import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
+import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -275,6 +279,10 @@ describe("variantsOf", () => {
     ["hang-power-snatch", "Andi", [HANG_POWER_SNATCH]],
     ["kettlebell-thruster", "Strange", [KETTLEBELL_THRUSTER, KETTLEBELL_THRUSTER_SINGLE_ARM]],
     ["kettlebell-thruster", "Bowen", [KETTLEBELL_THRUSTER_SINGLE_ARM]],
+    ["lunge", "Josh-O", [LUNGE_DUMBBELLS]],
+    ["lunge", "Swift 1-1", [LUNGE_DUMBBELL]],
+    ["lunge", "Luke", [LUNGE_FRONT_RACK]],
+    ["front-rack-lunge", "Daniel Ray", [FRONT_RACK_LUNGE]],
   ] as const)("shows %s in %s", (id, name, exercises) => {
     const workout = CATALOG.find((item) => item.name === name);
     expect(motions(id, workout?.lines ?? [])).toEqual(exercises);
@@ -310,6 +318,7 @@ describe("variantsOf", () => {
     ["jerk", ["Push", "Split"]],
     ["shoulder-to-overhead", ["Press", "Push", "Split"]],
     ["overhead-lunge", ["Plate", "Bar", "DB"]],
+    ["lunge", ["DB", "1 DB", "Bar"]],
     ["clean-and-jerk", ["Power", "Squat"]],
     ["snatch", ["Power", "Squat"]],
     ["toes-to-bar", ["Tuck", "Straight"]],

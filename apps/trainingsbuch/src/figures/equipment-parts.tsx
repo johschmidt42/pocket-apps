@@ -245,8 +245,9 @@ function floorBar({ fromSide }: Scene, x: number): Parts {
   return [disc("plate", BEHIND, center, PLATE), grip("bar", BEHIND + 1, center, 3, 2)];
 }
 
-function dumbbells({ joints, flat, fromSide }: Scene): Parts {
+function dumbbells({ joints, flat, fromSide }: Scene, only: 0 | 1 | undefined): Parts {
   return SIDES.flatMap((side) => {
+    if (only !== undefined && side !== only) return [];
     const hand = joints.arms[side].end;
     const back = flat(vec(hand.x - 9, hand.y, hand.z));
     const front = flat(vec(hand.x + 9, hand.y, hand.z));
@@ -828,7 +829,7 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "dumbbell":
       return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":
-      return dumbbells(scene);
+      return dumbbells(scene, equipment.hand);
     case "kettlebells":
       return kettlebells(scene, equipment.hand);
     case "kettlebell":

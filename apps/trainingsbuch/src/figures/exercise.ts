@@ -33,9 +33,10 @@ export type Equipment =
   | { kind: "dumbbell"; hand: 0 | 1; swap?: readonly [number, number] }
   /**
    * Two dumbbells, one in each hand, parallel to the way of the figure (a farmers carry). From the
-   * side, each one is a bar with two plates. From the front, it is a circle at the hand.
+   * side, each one is a bar with two plates. From the front, it is a circle at the hand. `hand`:
+   * only this hand holds a dumbbell (a lunge with one dumbbell at the side).
    */
-  | { kind: "dumbbells" }
+  | { kind: "dumbbells"; hand?: 0 | 1 }
   /**
    * Two kettlebells, one in each hand. Each bell hangs straight below its hand (a farmers carry). In
    * a rack and overhead, the bell lies on the outside of the forearm (`heldBell`). `hand`: only this

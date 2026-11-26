@@ -34,6 +34,7 @@ import { DUMBBELL_SQUAT_CLEAN } from "./exercises/dumbbell-squat-clean.ts";
 import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
+import { FRONT_RACK_LUNGE } from "./exercises/front-rack-lunge.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
 import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
@@ -51,6 +52,9 @@ import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-p
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
+import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
+import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
+import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -110,6 +114,9 @@ const KETTLEBELL_CARRY = form("Kettlebell", FARMERS_CARRY_KETTLEBELL);
 const PLATE_LUNGE = form("Plate", OVERHEAD_LUNGE_PLATE);
 const BARBELL_LUNGE = form("Bar", OVERHEAD_LUNGE_BARBELL);
 const DUMBBELL_LUNGE = form("DB", OVERHEAD_LUNGE_DUMBBELL);
+const TWO_DUMBBELLS_LUNGE = form("DB", LUNGE_DUMBBELLS);
+const ONE_DUMBBELL_LUNGE = form("1 DB", LUNGE_DUMBBELL);
+const FRONT_RACK_BAR_LUNGE = form("Bar", LUNGE_FRONT_RACK);
 const DUMBBELL_SQUAT = form("Squat", DUMBBELL_SQUAT_CLEAN);
 const DUMBBELL_HANG = form("Hang", DUMBBELL_HANG_CLEAN);
 const DUMBBELL_POWER = form("Power", DUMBBELL_POWER_CLEAN);
@@ -150,6 +157,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "dumbbell-snatch": only(DUMBBELL_SNATCH),
   "dumbbell-thruster": only(DUMBBELL_THRUSTER),
   "farmers-carry": [form("Dumbbell", FARMERS_CARRY), KETTLEBELL_CARRY],
+  "front-rack-lunge": only(FRONT_RACK_LUNGE),
   "front-squat": only(FRONT_SQUAT),
   "hand-release-push-up": only(HAND_RELEASE_PUSH_UP),
   "hang-power-clean": only(HANG_POWER_CLEAN),
@@ -160,6 +168,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("American", KETTLEBELL_SWING_AMERICAN),
     form("Russian", KETTLEBELL_SWING_RUSSIAN),
   ],
+  lunge: [TWO_DUMBBELLS_LUNGE, ONE_DUMBBELL_LUNGE, FRONT_RACK_BAR_LUNGE],
   "overhead-lunge": [PLATE_LUNGE, BARBELL_LUNGE, DUMBBELL_LUNGE],
   "overhead-squat": only(OVERHEAD_SQUAT),
   pistol: only(PISTOL),
@@ -230,6 +239,12 @@ const FORMS_IN_TEXT: Partial<
   ],
   "handstand-push-up": [
     { pattern: /\bstrict\s+handstand\s+push-?ups?\b/i, variant: STRICT_HANDSTAND_PUSH_UP },
+  ],
+  // Luke: a barbell in the front rack. Swift 1-1: one dumbbell. Josh-O: two dumbbells.
+  lunge: [
+    { pattern: /\bfront-rack (?:weighted )?lunges?\b/i, variant: FRONT_RACK_BAR_LUNGE },
+    { pattern: /\bhold the dumbbell\b/i, variant: ONE_DUMBBELL_LUNGE },
+    { pattern: /\btwo dumbbells\b/i, variant: TWO_DUMBBELLS_LUNGE },
   ],
   "overhead-lunge": [
     { pattern: /\bdumbbell overhead (?:walking )?lunge/i, variant: DUMBBELL_LUNGE },
