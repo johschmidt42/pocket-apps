@@ -57,6 +57,7 @@ import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
 import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
 import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
 import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
+import { MEDICINE_BALL_BOX_STEP_OVER } from "./exercises/medicine-ball-box-step-over.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -238,6 +239,12 @@ const FORMS_IN_TEXT: Partial<
     { pattern: /\bpower cleans?\b/i, variant: DUMBBELL_POWER },
     { pattern: /\bsquat cleans?\b/i, variant: DUMBBELL_SQUAT },
   ],
+  "box-step-over": [
+    {
+      pattern: /\bmedicine-ball box step-overs?\b/i,
+      variant: form("Ball", MEDICINE_BALL_BOX_STEP_OVER),
+    },
+  ],
   // Open 18.1 and 25.1: one dumbbell. Josh-O: two dumbbells.
   "dumbbell-clean-and-jerk": [
     { pattern: /\bwith each arm\b|\bclean-to-overheads?\b/i, variant: SINGLE_ARM_CLEAN_AND_JERK },
@@ -267,7 +274,6 @@ const FORMS_IN_TEXT: Partial<
 /** Some workouts have the id of an exercise, but their text asks for another movement. */
 const OTHER_MOVEMENT: Partial<Record<ExerciseId, RegExp>> = {
   burpee: /\bburpees?\b[^,]*\bover\b/i,
-  "box-step-over": /\bmedicine-ball box step-overs?\b/i,
   "burpee-pull-up": /\b(?:strict burpee|burpee chest-to-bar)/i,
   "dumbbell-clean": /\bsplit cleans?\b/i,
   "dumbbell-snatch": /\bsplit snatch/i,

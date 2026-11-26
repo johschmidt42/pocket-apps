@@ -854,8 +854,10 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return [...bench(scene, equipment.x), ...barbell(scene, false)];
     case "floorbar":
       return floorBar(scene, equipment.x);
-    case "box":
-      return box(scene, equipment.x, equipment.width, equipment.height);
+    case "box": {
+      const parts = box(scene, equipment.x, equipment.width, equipment.height);
+      return equipment.ball === true ? [...parts, ...medicineBall(scene)] : parts;
+    }
     case "rope":
       return rope(scene, equipment.x);
     case "pullupbar":

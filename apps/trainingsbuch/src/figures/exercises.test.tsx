@@ -41,13 +41,15 @@ const ALL: [string, Exercise][] = [
     [
       ...EXERCISE_IDS.flatMap((id) => variantsOf(id, []) ?? []),
       ...(variantsOf("run", LOADED_RUNS) ?? []),
+      // Only the line of Open 26.1 shows the step-over with a medicine ball.
+      ...(variantsOf("box-step-over", ["18 medicine-ball box step-overs"]) ?? []),
     ].map((variant) => [variant.exercise.key, variant.exercise]),
   ).entries(),
 ];
 
 describe("the exercises", () => {
-  it("are all 94 animations of the prototype", () => {
-    expect(ALL).toHaveLength(94);
+  it("are all 95 animations of the prototype", () => {
+    expect(ALL).toHaveLength(95);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {

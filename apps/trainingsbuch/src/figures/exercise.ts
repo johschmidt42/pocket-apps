@@ -99,8 +99,11 @@ export type Equipment =
    * head. The sizes are in `BENCH`. The figure lies on it with the head at -x.
    */
   | { kind: "bench"; x: number }
-  /** A box on the ground. `x` is its near edge. */
-  | { kind: "box"; x: number; width: number; height: number }
+  /**
+   * A box on the ground. `x` is its near edge. `ball`: the figure also holds a medicine ball in both
+   * hands, as with `medicineball` (the medicine-ball box step-over).
+   */
+  | { kind: "box"; x: number; width: number; height: number; ball?: boolean }
   /** A climbing rope that hangs at `x`. */
   | { kind: "rope"; x: number }
   /**

@@ -42,6 +42,7 @@ import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
 import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
 import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
 import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
+import { MEDICINE_BALL_BOX_STEP_OVER } from "./exercises/medicine-ball-box-step-over.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -293,9 +294,9 @@ describe("variantsOf", () => {
     expect(motions(id, workout?.lines ?? [])).toEqual(exercises);
   });
 
-  it("has no animation for the medicine-ball box step-overs of Open 26.1", () => {
+  it("shows the medicine-ball box step-over of Open 26.1", () => {
     const workout = CATALOG.find((item) => item.name === "Open 26.1");
-    expect(variantsOf("box-step-over", workout?.lines ?? [])).toBeNull();
+    expect(motions("box-step-over", workout?.lines ?? [])).toEqual([MEDICINE_BALL_BOX_STEP_OVER]);
     expect(motions("box-jump-over", workout?.lines ?? [])).toEqual([BOX_JUMP_OVER]);
   });
 
