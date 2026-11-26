@@ -14,6 +14,8 @@ import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
+import { DUMBBELL_CLEAN_AND_JERK } from "./exercises/dumbbell-clean-and-jerk.ts";
+import { DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM } from "./exercises/dumbbell-clean-and-jerk-single-arm.ts";
 import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
@@ -283,6 +285,9 @@ describe("variantsOf", () => {
     ["lunge", "Swift 1-1", [LUNGE_DUMBBELL]],
     ["lunge", "Luke", [LUNGE_FRONT_RACK]],
     ["front-rack-lunge", "Daniel Ray", [FRONT_RACK_LUNGE]],
+    ["dumbbell-clean-and-jerk", "Josh-O", [DUMBBELL_CLEAN_AND_JERK]],
+    ["dumbbell-clean-and-jerk", "Open 18.1", [DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM]],
+    ["dumbbell-clean-and-jerk", "Open 25.1", [DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM]],
   ] as const)("shows %s in %s", (id, name, exercises) => {
     const workout = CATALOG.find((item) => item.name === name);
     expect(motions(id, workout?.lines ?? [])).toEqual(exercises);
@@ -314,6 +319,7 @@ describe("variantsOf", () => {
   it.each([
     ["clean", ["Power", "Squat"]],
     ["dumbbell-clean", ["Squat", "Hang", "Power"]],
+    ["dumbbell-clean-and-jerk", ["Einarmig", "Zwei"]],
     ["farmers-carry", ["Dumbbell", "Kettlebell"]],
     ["jerk", ["Push", "Split"]],
     ["shoulder-to-overhead", ["Press", "Push", "Split"]],

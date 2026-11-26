@@ -61,7 +61,7 @@ export const EXTEND: Pose = (() => {
   return { ...pull, feet, toes, hip, lean, head: 2, hands, shrug, elbowTo: 150, elbowsOut: 3 };
 })();
 // The hang clean starts with a short dip: the hips go back and down, the dumbbells go to just above the knees.
-const DIP = pulled(58, 33, { x: 83, y: 155 }, -15);
+export const HANG_DIP = pulled(58, 33, { x: 83, y: 155 }, -15);
 
 /**
  * The poses of the turnover from the extension into the rack pose `land`. The hands have their place relative to the
@@ -171,7 +171,7 @@ export function dumbbellClean(options: Options): Exercise {
           },
         ]
       : [
-          { to: DIP, seconds: 0.3, label: "Dip", ease: "soft", anchor: "feet", arms: "fk" },
+          { to: HANG_DIP, seconds: 0.3, label: "Dip", ease: "soft", anchor: "feet", arms: "fk" },
           {
             to: POWER,
             via: [HANG],

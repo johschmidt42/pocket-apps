@@ -25,6 +25,8 @@ import { DEADLIFT } from "./exercises/deadlift.ts";
 import { DEVIL_PRESS } from "./exercises/devil-press.ts";
 import { DEVIL_PRESS_CLEAN } from "./exercises/devil-press-clean.ts";
 import { DOUBLE_UNDER } from "./exercises/double-under.ts";
+import { DUMBBELL_CLEAN_AND_JERK } from "./exercises/dumbbell-clean-and-jerk.ts";
+import { DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM } from "./exercises/dumbbell-clean-and-jerk-single-arm.ts";
 import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
@@ -121,6 +123,8 @@ const DUMBBELL_SQUAT = form("Squat", DUMBBELL_SQUAT_CLEAN);
 const DUMBBELL_HANG = form("Hang", DUMBBELL_HANG_CLEAN);
 const DUMBBELL_POWER = form("Power", DUMBBELL_POWER_CLEAN);
 const SINGLE_ARM_THRUSTER = form("Einarmig", KETTLEBELL_THRUSTER_SINGLE_ARM);
+const SINGLE_ARM_CLEAN_AND_JERK = form("Einarmig", DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM);
+const TWO_DUMBBELLS_CLEAN_AND_JERK = form("Zwei", DUMBBELL_CLEAN_AND_JERK);
 
 /**
  * The exercises that have an animation. To add one, copy its file from the prototype into
@@ -154,6 +158,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "devil-press": [form("Snatch", DEVIL_PRESS), form("Clean", DEVIL_PRESS_CLEAN)],
   "double-under": only(DOUBLE_UNDER),
   "dumbbell-clean": [DUMBBELL_SQUAT, DUMBBELL_HANG, DUMBBELL_POWER],
+  "dumbbell-clean-and-jerk": [SINGLE_ARM_CLEAN_AND_JERK, TWO_DUMBBELLS_CLEAN_AND_JERK],
   "dumbbell-snatch": only(DUMBBELL_SNATCH),
   "dumbbell-thruster": only(DUMBBELL_THRUSTER),
   "farmers-carry": [form("Dumbbell", FARMERS_CARRY), KETTLEBELL_CARRY],
@@ -232,6 +237,11 @@ const FORMS_IN_TEXT: Partial<
     { pattern: /\bhang squat clean/i, variant: DUMBBELL_HANG },
     { pattern: /\bpower cleans?\b/i, variant: DUMBBELL_POWER },
     { pattern: /\bsquat cleans?\b/i, variant: DUMBBELL_SQUAT },
+  ],
+  // Open 18.1 and 25.1: one dumbbell. Josh-O: two dumbbells.
+  "dumbbell-clean-and-jerk": [
+    { pattern: /\bwith each arm\b|\bclean-to-overheads?\b/i, variant: SINGLE_ARM_CLEAN_AND_JERK },
+    { pattern: /\btwo dumbbells\b/i, variant: TWO_DUMBBELLS_CLEAN_AND_JERK },
   ],
   "farmers-carry": [{ pattern: /\bkettlebell farmers carry\b/i, variant: KETTLEBELL_CARRY }],
   "kettlebell-thruster": [
