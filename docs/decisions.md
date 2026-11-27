@@ -5,6 +5,13 @@ Read the related entry before you change a decision. Add an entry for each new d
 
 ## 2026-11-27: Media controls of the phone (workout-timer)
 
+- **Status:** Removed again in version 2.1 (2026-11-27). The user tested it on the Android emulator. The media controls did not fit the timer:
+  - Android lets the user move every visible progress bar. The app can only set it back afterwards.
+  - Exact seconds need a new title every second. Android shows a fade-in animation for each new title.
+  - The silent audio pauses the music of the user.
+- **Also tested and rejected:** a normal notification (Notifications API) with the seconds. Without audio, Chrome slows down the page in the background: the notification changed only every few seconds, and after about 1.5 minutes not at all.
+- **Possible later:** a native Android app (for example Capacitor) that loads the web app from GitHub Pages and adds a notification with a clock that Android runs itself (chronometer, Live Updates) and a foreground service. The user chose not to build it for now.
+
 - **Context:** The user wants to see and control the running timer when they swipe down from the top of the phone, like a video from YouTube. Android calls these the media controls.
 - **Decision:** The workout timer uses the Media Session API (`src/media.ts`). The controls show:
   - the phase and the round as the title, for example "Arbeit · Runde 2 von 8"

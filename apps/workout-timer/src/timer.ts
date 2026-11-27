@@ -170,18 +170,6 @@ export function lastCue(timeline: Timeline, fromMs: number, toMs: number): Cue |
   return found;
 }
 
-/** The German name of a phase: on the screen and in the media controls of the phone. */
-export function phaseLabel(config: TimerConfig, kind: Segment["kind"]): string {
-  switch (kind) {
-    case "lead-in":
-      return "Gleich geht’s los";
-    case "rest":
-      return "Pause";
-    case "work":
-      return config.mode === "tabata" ? "Arbeit" : "Los!";
-  }
-}
-
 /** A time as "m:ss", or "h:mm:ss" from one hour. Example: 452 → "7:32". */
 export function formatClock(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);

@@ -10,7 +10,6 @@ import {
   countsRounds,
   describeTimer,
   formatClock,
-  phaseLabel,
   type Position,
   positionAt,
   type Segment,
@@ -180,6 +179,17 @@ function ControlButton({
       </span>
     </div>
   );
+}
+
+function phaseLabel(config: TimerConfig, kind: Segment["kind"]): string {
+  switch (kind) {
+    case "lead-in":
+      return "Gleich geht’s los";
+    case "rest":
+      return "Pause";
+    case "work":
+      return config.mode === "tabata" ? "Arbeit" : "Los!";
+  }
 }
 
 /** The lead-in shows the seconds left. For Time counts up, the other modes count down. */
