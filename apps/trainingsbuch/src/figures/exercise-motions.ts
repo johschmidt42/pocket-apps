@@ -45,6 +45,7 @@ import { FARMERS_CARRY_BARBELL } from "./exercises/farmers-carry-barbell.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
 import { FREESTANDING_HANDSTAND_PUSH_UP } from "./exercises/freestanding-handstand-push-up.ts";
+import { FRONT_RACK_CARRY } from "./exercises/front-rack-carry.ts";
 import { FRONT_RACK_LUNGE } from "./exercises/front-rack-lunge.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
@@ -68,12 +69,16 @@ import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
 import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
 import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
 import { MEDICINE_BALL_BOX_STEP_OVER } from "./exercises/medicine-ball-box-step-over.ts";
+import { MEDICINE_BALL_CLEAN } from "./exercises/medicine-ball-clean.ts";
+import { OVERHEAD_CARRY_BARBELL } from "./exercises/overhead-carry-barbell.ts";
+import { OVERHEAD_CARRY } from "./exercises/overhead-carry.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT_KETTLEBELL } from "./exercises/overhead-squat-kettlebell.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { PISTOL } from "./exercises/pistol.ts";
+import { PLATE_CARRY } from "./exercises/plate-carry.ts";
 import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
 import { POWER_SNATCH } from "./exercises/power-snatch.ts";
@@ -93,6 +98,7 @@ import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
 import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
 import { RUN_PLATE } from "./exercises/run-plate.ts";
 import { RUN } from "./exercises/run.ts";
+import { SHOULDER_PRESS } from "./exercises/shoulder-press.ts";
 import { SHUTTLE_RUN } from "./exercises/shuttle-run.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
 import { SKI } from "./exercises/ski.ts";
@@ -107,6 +113,7 @@ import { SUMO_DEADLIFT_HIGH_PULL } from "./exercises/sumo-deadlift-high-pull.ts"
 import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
+import { WAITER_WALK } from "./exercises/waiter-walk.ts";
 import { WALKING_LUNGE_KETTLEBELLS } from "./exercises/walking-lunge-kettlebells.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 import { WALL_BALL } from "./exercises/wall-ball.ts";
@@ -142,6 +149,8 @@ const DUMBBELL_POWER = form("Power", DUMBBELL_POWER_CLEAN);
 const SINGLE_ARM_THRUSTER = form("Einarmig", KETTLEBELL_THRUSTER_SINGLE_ARM);
 const SINGLE_ARM_CLEAN_AND_JERK = form("Einarmig", DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM);
 const TWO_DUMBBELLS_CLEAN_AND_JERK = form("Zwei", DUMBBELL_CLEAN_AND_JERK);
+const KETTLEBELL_OVERHEAD_CARRY = form("KB", OVERHEAD_CARRY);
+const BARBELL_OVERHEAD_CARRY = form("Bar", OVERHEAD_CARRY_BARBELL);
 const SQUAT_CLEAN_THRUSTERS = /\bsquat clean thrusters?\b/i;
 
 /**
@@ -180,6 +189,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "dumbbell-snatch": only(DUMBBELL_SNATCH),
   "dumbbell-thruster": only(DUMBBELL_THRUSTER),
   "farmers-carry": [form("Dumbbell", FARMERS_CARRY), KETTLEBELL_CARRY],
+  "front-rack-carry": only(FRONT_RACK_CARRY),
   "front-rack-lunge": only(FRONT_RACK_LUNGE),
   "front-squat": only(FRONT_SQUAT),
   "hand-release-push-up": only(HAND_RELEASE_PUSH_UP),
@@ -192,9 +202,12 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("Russian", KETTLEBELL_SWING_RUSSIAN),
   ],
   lunge: [TWO_DUMBBELLS_LUNGE, ONE_DUMBBELL_LUNGE, FRONT_RACK_BAR_LUNGE],
+  "medicine-ball-clean": only(MEDICINE_BALL_CLEAN),
+  "overhead-carry": [KETTLEBELL_OVERHEAD_CARRY, BARBELL_OVERHEAD_CARRY],
   "overhead-lunge": [PLATE_LUNGE, BARBELL_LUNGE, DUMBBELL_LUNGE],
   "overhead-squat": only(OVERHEAD_SQUAT),
   pistol: only(PISTOL),
+  "plate-carry": only(PLATE_CARRY),
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
   "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
@@ -215,6 +228,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
     form("Push", PUSH_JERK),
     form("Split", SPLIT_JERK),
   ],
+  "shoulder-press": only(SHOULDER_PRESS),
   "sit-up": only(SIT_UP),
   ski: only(SKI),
   snatch: [form("Power", POWER_SNATCH), form("Squat", SNATCH)],
@@ -228,6 +242,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   thruster: only(THRUSTER),
   "toes-to-bar": [form("Tuck", TOES_TO_BAR_TUCK), form("Straight", TOES_TO_BAR)],
   "walking-lunge": only(WALKING_LUNGE),
+  "waiter-walk": only(WAITER_WALK),
   "wall-walk": only(WALL_WALK),
   "wall-ball": only(WALL_BALL),
   "box-jump-over": only(BOX_JUMP_OVER),
@@ -339,6 +354,11 @@ const FORMS_IN_TEXT: Partial<
   "step-up": [
     { pattern: /\bbarbell\b[^,]*\bstep-ups?\b/i, variant: form("Bar", STEP_UP_BARBELL) },
     { pattern: /\bdumbbell\b[^,]*\bstep-ups?\b/i, variant: form("DB", STEP_UP_DUMBBELL) },
+  ],
+  // Daniel Ray: two kettlebells. Paul: an overhead walk with a barbell.
+  "overhead-carry": [
+    { pattern: /\bkettlebell overhead carry\b/i, variant: KETTLEBELL_OVERHEAD_CARRY },
+    { pattern: /\boverhead walk\b/i, variant: BARBELL_OVERHEAD_CARRY },
   ],
   // Foo.
   thruster: [

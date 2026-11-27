@@ -165,7 +165,7 @@ function ankleOf(part: number, hip: Spot): Spot {
  * The hand of one side: the arm is straight and hangs from the shoulder joint, which the shrug pulls down.
  * The load swings only a little, opposite to the leg of its side: the hand is in front when the leg is back.
  */
-function handOf(part: number, hip: Spot, grip: number): Spot {
+export function handOf(part: number, hip: Spot, grip: number): Spot {
   const torso = up(LEAN);
   const joint = { x: hip.x + torso.x * (46 + SHRUG), y: hip.y + torso.y * (46 + SHRUG) };
   const dx = -SWING * Math.cos(2 * Math.PI * (part - 0.04));
@@ -174,8 +174,14 @@ function handOf(part: number, hip: Spot, grip: number): Spot {
   return { x: joint.x + dx, y: joint.y + Math.sqrt(flat * flat - dx * dx) };
 }
 
+/**
+ * What the arms do in a carry with the load not at the sides (overhead, in the rack): the fields of the pose for the
+ * part of the loop and the hip. `LEAN` is the lean of the walk.
+ */
+export type Upper = (part: number, hip: Spot, lean: number) => Partial<Pose>;
+
 /** The pose at one part of the loop. The near leg lands at 0, the far leg lands at 0.5. */
-function pose(part: number, grip: number): Pose {
+function pose(part: number, grip: number, upper?: Upper): Pose {
   const hip = hipOf(part);
   return {
     hip,
@@ -188,6 +194,7 @@ function pose(part: number, grip: number): Pose {
     knees: 0.08,
     hands: [handOf(part, hip, grip), handOf(part + 0.5, hip, grip)],
     grip,
+    ...upper?.(part, hip, LEAN),
   };
 }
 
@@ -203,12 +210,13 @@ export function farmersCarry(options: {
   title: string;
   equipment: Equipment;
   grip: number;
+  upper?: Upper;
 }): Exercise {
-  const start = pose(0, options.grip);
+  const start = pose(0, options.grip, options.upper);
   const steps: Step[] = [];
   for (let i = 1; i <= POSES; i++) {
     steps.push({
-      to: i === POSES ? start : pose(i / POSES, options.grip),
+      to: i === POSES ? start : pose(i / POSES, options.grip, options.upper),
       seconds: LOOP / POSES,
       ...(i === 1 ? { label: "Rechter Schritt" } : {}),
       ...(i === POSES / 2 + 1 ? { label: "Linker Schritt" } : {}),
@@ -232,6 +240,15 @@ export function farmersCarry(options: {
 export const wide = (exercise: Exercise): Exercise => ({
   ...exercise,
   views: [{ ...SIDE, box: [-8, 22, 170, 190] }, FRONT],
+});
+
+/** The views for a load overhead: higher than for a load at the sides. */
+export const tall = (exercise: Exercise): Exercise => ({
+  ...exercise,
+  views: [
+    { ...SIDE, box: [4, -24, 150, 236] },
+    { ...FRONT, box: [-60, -24, 120, 236] },
+  ],
 });
 
 export const FARMERS_CARRY: Exercise = farmersCarry({

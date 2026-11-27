@@ -1,6 +1,6 @@
 {
   "name": "trainingsbuch",
-  "version": "5.16.0",
+  "version": "5.17.0",
   "private": true,
   "type": "module",
   "description": "Speichert deine Ergebnisse bei Benchmark-, Hero- und Open-Workouts. Auf Wunsch trägt die KI sie aus Text oder Foto ein.",

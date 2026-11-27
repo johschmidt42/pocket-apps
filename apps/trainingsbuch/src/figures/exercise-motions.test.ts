@@ -53,6 +53,8 @@ import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
 import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
 import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
 import { MEDICINE_BALL_BOX_STEP_OVER } from "./exercises/medicine-ball-box-step-over.ts";
+import { OVERHEAD_CARRY_BARBELL } from "./exercises/overhead-carry-barbell.ts";
+import { OVERHEAD_CARRY } from "./exercises/overhead-carry.ts";
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
@@ -420,6 +422,16 @@ describe("variantsOf", () => {
     const variants = variantsOf(id, [line]);
     expect(variants?.map((variant) => variant.exercise)).toEqual([exercise]);
     expect(variants?.[0].label).toBe(label);
+  });
+
+  it("offers both overhead carries and picks the one of the workout", () => {
+    expect(motions("overhead-carry", [])).toEqual([OVERHEAD_CARRY, OVERHEAD_CARRY_BARBELL]);
+    expect(motions("overhead-carry", ["15 m (50 ft) double-kettlebell overhead carry"])).toEqual([
+      OVERHEAD_CARRY,
+    ]);
+    expect(motions("overhead-carry", ["18 m overhead walk (20 yd), 84/57 kg"])).toEqual([
+      OVERHEAD_CARRY_BARBELL,
+    ]);
   });
 
   it("has the ring handstand push-up of Meadows", () => {
