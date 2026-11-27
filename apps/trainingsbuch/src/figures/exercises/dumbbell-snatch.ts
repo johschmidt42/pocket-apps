@@ -30,7 +30,7 @@ export function pose(
 }
 
 // The free arm is straight in each pose: the hand is 2 units farther away than the arm can reach (62).
-const WIDE: Free = { dx: -40, dy: 24, out: 44 }; // out to the side and back, above the knee
+export const WIDE: Free = { dx: -40, dy: 24, out: 44 }; // out to the side and back, above the knee
 export const SIDEWAYS: Free = { dx: -16, dy: 46, out: 42 }; // down and out to the side
 export const LOW: Free = { dx: 2, dy: 60, out: 22 }; // hangs beside the hip, a little away from the leg
 

@@ -1,7 +1,26 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
-import { BACKPACK, CARRY_BAR, dumbbellHand, floorDumbbellZ, type Equipment } from "./exercise.ts";
-import { BENCH, BIKE, GHD, pedalOf, RINGS, ROWER, SKIERG, strapOf } from "./machines.ts";
+import {
+  BACKPACK,
+  CARRY_BAR,
+  DIP_BARS,
+  dumbbellHand,
+  floorDumbbellZ,
+  ringsHeld,
+  ROWER_RAIL,
+  type Equipment,
+} from "./exercise.ts";
+import {
+  BENCH,
+  BIKE,
+  GHD,
+  pedalOf,
+  ringAnchor,
+  RINGS,
+  ROWER,
+  SKIERG,
+  strapOf,
+} from "./machines.ts";
 import {
   BALL,
   ballCenter,
@@ -279,10 +298,59 @@ function backpack(x: number): Parts {
   ];
 }
 
-/** A barbell or a backpack on the floor. It stays on its spot when the figure turns around. */
-function floorBar({ fromSide }: Scene, x: number, isBackpack: boolean): Parts {
+/** The end of the rail of a rower that crosses the way, on a post with a foot. */
+function rowerRail(x: number): Parts {
+  const { half, top, depth, foot } = ROWER_RAIL;
+  return [
+    part(
+      BEHIND,
+      <rect
+        key="railPost"
+        x={x - 2}
+        y={GROUND - top + depth}
+        width={4}
+        height={top - depth}
+        fill={COLOR}
+        stroke="none"
+      />,
+    ),
+    part(
+      BEHIND,
+      <rect
+        key="railFoot"
+        x={x - foot}
+        y={GROUND - 3}
+        width={foot * 2}
+        height={3}
+        rx={1}
+        fill={COLOR}
+        stroke="none"
+      />,
+    ),
+    part(
+      BEHIND + 1,
+      <rect
+        key="rail"
+        x={x - half}
+        y={GROUND - top}
+        width={half * 2}
+        height={depth}
+        rx={1.5}
+        fill={COLOR}
+        stroke="none"
+      />,
+    ),
+  ];
+}
+
+/**
+ * A barbell, a backpack or the rail of a rower on the floor. It stays on its spot when the figure
+ * turns around.
+ */
+function floorBar({ fromSide }: Scene, x: number, item: "backpack" | "rower" | undefined): Parts {
   if (!fromSide) return [];
-  if (isBackpack) return backpack(x);
+  if (item === "backpack") return backpack(x);
+  if (item === "rower") return rowerRail(x);
   const center = { x, y: GROUND - PLATE, depth: BEHIND };
   return [disc("plate", BEHIND, center, PLATE), grip("bar", BEHIND + 1, center, 3, 2)];
 }
@@ -465,11 +533,20 @@ function pullUpBar({ flat, fromSide }: Scene, x: number, y: number): Parts {
  * front a bar. Each piece of the strap is compared with the body parts where they overlap: the near strap goes
  * over the near arm, the far strap behind the body. Each ring is drawn over the forearm of its side.
  */
-function rings(scene: Scene, at: { x: number; y: number }): Parts {
+function rings(
+  scene: Scene,
+  at: { x: number; y: number; held?: readonly [number, number] },
+): Parts {
   const { flat, joints } = scene;
+  const held = ringsHeld(at, scene.progress);
   return SIDES.flatMap((side) => {
-    const hand = joints.arms[side].end;
-    const strap = strapOf(at, joints, side);
+    // A ring that the hand does not hold hangs still at its grip spot, on a straight strap.
+    const hand = held
+      ? joints.arms[side].end
+      : vec(at.x, at.y, side === 0 ? RINGS.half : -RINGS.half);
+    const strap = held
+      ? strapOf(at, joints, side)
+      : { points: [ringAnchor(at, hand), hand], up: vec(0, -1, 0) };
     const rise = strap.up;
     // In the plane of the ring: `rise` along the strap, and the forward direction at a right angle to it.
     const ahead = vec(1 - rise.x * rise.x, -rise.x * rise.y, -rise.x * rise.z);
@@ -521,6 +598,33 @@ function rings(scene: Scene, at: { x: number; y: number }): Parts {
       over: [`forearm${String(side)}`],
     };
     return [...pieces, ring];
+  });
+}
+
+/**
+ * The two bars of a dip station: each bar under its hand, the posts at its ends down to the floor.
+ * From the side, the near bar covers the far one. From the front, the bars are discs.
+ */
+function dipBars({ flat, fromSide, joints }: Scene, at: { x: number; y: number }): Parts {
+  return SIDES.flatMap((side) => {
+    const z = side === 0 ? DIP_BARS.z : -DIP_BARS.z;
+    const end = (dx: number, y: number) => flat(vec(at.x + dx, y, z));
+    const back = end(-DIP_BARS.half, at.y + 3);
+    const front = end(DIP_BARS.half, at.y + 3);
+    const posts = [-DIP_BARS.half, DIP_BARS.half].map((dx) =>
+      bar(
+        `dipPost${String(side)}${String(dx)}`,
+        BEHIND,
+        end(dx, at.y + 3),
+        end(dx, GROUND),
+        4,
+        "butt",
+      ),
+    );
+    const top = fromSide
+      ? bar(`dipBar${String(side)}`, flat(joints.arms[side].end).depth - 0.5, back, front, 5)
+      : disc(`dipBar${String(side)}`, front.depth, front, 3);
+    return [...posts, top];
   });
 }
 
@@ -933,7 +1037,7 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "bench":
       return [...bench(scene, equipment.x), ...barbell(scene, false)];
     case "floorbar":
-      return floorBar(scene, equipment.x, equipment.backpack === true);
+      return floorBar(scene, equipment.x, equipment.item);
     case "box":
       return box(scene, equipment.x, equipment.width, equipment.height);
     case "rope":
@@ -944,6 +1048,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return rings(scene, equipment);
     case "jumprope":
       return jumpRope(scene, equipment.turns, equipment.phase, equipment.radius);
+    case "dipbars":
+      return dipBars(scene, equipment);
     case "floordumbbell":
       return floorDumbbell(scene, equipment);
   }

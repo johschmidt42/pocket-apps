@@ -10,6 +10,6 @@ export const BURPEE_OVER_BACKPACK: Exercise = {
   title: "Burpee over the Backpack",
   equipment:
     BURPEE_OVER_BAR.equipment.kind === "floorbar"
-      ? { ...BURPEE_OVER_BAR.equipment, backpack: true }
+      ? { ...BURPEE_OVER_BAR.equipment, item: "backpack" }
       : BURPEE_OVER_BAR.equipment,
 };

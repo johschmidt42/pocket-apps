@@ -93,10 +93,11 @@ export type Equipment =
   | { kind: "bike"; x: number }
   /**
    * A loaded barbell on the floor at `x`, from side to side (a bar-facing burpee). It is drawn
-   * behind the figure. Only the side view shows it. `backpack`: a loaded backpack lies there
-   * instead (`BACKPACK`), on its back.
+   * behind the figure. Only the side view shows it. `item`: something else lies there instead of
+   * the bar, to jump over it in a burpee: a loaded backpack on its back (`BACKPACK`), or the rail
+   * of a rower that crosses the way (`ROWER_RAIL`).
    */
-  | { kind: "floorbar"; x: number; backpack?: boolean }
+  | { kind: "floorbar"; x: number; item?: "backpack" | "rower" }
   /**
    * A weight plate in both hands, held at its edge. Its flat side looks forward: from the side it
    * is a thin bar, from the front a circle. Its center is between the hands.
@@ -119,8 +120,16 @@ export type Equipment =
   /**
    * Two gymnastic rings, one in each hand (see `RINGS` in `machines.ts`). `x` and `y` are the grip when the
    * straps hang straight down. The hand holds the bottom of the ring: the ring is above the hand.
+   * `held`: the hands hold the rings only between these two parts of the loop (0 to 1). Outside,
+   * the rings hang still at `x`, `y` (a burpee under the rings).
    */
-  | { kind: "rings"; x: number; y: number }
+  | { kind: "rings"; x: number; y: number; held?: readonly [number, number] }
+  /**
+   * Two fixed parallel bars of a dip station, along the way of the figure. `x` and `y` are the
+   * grip: each hand holds the top of its bar. The bars are `DIP_BARS.half` long to each side of the
+   * grip and stand on two posts.
+   */
+  | { kind: "dipbars"; x: number; y: number }
   /**
    * A jump rope from hand to hand. It turns `turns` times in one loop of the exercise.
    * `phase` is where it starts, as a part of one turn: 0 is over the head, 0.25 in front, 0.5 under the feet.
@@ -151,6 +160,26 @@ export type View = {
 
 /** A backpack on the floor, from the side: half its length along the way, and its height. */
 export const BACKPACK = { half: 20, height: 22 };
+
+/**
+ * The rail of a rower (Concept2) that crosses the way, as the side view sees its end: half its
+ * width, the height of its top above the floor, and its depth. A post carries it, on a foot of
+ * half the width `foot`.
+ */
+export const ROWER_RAIL = { half: 4, top: 34, depth: 10, foot: 14 };
+
+/**
+ * The bars of a dip station: half their length from the grip, and how far the two bars are from
+ * the middle.
+ */
+export const DIP_BARS = { half: 30, z: 20 };
+
+/** True when the hands hold the rings at this part of the loop (see `held` of the rings). */
+export function ringsHeld(rings: { held?: readonly [number, number] }, progress: number): boolean {
+  if (rings.held === undefined) return true;
+  const part = progress - Math.floor(progress);
+  return part >= rings.held[0] && part < rings.held[1];
+}
 
 /**
  * A barbell in one hand at the side: the plates are this far in front of the hand and behind it,

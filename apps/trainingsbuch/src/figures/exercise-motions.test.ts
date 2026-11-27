@@ -12,6 +12,7 @@ import { BURPEE_BAR_MUSCLE_UP } from "./exercises/burpee-bar-muscle-up.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
 import { BURPEE_CHEST_TO_BAR_PULL_UP } from "./exercises/burpee-chest-to-bar-pull-up.ts";
+import { BURPEE_MUSCLE_UP } from "./exercises/burpee-muscle-up.ts";
 import { BURPEE_OVER_BACKPACK } from "./exercises/burpee-over-backpack.ts";
 import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
@@ -61,7 +62,9 @@ import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
 import { OVERHEAD_SQUAT_KETTLEBELL } from "./exercises/overhead-squat-kettlebell.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { PISTOL } from "./exercises/pistol.ts";
+import { POWER_CLEAN_AND_JERK } from "./exercises/power-clean-and-jerk.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
+import { POWER_SNATCH } from "./exercises/power-snatch.ts";
 import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
@@ -432,6 +435,24 @@ describe("variantsOf", () => {
     expect(motions("overhead-carry", ["18 m overhead walk (20 yd), 84/57 kg"])).toEqual([
       OVERHEAD_CARRY_BARBELL,
     ]);
+  });
+
+  it("offers the burpee muscle-up on rings first and on a bar", () => {
+    expect(motions("burpee-muscle-up", ["5 burpee muscle-ups"])).toEqual([
+      BURPEE_MUSCLE_UP,
+      BURPEE_BAR_MUSCLE_UP,
+    ]);
+  });
+
+  it("offers a snatch and a clean and jerk for ground-to-overheads", () => {
+    expect(motions("ground-to-overhead", ["8 ground-to-overheads"])).toEqual([
+      POWER_SNATCH,
+      POWER_CLEAN_AND_JERK,
+    ]);
+  });
+
+  it("shows the squat clean thruster for its own id", () => {
+    expect(motions("squat-clean-thruster", [])).toEqual([SQUAT_CLEAN_THRUSTER]);
   });
 
   it("has the ring handstand push-up of Meadows", () => {

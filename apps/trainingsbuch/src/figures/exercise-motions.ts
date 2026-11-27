@@ -16,23 +16,30 @@ import { BURPEE_BAR_MUSCLE_UP } from "./exercises/burpee-bar-muscle-up.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
 import { BURPEE_CHEST_TO_BAR_PULL_UP } from "./exercises/burpee-chest-to-bar-pull-up.ts";
+import { BURPEE_MUSCLE_UP } from "./exercises/burpee-muscle-up.ts";
 import { BURPEE_OVER_BACKPACK } from "./exercises/burpee-over-backpack.ts";
 import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
+import { BURPEE_OVER_ROWER } from "./exercises/burpee-over-rower.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { BURPEE } from "./exercises/burpee.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
 import { CLEAN_AND_JERK } from "./exercises/clean-and-jerk.ts";
+import { DEAD_HANG } from "./exercises/dead-hang.ts";
 import { DEADLIFT } from "./exercises/deadlift.ts";
 import { DEVIL_PRESS_CLEAN } from "./exercises/devil-press-clean.ts";
 import { DEVIL_PRESS } from "./exercises/devil-press.ts";
+import { DIP } from "./exercises/dip.ts";
 import { DOUBLE_UNDER } from "./exercises/double-under.ts";
+import { DUMBBELL_BURPEE_DEADLIFT } from "./exercises/dumbbell-burpee-deadlift.ts";
 import { DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM } from "./exercises/dumbbell-clean-and-jerk-single-arm.ts";
 import { DUMBBELL_CLEAN_AND_JERK } from "./exercises/dumbbell-clean-and-jerk.ts";
 import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
+import { DUMBBELL_FLOOR_PRESS } from "./exercises/dumbbell-floor-press.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
 import { DUMBBELL_HANG_SPLIT_SNATCH } from "./exercises/dumbbell-hang-split-snatch.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
+import { DUMBBELL_ROW } from "./exercises/dumbbell-row.ts";
 import { DUMBBELL_SNATCH } from "./exercises/dumbbell-snatch.ts";
 import { DUMBBELL_SPLIT_CLEAN } from "./exercises/dumbbell-split-clean.ts";
 import { DUMBBELL_SQUAT_CLEAN_THRUSTER } from "./exercises/dumbbell-squat-clean-thruster.ts";
@@ -57,6 +64,8 @@ import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANG_CLEAN } from "./exercises/hang-clean.ts";
 import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANG_POWER_SNATCH } from "./exercises/hang-power-snatch.ts";
+import { KETTLEBELL_CLEAN_AND_JERK } from "./exercises/kettlebell-clean-and-jerk.ts";
+import { KETTLEBELL_SNATCH } from "./exercises/kettlebell-snatch.ts";
 import { KETTLEBELL_SWING_AMERICAN } from "./exercises/kettlebell-swing-american.ts";
 import { KETTLEBELL_SWING_RUSSIAN } from "./exercises/kettlebell-swing-russian.ts";
 import { KETTLEBELL_THRUSTER_SINGLE_ARM } from "./exercises/kettlebell-thruster-single-arm.ts";
@@ -65,6 +74,7 @@ import { KIPPING_CHEST_TO_BAR_PULL_UP } from "./exercises/kipping-chest-to-bar-p
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
+import { LEGLESS_ROPE_CLIMB } from "./exercises/legless-rope-climb.ts";
 import { LUNGE_DUMBBELL } from "./exercises/lunge-dumbbell.ts";
 import { LUNGE_DUMBBELLS } from "./exercises/lunge-dumbbells.ts";
 import { LUNGE_FRONT_RACK } from "./exercises/lunge-front-rack.ts";
@@ -88,6 +98,7 @@ import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { PUSH_UP } from "./exercises/push-up.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
 import { RING_HANDSTAND_PUSH_UP } from "./exercises/ring-handstand-push-up.ts";
+import { RING_LOWER } from "./exercises/ring-lower.ts";
 import { RING_MUSCLE_UP } from "./exercises/ring-muscle-up.ts";
 import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { RING_ROW } from "./exercises/ring-row.ts";
@@ -109,10 +120,12 @@ import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
 import { STEP_UP_BARBELL } from "./exercises/step-up-barbell.ts";
 import { STEP_UP_DUMBBELL } from "./exercises/step-up-dumbbell.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
+import { STIFF_LEGGED_DEADLIFT } from "./exercises/stiff-legged-deadlift.ts";
 import { SUMO_DEADLIFT_HIGH_PULL } from "./exercises/sumo-deadlift-high-pull.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
 import { TOES_TO_BAR_TUCK } from "./exercises/toes-to-bar-tuck.ts";
 import { TOES_TO_BAR } from "./exercises/toes-to-bar.ts";
+import { TRIPLE_UNDER } from "./exercises/triple-under.ts";
 import { WAITER_WALK } from "./exercises/waiter-walk.ts";
 import { WALKING_LUNGE_KETTLEBELLS } from "./exercises/walking-lunge-kettlebells.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
@@ -249,6 +262,23 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "box-step-over": only(BOX_STEP_OVER),
   "burpee-bar-muscle-up": only(BURPEE_BAR_MUSCLE_UP),
   "burpee-over-dumbbell": only(BURPEE_OVER_DUMBBELL),
+  "burpee-over-rower": only(BURPEE_OVER_ROWER),
+  // Taylor does not say rings or bar. In 2014 a muscle-up was on the rings.
+  "burpee-muscle-up": [form("Ring", BURPEE_MUSCLE_UP), form("Bar", BURPEE_BAR_MUSCLE_UP)],
+  "dead-hang": only(DEAD_HANG),
+  dip: only(DIP),
+  "dumbbell-burpee-deadlift": only(DUMBBELL_BURPEE_DEADLIFT),
+  "dumbbell-floor-press": only(DUMBBELL_FLOOR_PRESS),
+  "dumbbell-row": only(DUMBBELL_ROW),
+  // Open 20.1 permits any way from the floor to overhead.
+  "ground-to-overhead": [form("Snatch", POWER_SNATCH), form("C&J", POWER_CLEAN_AND_JERK)],
+  "kettlebell-clean-and-jerk": only(KETTLEBELL_CLEAN_AND_JERK),
+  "kettlebell-snatch": only(KETTLEBELL_SNATCH),
+  "legless-rope-climb": only(LEGLESS_ROPE_CLIMB),
+  "ring-lower": only(RING_LOWER),
+  "squat-clean-thruster": only(SQUAT_CLEAN_THRUSTER),
+  "stiff-legged-deadlift": only(STIFF_LEGGED_DEADLIFT),
+  "triple-under": only(TRIPLE_UNDER),
   "dumbbell-deadlift": only(DUMBBELL_DEADLIFT),
   "dumbbell-squat": only(DUMBBELL_FRONT_SQUAT),
   "ghd-sit-up": only(GHD_SIT_UP),
