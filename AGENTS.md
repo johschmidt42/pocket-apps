@@ -88,6 +88,7 @@ scripts/serve-release.mjs  Serves release/ at http://localhost:4173/pocket-apps/
 e2e/                       Browser tests (Playwright) for the files in release/.
 .github/                   GitHub Actions: pipelines in workflows/, shared setup in actions/setup/.
 docs/decisions.md          Why we chose the tools and patterns.
+docs/android-emulator.md   Test an app on the Android emulator: install a PWA, start it, adb commands.
 ```
 
 Import boundaries (ESLint enforces them in `apps/` and `launcher/`):
@@ -294,6 +295,7 @@ Browser tests:
 - Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. See `e2e/app-ideen.spec.ts`.
 - Use the helpers in `e2e/helpers.ts`. `withDataFolder(page)` before `page.goto()` gives a data folder in the private file system of the browser (OPFS). `withoutFolderAccess(page)` acts like Firefox or Safari: the app offers only the cloud storages. `e2e/onedrive.spec.ts` and `e2e/dropbox.spec.ts` fake the login and the API of the provider with `page.route()`. `writeDataFile()` and `readDataFile()` change and read files in the folder after `page.goto()`.
 - In browser tests of a sub-page, use `page.goBack()` and `page.goForward()`.
+- The browser tests cannot check what only a phone has: the install of a PWA, the app window, the back gesture of Android, notifications. Test these on the Android emulator: see `docs/android-emulator.md`.
 - The browser tests have no internet. Answer the requests to an API or an AI provider with `page.route()`. See `e2e/kursverlauf.spec.ts` and `e2e/launcher.spec.ts`.
 
 ## Add a new app
