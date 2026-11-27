@@ -3,6 +3,18 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-27: Ask before the back gesture ends a timer (workout-timer)
+
+- **Context:** On a phone, the back gesture during a workout closed the installed app or left the page. The running timer was lost.
+- **Decision:** While a timer runs or pauses, the app keeps one extra entry in the browser history (`src/back-guard.ts`). AGENTS.md lists this as the exception to "Only a sub-page adds an entry". It has the same address and `history.state` `{ workoutTimerGuard: true }`. The back gesture removes only this entry. Then the app shows the dialog "Timer läuft noch" with "Weiter trainieren" and "Timer beenden". The timer keeps running while the dialog shows. "Weiter trainieren" (and Esc, X or a tap outside) adds the entry again.
+- **Decision:** A second "back" while the dialog shows leaves the app. Two gestures in a row are not an accident. A page must not keep the user in it.
+- **Decision:** When the timer ends in the app ("Beenden", "Fertig" or the end of the time), the app goes back over its extra entry. Thus no empty back step stays. A second end before the browser went back does nothing. If a new timer starts in this time ("Nochmal"), the app adds the entry again after the browser went back.
+- **Decision:** A reload keeps `history.state`. If the page starts on an old extra entry, or the forward button shows one, and no timer runs, the app goes back over it.
+- **Decision:** While a timer runs or pauses, the app also asks the browser to confirm a reload, the close of the tab or a link that leaves the page (`beforeunload`). The browser shows its own question.
+- **Relation:** "Sub-pages in the browser history" says that the back button does not close a dialog. This is different: the back gesture opens a dialog, and the extra entry protects a running process, not a page.
+- **Rejected:** The `CloseWatcher` API. It is made for this. But only Chromium has it, and jsdom does not. Also, without a recent tap of the user, it lets the back gesture through.
+- **Rejected:** `useSubPage()` for the running timer. Its back step would show the settings and end the timer without a question.
+
 ## 2026-11-27: Media controls of the phone (workout-timer)
 
 - **Status:** Removed again in version 2.1 (2026-11-27). The user tested it on the Android emulator. The media controls did not fit the timer:

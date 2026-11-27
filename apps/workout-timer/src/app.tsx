@@ -1,12 +1,15 @@
 import { AppHeader } from "@pocket-apps/core/app-shell";
 import { useEffect, useReducer, useRef, useState } from "react";
+import { armBackGuard, disarmBackGuard, useBackGuard } from "./back-guard.ts";
 import { FinishedView } from "./finished-view.tsx";
+import { LeaveDialog } from "./leave-dialog.tsx";
 import { elapsedAt, runReducer } from "./run.ts";
 import { RunningView } from "./running-view.tsx";
 import { DEFAULT_SETTINGS, type Settings } from "./settings.ts";
 import { SetupForm } from "./setup-form.tsx";
 import { createSound, type Sound } from "./sound.ts";
 import { buildTimeline, lastCue, type TimerConfig } from "./timer.ts";
+import { useLeaveWarning } from "./use-leave-warning.ts";
 import { useWakeLock } from "./use-wake-lock.ts";
 
 /** A clock in milliseconds. Only the differences count. */
@@ -27,8 +30,22 @@ export function App({ clock = systemClock, sound }: { clock?: Clock; sound?: Sou
   const [tones] = useState(() => sound ?? createSound());
   // The elapsed time at the last tick. A tone plays when its time is between two ticks.
   const lastElapsed = useRef(0);
+  // True after the back gesture during a timer: the app asks before the timer ends.
+  const [asking, setAsking] = useState(false);
+  const active = run.status === "running" || run.status === "paused";
 
-  useWakeLock(run.status === "running" || run.status === "paused");
+  useWakeLock(active);
+  useLeaveWarning(active);
+  useBackGuard(active, () => {
+    setAsking(true);
+  });
+
+  /** Ends the timer and removes the extra entry of the browser history. */
+  const finish = (time: number) => {
+    setAsking(false);
+    dispatch({ type: "finish", now: time });
+    disarmBackGuard();
+  };
 
   // Sync with the clock: a timer that ticks while the workout runs.
   useEffect(() => {
@@ -40,9 +57,7 @@ export function App({ clock = systemClock, sound }: { clock?: Clock; sound?: Sou
       const cue = lastCue(timeline, lastElapsed.current, elapsed);
       lastElapsed.current = elapsed;
       if (cue !== null && !muted) tones.play(cue);
-      if (timeline.endMs !== null && elapsed >= timeline.endMs) {
-        dispatch({ type: "finish", now: time });
-      }
+      if (timeline.endMs !== null && elapsed >= timeline.endMs) finish(time);
       setNow(time);
     }, TICK_MS);
     return () => {
@@ -57,6 +72,7 @@ export function App({ clock = systemClock, sound }: { clock?: Clock; sound?: Sou
     lastElapsed.current = -1;
     setNow(time);
     dispatch({ type: "start", config, now: time });
+    armBackGuard();
   };
 
   const content = () => {
@@ -81,7 +97,7 @@ export function App({ clock = systemClock, sound }: { clock?: Clock; sound?: Sou
               dispatch({ type: "resume", now: time });
             }}
             onFinish={() => {
-              dispatch({ type: "finish", now: clock() });
+              finish(clock());
             }}
             onCountRound={(change) => {
               dispatch({ type: "count-round", change });
@@ -112,6 +128,16 @@ export function App({ clock = systemClock, sound }: { clock?: Clock; sound?: Sou
     <>
       <AppHeader app={__POCKET_APP__} />
       <main className="mx-auto flex max-w-md flex-col gap-4 p-4">{content()}</main>
+      <LeaveDialog
+        open={asking}
+        onKeep={() => {
+          setAsking(false);
+          armBackGuard();
+        }}
+        onFinish={() => {
+          finish(clock());
+        }}
+      />
     </>
   );
 }

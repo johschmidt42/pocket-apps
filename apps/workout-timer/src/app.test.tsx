@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
@@ -260,5 +260,120 @@ describe("Workout Timer", () => {
 
     expect(sound.play).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Ton an" })).toBeInTheDocument();
+  });
+
+  describe("back gesture during a timer", () => {
+    /** The back gesture of the phone, or the back button of the browser. */
+    function goBack() {
+      act(() => {
+        window.history.back();
+      });
+    }
+
+    it("asks first and keeps the timer", async () => {
+      const { clock, user } = setup();
+      await user.click(screen.getByRole("button", { name: "Start" }));
+
+      goBack();
+
+      expect(await screen.findByRole("dialog", { name: "Timer läuft noch" })).toBeInTheDocument();
+      // The timer keeps running while the dialog shows.
+      clock.time = LEAD_IN_MS + 3_000;
+      await expectClock("0:03");
+      await user.click(screen.getByRole("button", { name: "Weiter trainieren" }));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+      // The app protects the timer again.
+      goBack();
+      expect(await screen.findByRole("dialog", { name: "Timer läuft noch" })).toBeInTheDocument();
+    });
+
+    it("keeps the timer when the user closes the dialog with Esc", async () => {
+      const { user } = setup();
+      await user.click(screen.getByRole("button", { name: "Start" }));
+
+      goBack();
+      await screen.findByRole("dialog", { name: "Timer läuft noch" });
+      await user.keyboard("{Escape}");
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Gleich geht’s los" })).toBeInTheDocument();
+    });
+
+    it("ends the timer when the user confirms", async () => {
+      const { user } = setup();
+      await chooseMode(user, "Tabata");
+      await user.click(screen.getByRole("button", { name: "Start" }));
+
+      goBack();
+      await user.click(await screen.findByRole("button", { name: "Timer beenden" }));
+
+      expect(screen.getByRole("heading", { name: "Beendet" })).toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("leaves no extra step when the timer ends in the app", async () => {
+      // The entry before the start of the timer.
+      window.history.replaceState({ before: true }, "");
+      const { user } = setup();
+      await chooseMode(user, "Tabata");
+      await user.click(screen.getByRole("button", { name: "Start" }));
+      expect(window.history.state).toEqual({ workoutTimerGuard: true });
+
+      await user.click(screen.getByRole("button", { name: "Beenden" }));
+
+      // The app went back over its extra entry, to the entry from before the start.
+      await waitFor(() => {
+        expect(window.history.state).toEqual({ before: true });
+      });
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("protects the next timer after Nochmal", async () => {
+      window.history.replaceState({ before: true }, "");
+      const { user } = setup();
+      await chooseMode(user, "Tabata");
+      await user.click(screen.getByRole("button", { name: "Start" }));
+      await user.click(screen.getByRole("button", { name: "Beenden" }));
+
+      await user.click(screen.getByRole("button", { name: "Nochmal" }));
+
+      await waitFor(() => {
+        expect(window.history.state).toEqual({ workoutTimerGuard: true });
+      });
+      goBack();
+      expect(await screen.findByRole("dialog", { name: "Timer läuft noch" })).toBeInTheDocument();
+    });
+
+    it("removes the extra entry at the end of the time", async () => {
+      window.history.replaceState({ before: true }, "");
+      const { clock, user } = setup();
+      await chooseMode(user, "AMRAP");
+      await setInput(user, "Dauer in Minuten", "1");
+      await user.click(screen.getByRole("button", { name: "Start" }));
+
+      clock.time = LEAD_IN_MS + 60_000;
+
+      expect(await screen.findByRole("heading", { name: "Geschafft!" })).toBeInTheDocument();
+      await waitFor(() => {
+        expect(window.history.state).toEqual({ before: true });
+      });
+    });
+
+    it("lets the browser ask before the page closes while a timer runs", async () => {
+      const { user } = setup();
+      const leave = () => {
+        const event = new Event("beforeunload", { cancelable: true });
+        window.dispatchEvent(event);
+        return event.defaultPrevented;
+      };
+      expect(leave()).toBe(false);
+
+      await user.click(screen.getByRole("button", { name: "Start" }));
+      expect(leave()).toBe(true);
+
+      await user.click(screen.getByRole("button", { name: "Fertig" }));
+      expect(leave()).toBe(false);
+    });
   });
 });
