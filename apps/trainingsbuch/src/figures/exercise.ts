@@ -38,6 +38,13 @@ export type Equipment =
    */
   | { kind: "dumbbells"; hand?: 0 | 1 }
   /**
+   * A barbell in each hand at the side, parallel to the way of the figure (a barbell farmers carry).
+   * The hand holds the middle of the bar. From the side, the bar is a long line with a plate at each
+   * end, `CARRY_BAR.plates` in front of the hand and behind it. From the front, the near plate is a
+   * disc at the hand. `hand`: only this hand holds a bar.
+   */
+  | { kind: "carrybars"; hand?: 0 | 1 }
+  /**
    * Two kettlebells, one in each hand. Each bell hangs straight below its hand (a farmers carry). In
    * a rack and overhead, the bell lies on the outside of the forearm (`heldBell`). `hand`: only this
    * hand holds a bell (a single-arm lift).
@@ -86,9 +93,10 @@ export type Equipment =
   | { kind: "bike"; x: number }
   /**
    * A loaded barbell on the floor at `x`, from side to side (a bar-facing burpee). It is drawn
-   * behind the figure. Only the side view shows it.
+   * behind the figure. Only the side view shows it. `backpack`: a loaded backpack lies there
+   * instead (`BACKPACK`), on its back.
    */
-  | { kind: "floorbar"; x: number }
+  | { kind: "floorbar"; x: number; backpack?: boolean }
   /**
    * A weight plate in both hands, held at its edge. Its flat side looks forward: from the side it
    * is a thin bar, from the front a circle. Its center is between the hands.
@@ -99,11 +107,8 @@ export type Equipment =
    * head. The sizes are in `BENCH`. The figure lies on it with the head at -x.
    */
   | { kind: "bench"; x: number }
-  /**
-   * A box on the ground. `x` is its near edge. `ball`: the figure also holds a medicine ball in both
-   * hands, as with `medicineball` (the medicine-ball box step-over).
-   */
-  | { kind: "box"; x: number; width: number; height: number; ball?: boolean }
+  /** A box on the ground. `x` is its near edge. A load in the hands is `load` of the exercise. */
+  | { kind: "box"; x: number; width: number; height: number }
   /** A climbing rope that hangs at `x`. */
   | { kind: "rope"; x: number }
   /**
@@ -144,12 +149,26 @@ export type View = {
   box: readonly [number, number, number, number];
 };
 
+/** A backpack on the floor, from the side: half its length along the way, and its height. */
+export const BACKPACK = { half: 20, height: 22 };
+
+/**
+ * A barbell in one hand at the side: the plates are this far in front of the hand and behind it,
+ * the bar ends 6 farther.
+ */
+export const CARRY_BAR = { plates: 55, end: 61 };
+
 export type Exercise = {
   key: string;
   title: string;
   start: Pose;
   steps: Step[];
   equipment: Equipment;
+  /**
+   * What the hands hold while `equipment` stands on the floor: a barbell on the back or a medicine
+   * ball on a box. The figure draws it as if it were the equipment of the exercise.
+   */
+  load?: Equipment;
   /** The first view shows first. */
   views: readonly [View, ...View[]];
   /**

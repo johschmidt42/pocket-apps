@@ -3,7 +3,7 @@
 import { FRONT, SIDE, type Exercise } from "../exercise.ts";
 import { handAt, shoulderOf } from "../poses.ts";
 import { tiptoe, up, type Pose, type Step } from "../skeleton.ts";
-import { BOTTOM, rack, RACK } from "./dumbbell-thruster.ts";
+import { BOTTOM, DRIVE, HIGH, LOW, PRESS, rack, RACK, TOP } from "./dumbbell-thruster.ts";
 
 type Spot2 = { x: number; y: number };
 
@@ -145,6 +145,10 @@ type Options = {
   /** The time from `land` into the catch, and the time of the stand. */
   sink: number;
   stand: number;
+  /** True: from the catch, the legs drive up and the arms press the dumbbells overhead (a squat clean thruster). */
+  press?: boolean;
+  /** The feet of the landing and the catch: one forward, one back (a split clean). The stand brings them together. */
+  split?: Pick<Pose, "feet" | "toes">;
 };
 
 /** A clean with two dumbbells. The three forms differ only in the start and in the catch. */
@@ -153,7 +157,9 @@ export function dumbbellClean(options: Options): Exercise {
     ...rack(options.land.x, options.land.y, options.land.lean, -6),
     elbowTo: 20,
     elbowsOut: 0.55,
+    ...options.split,
   };
+  const CATCH: Pose = { ...options.catch, ...options.split };
   const start = options.from === "floor" ? FLOOR : HANG;
   const up: Step[] =
     options.from === "floor"
@@ -189,7 +195,7 @@ export function dumbbellClean(options: Options): Exercise {
             to: HANG,
             via: lowered(),
             seconds: 0.5,
-            label: "Ablassen",
+            label: options.press === true ? "Zum Boden" : "Ablassen",
             ease: "soft",
             anchor: "feet",
             arms: "fk",
@@ -238,16 +244,58 @@ export function dumbbellClean(options: Options): Exercise {
         arms: "fk",
       },
       {
-        to: options.catch,
+        to: CATCH,
         seconds: options.sink,
         label: "Fangen",
         ease: "out",
         anchor: "feet",
         arms: "carry",
       },
-      { to: options.catch, seconds: 0.15 },
-      { to: RACK, seconds: options.stand, label: "Aufstehen", anchor: "feet", arms: "carry" },
-      { to: RACK, seconds: 0.3 },
+      { to: CATCH, seconds: 0.15 },
+      ...(options.press === true
+        ? // The thruster of `dumbbell-thruster.ts` from its bottom: up, and the arms press without a stop.
+          ([
+            {
+              to: DRIVE,
+              via: [LOW, HIGH],
+              seconds: options.stand,
+              label: "Aufstehen",
+              ease: "in",
+              anchor: "feet",
+              arms: "carry",
+            },
+            {
+              to: TOP,
+              via: [PRESS],
+              seconds: 0.3,
+              label: "Drücken",
+              ease: "out",
+              anchor: "feet",
+              arms: "line",
+              follow: "hands",
+            },
+            { to: TOP, seconds: 0.3, label: "Halten" },
+            {
+              to: RACK,
+              via: [PRESS],
+              seconds: 0.5,
+              label: "Ablassen",
+              anchor: "feet",
+              arms: "line",
+              follow: "hands",
+            },
+            { to: RACK, seconds: 0.15 },
+          ] satisfies Step[])
+        : ([
+            {
+              to: RACK,
+              seconds: options.stand,
+              label: options.split === undefined ? "Aufstehen" : "Füße zusammen",
+              anchor: "feet",
+              arms: "carry",
+            },
+            { to: RACK, seconds: 0.3 },
+          ] satisfies Step[])),
       ...down,
     ],
   };

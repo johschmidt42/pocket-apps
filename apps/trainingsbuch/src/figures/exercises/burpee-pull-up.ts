@@ -1,5 +1,6 @@
 // Burpee Pull-up: a burpee (chest and thighs on the floor), a jump to the bar, chin over the bar, and down.
 // The way to the floor and back is the burpee, the pull is the strict pull-up. The figure stands under the bar.
+// `burpeePullUp()` takes another top: the burpee chest-to-bar pull-up (`burpee-chest-to-bar-pull-up.ts`).
 import type { Exercise, View } from "../exercise.ts";
 import { handAt } from "../poses.ts";
 import { GRAVITY, type Pose } from "../skeleton.ts";
@@ -34,7 +35,6 @@ const HANG = pose(HANG_BODY, BAR);
 const GRAB = pose(GRAB_BODY, BAR);
 const PULL_LOW = pose(LOW_BODY, BAR);
 const PULL_HIGH = pose(HIGH_BODY, BAR);
-const TOP = pose(CHIN_OVER_BAR, BAR);
 
 // Full extension, on the toes. The arms reach up to the bar.
 const REACH: Pose = { ...TAKEOFF, grip: 17, hands: handAt(TAKEOFF.hip, TAKEOFF.lean, 2, -61.5) };
@@ -60,45 +60,61 @@ const DROP = Math.sqrt((2 * (LAND.hip.y - HANG.hip.y)) / GRAVITY);
 
 const SIDE: View = { label: "Seite", yaw: 0, box: [40, -46, 204, 258] };
 
-export const BURPEE_PULL_UP: Exercise = {
+/** A burpee pull-up to the top `top`. `label` names the top. */
+export function burpeePullUp(options: {
+  key: string;
+  title: string;
+  top: Body;
+  label: string;
+}): Exercise {
+  const TOP = pose(options.top, BAR);
+  return {
+    key: options.key,
+    title: options.title,
+    equipment: { kind: "pullupbar", ...BAR },
+    views: [SIDE],
+    start: STAND,
+    steps: [
+      ...TO_THE_FLOOR,
+      { to: RISE, seconds: 0.38, label: "Sprung", ease: "in", anchor: "feet" },
+      { to: REACH, seconds: 0.11, ease: "linear", anchor: "feet" },
+      { to: GRAB, seconds: JUMP, ease: "linear", flight: true, legs: "carry", arms: "line" },
+      {
+        to: TOP,
+        via: [PULL_LOW, PULL_HIGH],
+        seconds: 0.6,
+        label: "Zug",
+        ease: "soft",
+        anchor: "hands",
+        legs: "carry",
+      },
+      { to: TOP, seconds: 0.12, label: options.label },
+      {
+        to: HANG,
+        via: [PULL_HIGH, PULL_LOW],
+        seconds: 0.65,
+        label: "Ablassen",
+        ease: "soft",
+        anchor: "hands",
+        legs: "carry",
+      },
+      {
+        to: TOUCH_DOWN,
+        seconds: DROP,
+        label: "Landung",
+        ease: "linear",
+        flight: true,
+        legs: "carry",
+      },
+      { to: GIVE, seconds: 0.22, ease: "out" },
+      { to: STAND, seconds: 0.36, label: "Stehen", ease: "soft", anchor: "feet" },
+    ],
+  };
+}
+
+export const BURPEE_PULL_UP: Exercise = burpeePullUp({
   key: "burpee-pull-up",
   title: "Burpee Pull-up",
-  equipment: { kind: "pullupbar", ...BAR },
-  views: [SIDE],
-  start: STAND,
-  steps: [
-    ...TO_THE_FLOOR,
-    { to: RISE, seconds: 0.38, label: "Sprung", ease: "in", anchor: "feet" },
-    { to: REACH, seconds: 0.11, ease: "linear", anchor: "feet" },
-    { to: GRAB, seconds: JUMP, ease: "linear", flight: true, legs: "carry", arms: "line" },
-    {
-      to: TOP,
-      via: [PULL_LOW, PULL_HIGH],
-      seconds: 0.6,
-      label: "Zug",
-      ease: "soft",
-      anchor: "hands",
-      legs: "carry",
-    },
-    { to: TOP, seconds: 0.12, label: "Kinn über der Stange" },
-    {
-      to: HANG,
-      via: [PULL_HIGH, PULL_LOW],
-      seconds: 0.65,
-      label: "Ablassen",
-      ease: "soft",
-      anchor: "hands",
-      legs: "carry",
-    },
-    {
-      to: TOUCH_DOWN,
-      seconds: DROP,
-      label: "Landung",
-      ease: "linear",
-      flight: true,
-      legs: "carry",
-    },
-    { to: GIVE, seconds: 0.22, ease: "out" },
-    { to: STAND, seconds: 0.36, label: "Stehen", ease: "soft", anchor: "feet" },
-  ],
-};
+  top: CHIN_OVER_BAR,
+  label: "Kinn über der Stange",
+});

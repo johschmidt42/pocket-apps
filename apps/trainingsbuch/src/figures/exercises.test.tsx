@@ -1,7 +1,7 @@
 import type { ReactElement } from "react";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { EXERCISE_IDS } from "../exercises.ts";
+import { EXERCISE_IDS, type ExerciseId } from "../exercises.ts";
 import { equipmentParts } from "./equipment-parts.tsx";
 import { runOf, variantsOf } from "./exercise-motions.ts";
 import { dumbbellHand, floorDumbbellZ, isWide, type Equipment, type Exercise } from "./exercise.ts";
@@ -35,6 +35,24 @@ const LOADED_RUNS = [
   "800 m run with an empty barbell",
 ];
 
+/** Lines of workouts that ask for a form that only these words show. */
+const FORM_LINES: readonly (readonly [ExerciseId, string])[] = [
+  ["walking-lunge", "20 walking lunges with two kettlebells"],
+  ["step-up", "30 barbell step-ups"],
+  ["step-up", "50 dumbbell box step-ups"],
+  ["farmers-carry", "10 m barbell farmers carry"],
+  ["farmers-carry", "800 m single-arm barbell farmers carry"],
+  ["burpee-pull-up", "7 burpee chest-to-bar pull-ups"],
+  ["burpee", "23 burpees over the backpack"],
+  ["handstand-push-up", "8 freestanding handstand push-ups"],
+  ["dumbbell-thruster", "10 left-arm dumbbell thrusters"],
+  ["dumbbell-thruster", "Dumbbell squat clean thrusters"],
+  ["overhead-squat", "21 overhead squats, left arm"],
+  ["thruster", "2 squat clean thrusters"],
+  ["dumbbell-clean", "15 dumbbell split cleans"],
+  ["dumbbell-snatch", "10 dumbbell hang split snatches, right arm"],
+];
+
 /** Each animated exercise once, with all forms. */
 const ALL: [string, Exercise][] = [
   ...new Map(
@@ -43,13 +61,15 @@ const ALL: [string, Exercise][] = [
       ...(variantsOf("run", LOADED_RUNS) ?? []),
       // Only the line of Open 26.1 shows the step-over with a medicine ball.
       ...(variantsOf("box-step-over", ["18 medicine-ball box step-overs"]) ?? []),
+      // These forms show only for the words of their workouts.
+      ...FORM_LINES.flatMap(([id, line]) => variantsOf(id, [line]) ?? []),
     ].map((variant) => [variant.exercise.key, variant.exercise]),
   ).entries(),
 ];
 
 describe("the exercises", () => {
-  it("are all 96 animations of the prototype", () => {
-    expect(ALL).toHaveLength(96);
+  it("are all 111 animations of the prototype", () => {
+    expect(ALL).toHaveLength(111);
   });
 
   it("draws the bar of the back squat behind the body in the front view", () => {
@@ -279,7 +299,12 @@ describe("the exercises", () => {
         const frame = run.at((run.total * moment) / 12);
         const { container, unmount } = render(
           <svg>
-            <Figure frame={frame} yaw={view.yaw} equipment={exercise.equipment} />
+            <Figure
+              frame={frame}
+              yaw={view.yaw}
+              equipment={exercise.equipment}
+              load={exercise.load}
+            />
           </svg>,
         );
         expect(container.innerHTML).not.toContain("NaN");

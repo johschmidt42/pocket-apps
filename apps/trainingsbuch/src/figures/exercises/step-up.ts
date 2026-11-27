@@ -1,6 +1,6 @@
 // Box Step-up: one foot on the box, the leg on the box lifts the body, both feet stand on the box with hips and
 // knees straight, then a step down, one foot after the other. The leading leg changes in each repetition.
-import type { Exercise, View } from "../exercise.ts";
+import type { Equipment, Exercise, View } from "../exercise.ts";
 import { handAt } from "../poses.ts";
 import { ANKLE, GROUND, tiptoeFromToe, type Pose, type Step } from "../skeleton.ts";
 
@@ -42,7 +42,7 @@ const pushToes = 132;
 const onToes = tiptoeFromToe(FLOOR.x + 15, pushToes);
 
 /** One repetition. The leg of the side `first` goes up first and comes down last. */
-function repetition(first: 0 | 1): Step[] {
+export function repetition(first: 0 | 1): Step[] {
   const at = (hip: Spot, lean: number, legs: Legs, head?: number) =>
     pose(first, hip, lean, legs, head);
   const STAND = at({ x: 75, y: 120 }, 0, { lead: FLOOR, trail: FLOOR });
@@ -124,11 +124,28 @@ function repetition(first: 0 | 1): Step[] {
 const SIDE: View = { label: "Seite", yaw: 0, box: [30, -20, 140, 232] };
 const FRONT: View = { label: "Vorn", yaw: 90, box: [-70, -20, 140, 232] };
 
-export const STEP_UP: Exercise = {
-  key: "step-up",
-  title: "Box Step-up",
-  equipment: { kind: "box", ...BOX },
-  views: [SIDE, FRONT],
-  start: pose(0, { x: 75, y: 120 }, 0, { lead: FLOOR, trail: FLOOR }),
-  steps: [...repetition(0), ...repetition(1)],
-};
+/** A box step-up. `map` changes each pose, `load` is what the hands hold: a barbell on the back, a dumbbell. */
+export function stepUp(options: {
+  key: string;
+  title: string;
+  load?: Equipment;
+  map?: (pose: Pose) => Pose;
+}): Exercise {
+  const map = options.map ?? ((p: Pose) => p);
+  const steps = [...repetition(0), ...repetition(1)];
+  return {
+    key: options.key,
+    title: options.title,
+    equipment: { kind: "box", ...BOX },
+    ...(options.load === undefined ? {} : { load: options.load }),
+    views: [SIDE, FRONT],
+    start: map(pose(0, { x: 75, y: 120 }, 0, { lead: FLOOR, trail: FLOOR })),
+    steps: steps.map((step) => ({
+      ...step,
+      to: map(step.to),
+      ...(step.via ? { via: step.via.map(map) } : {}),
+    })),
+  };
+}
+
+export const STEP_UP: Exercise = stepUp({ key: "step-up", title: "Box Step-up" });

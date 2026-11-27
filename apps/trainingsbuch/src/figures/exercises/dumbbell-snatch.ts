@@ -12,7 +12,7 @@ type Free = { dx: number; dy: number; out: number };
  * One pose. `bell` is the hand with the dumbbell (side 0): `z` is its distance from the middle of the body.
  * The free hand (side 1) gets its place relative to its shoulder. Then the arm keeps its shape when the torso moves.
  */
-function pose(
+export function pose(
   hip: Hip,
   lean: number,
   bell: Required<Spot>,
@@ -31,8 +31,8 @@ function pose(
 
 // The free arm is straight in each pose: the hand is 2 units farther away than the arm can reach (62).
 const WIDE: Free = { dx: -40, dy: 24, out: 44 }; // out to the side and back, above the knee
-const SIDEWAYS: Free = { dx: -16, dy: 46, out: 42 }; // down and out to the side
-const LOW: Free = { dx: 2, dy: 60, out: 22 }; // hangs beside the hip, a little away from the leg
+export const SIDEWAYS: Free = { dx: -16, dy: 46, out: 42 }; // down and out to the side
+export const LOW: Free = { dx: 2, dy: 60, out: 22 }; // hangs beside the hip, a little away from the leg
 
 // The toe stays on its spot. So the ankle goes a little forward, and the hip goes with it: the body is over the toes.
 const ON_TOES = { feet: tiptoe(75, 110), toes: 110 };
@@ -45,7 +45,7 @@ const BELL = 83;
  * The shoulders are `ahead` units in front of the dumbbell. The hip follows from the shoulder and the lean.
  * The arm is 61.9 long in space: the hand is on its spot, and the arm is straight.
  */
-function hang(bellY: number, ahead: number, lean: number, head: number): Pose {
+export function hang(bellY: number, ahead: number, lean: number, head: number): Pose {
   const arm = Math.sqrt(61.9 ** 2 - BODY.shoulderHalf ** 2 - ahead ** 2);
   const torso = up(lean);
   const hip = { x: BELL + ahead - torso.x * BODY.torso, y: bellY - arm - torso.y * BODY.torso };
@@ -59,27 +59,29 @@ const SETUP = hang(199, 8, 68, -38);
 // The legs push. The dumbbell is at the knees, the back keeps its angle for the most part.
 const KNEE = hang(162, 6, 52, -28);
 // Hips and knees are open, on the toes. The shoulder pulls up, and the elbow starts to bend.
-const EXTEND = pose({ x: 78, y: 116 }, -3, { x: 86, y: 128, z: 8 }, SIDEWAYS, {
+export const EXTEND = pose({ x: 78, y: 116 }, -3, { x: 86, y: 128, z: 8 }, SIDEWAYS, {
   ...ON_TOES,
   elbows: 0,
 });
 // The elbow goes high and to the outside. The dumbbell is at the chest.
 // `elbows` sets the side of the elbow. The hand is below and in front of the shoulder: 0.85 puts the elbow
 // outside and above the hand. The hand is above and in front of the shoulder: -0.5 does the same.
-const HIGH_PULL = pose({ x: 78, y: 115 }, -3, { x: 91, y: 88, z: 13 }, SIDEWAYS, {
+export const HIGH_PULL = pose({ x: 78, y: 115 }, -3, { x: 91, y: 88, z: 13 }, SIDEWAYS, {
   ...ON_TOES,
   elbows: 0.85,
 });
 // The dumbbell passes the face. The elbow is still outside. The feet are flat again.
-const TURN = pose({ x: 74, y: 120 }, 0, { x: 91, y: 54, z: 16 }, SIDEWAYS, { elbows: -0.5 });
+export const TURN = pose({ x: 74, y: 120 }, 0, { x: 91, y: 54, z: 16 }, SIDEWAYS, { elbows: -0.5 });
 // The athlete drops under the dumbbell and locks the arm out.
 const CATCH = pose({ x: 71, y: 127 }, 4, { x: 76, y: 20.5, z: 12 }, SIDEWAYS, { elbows: -0.5 });
 // Full lockout: the arm is vertical, the dumbbell is above the shoulder. The spot is above the reach: the arm is straight.
-const OVERHEAD = pose({ x: 74, y: 120 }, 0, { x: 74.5, y: 9, z: 12 }, LOW, { elbows: 0 });
+export const OVERHEAD = pose({ x: 74, y: 120 }, 0, { x: 74.5, y: 9, z: 12 }, LOW, { elbows: 0 });
 // The way down is the way up in reverse: past the face, then to the chest with the elbow outside.
-const DOWN_FACE = pose({ x: 74, y: 120 }, 0, { x: 91, y: 54, z: 16 }, LOW, { elbows: -0.5 });
+export const DOWN_FACE = pose({ x: 74, y: 120 }, 0, { x: 91, y: 54, z: 16 }, LOW, { elbows: -0.5 });
 // The hips start to go back.
-const DOWN_CHEST = pose({ x: 72, y: 123 }, 8, { x: 93, y: 95, z: 13 }, LOW, { elbows: 0.85 });
+export const DOWN_CHEST = pose({ x: 72, y: 123 }, 8, { x: 93, y: 95, z: 13 }, LOW, {
+  elbows: 0.85,
+});
 
 export const DUMBBELL_SNATCH: Exercise = {
   key: "dumbbell-snatch",

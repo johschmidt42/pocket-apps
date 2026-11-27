@@ -174,6 +174,8 @@ export function stepOver(options: {
   key: string;
   title: string;
   equipment: Equipment;
+  /** What the hands hold: a medicine ball. */
+  load?: Equipment;
   map: (pose: Pose) => Pose;
   /** The near foot above the edge of the box on the way up. Lower: the knee comes up less high. */
   above?: Spot;
@@ -186,6 +188,7 @@ export function stepOver(options: {
     key: options.key,
     title: options.title,
     equipment: options.equipment,
+    ...(options.load === undefined ? {} : { load: options.load }),
     views: [SIDE],
     turnAxis: CENTER,
     start: map(STAND),

@@ -38,21 +38,22 @@ export function Figure({
   frame,
   yaw,
   equipment,
+  load,
 }: {
   frame: Frame;
   yaw: View["yaw"];
   equipment: Equipment;
+  /** What the hands hold besides the equipment (see `Exercise.load`). */
+  load?: Equipment | undefined;
 }) {
   const { joints } = frame;
   const flat = project(yaw, frame.facing);
   const fromSide = yaw === 0;
-  const parts: Part<ReactNode>[] = equipmentParts(equipment, {
-    joints,
-    flat,
-    fromSide,
-    progress: frame.progress % 1,
-    thrown: frame.thrown,
-  });
+  const scene = { joints, flat, fromSide, progress: frame.progress % 1, thrown: frame.thrown };
+  const parts: Part<ReactNode>[] = [
+    ...equipmentParts(equipment, scene),
+    ...(load === undefined ? [] : equipmentParts(load, scene)),
+  ];
 
   const bone = (key: string, a: Vec, b: Vec, width: number, far: boolean): number => {
     const p = flat(a);

@@ -228,6 +228,12 @@ export function farmersCarry(options: {
   };
 }
 
+/** The side view for a load that is long along the way (a barbell): wider than for dumbbells. */
+export const wide = (exercise: Exercise): Exercise => ({
+  ...exercise,
+  views: [{ ...SIDE, box: [-8, 22, 170, 190] }, FRONT],
+});
+
 export const FARMERS_CARRY: Exercise = farmersCarry({
   key: "farmers-carry",
   title: "Farmers Carry",

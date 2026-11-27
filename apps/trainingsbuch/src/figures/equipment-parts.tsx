@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { FlatPoint, Part } from "./draw-order.ts";
-import { dumbbellHand, floorDumbbellZ, type Equipment } from "./exercise.ts";
+import { BACKPACK, CARRY_BAR, dumbbellHand, floorDumbbellZ, type Equipment } from "./exercise.ts";
 import { BENCH, BIKE, GHD, pedalOf, RINGS, ROWER, SKIERG, strapOf } from "./machines.ts";
 import {
   BALL,
@@ -238,9 +238,51 @@ function bench({ fromSide }: Scene, x: number): Parts {
   ];
 }
 
-/** A barbell on the floor. It stays on its spot when the figure turns around. */
-function floorBar({ fromSide }: Scene, x: number): Parts {
+/** A loaded backpack on the floor, on its back: a round body, a flap and a handle on top. */
+function backpack(x: number): Parts {
+  const { half, height } = BACKPACK;
+  const top = GROUND - height;
+  return [
+    part(
+      BEHIND,
+      <rect
+        key="backpack"
+        x={x - half}
+        y={top}
+        width={half * 2}
+        height={height}
+        rx={9}
+        fill={COLOR}
+        stroke="none"
+      />,
+    ),
+    part(
+      BEHIND + 1,
+      <path
+        key="backpackFlap"
+        d={`M ${String(x - half + 4)} ${String(top + 9)} H ${String(x + half - 4)}`}
+        stroke={BACK}
+        strokeWidth={2}
+        fill="none"
+      />,
+    ),
+    part(
+      BEHIND + 1,
+      <path
+        key="backpackHandle"
+        d={`M ${String(x - 5)} ${String(top)} q 5 -7 10 0`}
+        stroke={COLOR}
+        strokeWidth={2.5}
+        fill="none"
+      />,
+    ),
+  ];
+}
+
+/** A barbell or a backpack on the floor. It stays on its spot when the figure turns around. */
+function floorBar({ fromSide }: Scene, x: number, isBackpack: boolean): Parts {
   if (!fromSide) return [];
+  if (isBackpack) return backpack(x);
   const center = { x, y: GROUND - PLATE, depth: BEHIND };
   return [disc("plate", BEHIND, center, PLATE), grip("bar", BEHIND + 1, center, 3, 2)];
 }
@@ -274,6 +316,42 @@ function dumbbells({ joints, flat, fromSide }: Scene, only: 0 | 1 | undefined): 
       bar(`handle${String(side)}`, flat(hand).depth - 0.5, back, front, 3.5),
       head(`back${String(side)}`, back),
       head(`front${String(side)}`, front),
+    ];
+  });
+}
+
+/** A barbell in each hand at the side, along the way (a barbell farmers carry). */
+function carryBars({ flat, fromSide, joints }: Scene, only: 0 | 1 | undefined): Parts {
+  return SIDES.flatMap((side) => {
+    if (only !== undefined && side !== only) return [];
+    const hand = joints.arms[side].end;
+    const at = (dx: number) => flat(vec(hand.x + dx, hand.y, hand.z));
+    const plate = (key: string, center: FlatPoint) =>
+      fromSide
+        ? part(
+            center.depth,
+            <rect
+              key={key}
+              x={center.x - 3.5}
+              y={center.y - PLATE}
+              width={7}
+              height={PLATE * 2}
+              rx={3.5}
+              fill={COLOR}
+              stroke="none"
+            />,
+          )
+        : disc(key, center.depth, center, PLATE);
+    return [
+      bar(
+        `carrybar${String(side)}`,
+        flat(hand).depth - 0.5,
+        at(-CARRY_BAR.end),
+        at(CARRY_BAR.end),
+        4,
+      ),
+      plate(`carryback${String(side)}`, at(-CARRY_BAR.plates)),
+      plate(`carryfront${String(side)}`, at(CARRY_BAR.plates)),
     ];
   });
 }
@@ -830,6 +908,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return dumbbell(scene, dumbbellHand(equipment, scene.progress));
     case "dumbbells":
       return dumbbells(scene, equipment.hand);
+    case "carrybars":
+      return carryBars(scene, equipment.hand);
     case "kettlebells":
       return kettlebells(scene, equipment.hand);
     case "kettlebell":
@@ -853,11 +933,9 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
     case "bench":
       return [...bench(scene, equipment.x), ...barbell(scene, false)];
     case "floorbar":
-      return floorBar(scene, equipment.x);
-    case "box": {
-      const parts = box(scene, equipment.x, equipment.width, equipment.height);
-      return equipment.ball === true ? [...parts, ...medicineBall(scene)] : parts;
-    }
+      return floorBar(scene, equipment.x, equipment.backpack === true);
+    case "box":
+      return box(scene, equipment.x, equipment.width, equipment.height);
     case "rope":
       return rope(scene, equipment.x);
     case "pullupbar":

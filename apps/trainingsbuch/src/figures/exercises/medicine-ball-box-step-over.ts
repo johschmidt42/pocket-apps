@@ -15,7 +15,8 @@ const BELOW = 0;
 export const MEDICINE_BALL_BOX_STEP_OVER: Exercise = stepOver({
   key: "medicine-ball-box-step-over",
   title: "Medicine-ball Box Step-over",
-  equipment: { kind: "box", ...BOX, ball: true },
+  equipment: { kind: "box", ...BOX },
+  load: { kind: "medicineball" },
   // The near foot goes only 8 above the edge of the box (17 without a ball): so the knee stays below the ball.
   above: { x: 95, y: TOP - 8 },
   // Open 26.1 does not ask for open hips and knees on the box. The figure stays bent and does not stop on the top.

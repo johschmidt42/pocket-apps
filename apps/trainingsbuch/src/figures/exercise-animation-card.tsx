@@ -96,7 +96,12 @@ export function ExerciseAnimationCard({
                 />
               )}
               <g transform={`translate(0 ${String(scroll)})`}>
-                <Figure frame={frame} yaw={view.yaw} equipment={exercise.equipment} />
+                <Figure
+                  frame={frame}
+                  yaw={view.yaw}
+                  equipment={exercise.equipment}
+                  load={exercise.load}
+                />
               </g>
             </svg>
           </Button>

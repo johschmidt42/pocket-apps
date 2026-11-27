@@ -9,34 +9,43 @@ import { BENCH_PRESS } from "./exercises/bench-press.ts";
 import { BOX_JUMP_OVER } from "./exercises/box-jump-over.ts";
 import { BOX_STEP_OVER } from "./exercises/box-step-over.ts";
 import { BURPEE_BAR_MUSCLE_UP } from "./exercises/burpee-bar-muscle-up.ts";
-import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
+import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
+import { BURPEE_CHEST_TO_BAR_PULL_UP } from "./exercises/burpee-chest-to-bar-pull-up.ts";
+import { BURPEE_OVER_BACKPACK } from "./exercises/burpee-over-backpack.ts";
 import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
-import { DUMBBELL_CLEAN_AND_JERK } from "./exercises/dumbbell-clean-and-jerk.ts";
 import { DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM } from "./exercises/dumbbell-clean-and-jerk-single-arm.ts";
+import { DUMBBELL_CLEAN_AND_JERK } from "./exercises/dumbbell-clean-and-jerk.ts";
 import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
 import { DUMBBELL_HANG_CLEAN } from "./exercises/dumbbell-hang-clean.ts";
+import { DUMBBELL_HANG_SPLIT_SNATCH } from "./exercises/dumbbell-hang-split-snatch.ts";
 import { DUMBBELL_POWER_CLEAN } from "./exercises/dumbbell-power-clean.ts";
-import { DUMBBELL_SQUAT } from "./exercises/dumbbell-squat.ts";
+import { DUMBBELL_SPLIT_CLEAN } from "./exercises/dumbbell-split-clean.ts";
+import { DUMBBELL_SQUAT_CLEAN_THRUSTER } from "./exercises/dumbbell-squat-clean-thruster.ts";
 import { DUMBBELL_SQUAT_CLEAN } from "./exercises/dumbbell-squat-clean.ts";
+import { DUMBBELL_SQUAT } from "./exercises/dumbbell-squat.ts";
+import { DUMBBELL_THRUSTER_SINGLE_ARM } from "./exercises/dumbbell-thruster-single-arm.ts";
 import { DUMBBELL_THRUSTER } from "./exercises/dumbbell-thruster.ts";
-import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
+import { FARMERS_CARRY_BARBELL_SINGLE_ARM } from "./exercises/farmers-carry-barbell-single-arm.ts";
+import { FARMERS_CARRY_BARBELL } from "./exercises/farmers-carry-barbell.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
+import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
+import { FREESTANDING_HANDSTAND_PUSH_UP } from "./exercises/freestanding-handstand-push-up.ts";
 import { FRONT_RACK_LUNGE } from "./exercises/front-rack-lunge.ts";
 import { FRONT_SQUAT } from "./exercises/front-squat.ts";
 import { GHD_SIT_UP } from "./exercises/ghd-sit-up.ts";
 import { GOBLET_SQUAT } from "./exercises/goblet-squat.ts";
 import { HAND_RELEASE_PUSH_UP } from "./exercises/hand-release-push-up.ts";
-import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANDSTAND_PUSH_UP } from "./exercises/handstand-push-up.ts";
 import { HANDSTAND_WALK } from "./exercises/handstand-walk.ts";
+import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANG_CLEAN } from "./exercises/hang-clean.ts";
 import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANG_POWER_SNATCH } from "./exercises/hang-power-snatch.ts";
-import { KETTLEBELL_THRUSTER } from "./exercises/kettlebell-thruster.ts";
 import { KETTLEBELL_THRUSTER_SINGLE_ARM } from "./exercises/kettlebell-thruster-single-arm.ts";
+import { KETTLEBELL_THRUSTER } from "./exercises/kettlebell-thruster.ts";
 import { KIPPING_HANDSTAND_PUSH_UP } from "./exercises/kipping-handstand-push-up.ts";
 import { KIPPING_PULL_UP } from "./exercises/kipping-pull-up.ts";
 import { KNEES_TO_ELBOWS } from "./exercises/knees-to-elbows.ts";
@@ -47,6 +56,7 @@ import { MEDICINE_BALL_BOX_STEP_OVER } from "./exercises/medicine-ball-box-step-
 import { OVERHEAD_LUNGE_BARBELL } from "./exercises/overhead-lunge-barbell.ts";
 import { OVERHEAD_LUNGE_DUMBBELL } from "./exercises/overhead-lunge-dumbbell.ts";
 import { OVERHEAD_LUNGE_PLATE } from "./exercises/overhead-lunge-plate.ts";
+import { OVERHEAD_SQUAT_KETTLEBELL } from "./exercises/overhead-squat-kettlebell.ts";
 import { OVERHEAD_SQUAT } from "./exercises/overhead-squat.ts";
 import { PISTOL } from "./exercises/pistol.ts";
 import { POWER_CLEAN } from "./exercises/power-clean.ts";
@@ -54,20 +64,25 @@ import { PULL_UP as STRICT_PULL_UP } from "./exercises/pull-up.ts";
 import { PUSH_JERK } from "./exercises/push-jerk.ts";
 import { PUSH_PRESS } from "./exercises/push-press.ts";
 import { RING_DIP } from "./exercises/ring-dip.ts";
+import { RING_HANDSTAND_PUSH_UP } from "./exercises/ring-handstand-push-up.ts";
 import { RING_MUSCLE_UP } from "./exercises/ring-muscle-up.ts";
 import { RING_PUSH_UP } from "./exercises/ring-push-up.ts";
 import { RING_ROW } from "./exercises/ring-row.ts";
-import { RUN } from "./exercises/run.ts";
 import { RUN_BARBELL } from "./exercises/run-barbell.ts";
 import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
-import { RUN_PLATE } from "./exercises/run-plate.ts";
 import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
+import { RUN_PLATE } from "./exercises/run-plate.ts";
+import { RUN } from "./exercises/run.ts";
 import { SHUTTLE_RUN } from "./exercises/shuttle-run.ts";
 import { SPLIT_JERK } from "./exercises/split-jerk.ts";
+import { SQUAT_CLEAN_THRUSTER } from "./exercises/squat-clean-thruster.ts";
 import { SQUAT_CLEAN } from "./exercises/squat-clean.ts";
+import { STEP_UP_BARBELL } from "./exercises/step-up-barbell.ts";
+import { STEP_UP_DUMBBELL } from "./exercises/step-up-dumbbell.ts";
 import { STEP_UP } from "./exercises/step-up.ts";
 import { SUMO_DEADLIFT_HIGH_PULL } from "./exercises/sumo-deadlift-high-pull.ts";
 import { THRUSTER } from "./exercises/thruster.ts";
+import { WALKING_LUNGE_KETTLEBELLS } from "./exercises/walking-lunge-kettlebells.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 import { WALL_WALK } from "./exercises/wall-walk.ts";
 
@@ -351,28 +366,64 @@ describe("variantsOf", () => {
   });
 
   it.each([
-    ["burpee", "23 burpees over the backpack"],
-    ["burpee", "8 burpees (over the barbell)"],
-    ["burpee-pull-up", "7 strict burpee pull-ups"],
-    ["burpee-pull-up", "7 burpee chest-to-bar pull-ups"],
-    ["dumbbell-clean", "15 dumbbell split cleans, 18/14 kg (40/30 lb)"],
-    ["dumbbell-snatch", "10 dumbbell hang split snatches, right arm"],
-    ["dumbbell-thruster", "Dumbbell squat clean thrusters, 29/20 kg (65/45 lb) dumbbells"],
-    ["dumbbell-thruster", "10 left-arm dumbbell thrusters, 14/9 kg (30/20 lb)"],
-    ["farmers-carry", "800 m single-arm barbell farmers carry, 43/30 kg"],
-    ["farmers-carry", "10 m barbell farmers carry, 102/70 kg"],
-    ["handstand-push-up", "25 ring handstand push-ups"],
-    ["handstand-push-up", "8 freestanding handstand push-ups"],
-    ["overhead-squat", "21 overhead squats, left arm"],
-    ["step-up", "30 barbell step-ups, 61/43 kg, 61/51 cm (24/20 in) box"],
-    ["step-up", "20 barbell back-rack step-ups, 61/51 cm (24/20 in)"],
-    ["step-up", "50 dumbbell box step-ups"],
-    ["thruster", "2 squat clean thrusters"],
-    ["walking-lunge", "15 m (50 ft) weighted walking lunge"],
-    ["walking-lunge", "20 dumbbell walking lunges, 22.5/15 kg (50/35 lb)"],
-    ["walking-lunge", "20 walking lunges with two kettlebells"],
-  ] as const)("has no animation for %s in the line: %s", (id, line) => {
-    expect(variantsOf(id, [line])).toBeNull();
+    ["burpee", "23 burpees over the backpack", "Backpack", BURPEE_OVER_BACKPACK],
+    ["burpee", "8 burpees (over the barbell)", "Bar", BURPEE_OVER_BAR],
+    ["burpee-pull-up", "7 strict burpee pull-ups", null, BURPEE_PULL_UP],
+    ["burpee-pull-up", "7 burpee chest-to-bar pull-ups", "C2B", BURPEE_CHEST_TO_BAR_PULL_UP],
+    [
+      "dumbbell-clean",
+      "15 dumbbell split cleans, 18/14 kg (40/30 lb)",
+      "Split",
+      DUMBBELL_SPLIT_CLEAN,
+    ],
+    [
+      "dumbbell-snatch",
+      "10 dumbbell hang split snatches, right arm",
+      "Split",
+      DUMBBELL_HANG_SPLIT_SNATCH,
+    ],
+    [
+      "dumbbell-thruster",
+      "Dumbbell squat clean thrusters, 29/20 kg (65/45 lb) dumbbells",
+      "Squat Clean",
+      DUMBBELL_SQUAT_CLEAN_THRUSTER,
+    ],
+    [
+      "dumbbell-thruster",
+      "10 left-arm dumbbell thrusters, 14/9 kg (30/20 lb)",
+      "Einarmig",
+      DUMBBELL_THRUSTER_SINGLE_ARM,
+    ],
+    [
+      "farmers-carry",
+      "800 m single-arm barbell farmers carry, 43/30 kg",
+      "1 Bar",
+      FARMERS_CARRY_BARBELL_SINGLE_ARM,
+    ],
+    ["farmers-carry", "10 m barbell farmers carry, 102/70 kg", "Bar", FARMERS_CARRY_BARBELL],
+    ["handstand-push-up", "25 ring handstand push-ups", "Ring", RING_HANDSTAND_PUSH_UP],
+    [
+      "handstand-push-up",
+      "8 freestanding handstand push-ups",
+      "Frei",
+      FREESTANDING_HANDSTAND_PUSH_UP,
+    ],
+    ["overhead-squat", "21 overhead squats, left arm", "Einarmig", OVERHEAD_SQUAT_KETTLEBELL],
+    ["step-up", "30 barbell step-ups, 61/43 kg, 61/51 cm (24/20 in) box", "Bar", STEP_UP_BARBELL],
+    ["step-up", "20 barbell back-rack step-ups, 61/51 cm (24/20 in)", "Bar", STEP_UP_BARBELL],
+    ["step-up", "50 dumbbell box step-ups", "DB", STEP_UP_DUMBBELL],
+    ["thruster", "2 squat clean thrusters", "Squat Clean", SQUAT_CLEAN_THRUSTER],
+    ["walking-lunge", "15 m (50 ft) weighted walking lunge", "DB", LUNGE_DUMBBELLS],
+    ["walking-lunge", "20 dumbbell walking lunges, 22.5/15 kg (50/35 lb)", "DB", LUNGE_DUMBBELLS],
+    ["walking-lunge", "20 walking lunges with two kettlebells", "KB", WALKING_LUNGE_KETTLEBELLS],
+  ] as const)("shows for %s the form of the line: %s", (id, line, label, exercise) => {
+    const variants = variantsOf(id, [line]);
+    expect(variants?.map((variant) => variant.exercise)).toEqual([exercise]);
+    expect(variants?.[0].label).toBe(label);
+  });
+
+  it("has the ring handstand push-up of Meadows", () => {
+    expect(motions("ring-handstand-push-up", [])).toEqual([RING_HANDSTAND_PUSH_UP]);
   });
 
   it("keeps the animation of a plain burpee and a plain dumbbell snatch", () => {
