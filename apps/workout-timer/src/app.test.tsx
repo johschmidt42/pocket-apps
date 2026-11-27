@@ -1,19 +1,28 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "./app.tsx";
+import type { Media } from "./media.ts";
 import type { Sound } from "./sound.ts";
 
 /** The default lead-in: 10 s. */
 const LEAD_IN_MS = 10_000;
 
-/** A clock that the test moves forward. The app still ticks with a real interval. */
+/**
+ * A clock that the test moves forward. The app still ticks with a real interval. The sound and
+ * the media controls of the phone are fakes.
+ */
 function setup() {
   const clock = { time: 0 };
   const sound: Sound = { unlock: vi.fn(), play: vi.fn() };
+  const media = {
+    start: vi.fn<Media["start"]>(),
+    show: vi.fn<Media["show"]>(),
+    clear: vi.fn<Media["clear"]>(),
+  } satisfies Media;
   const user = userEvent.setup();
-  render(<App clock={() => clock.time} sound={sound} />);
-  return { clock, sound, user };
+  const view = render(<App clock={() => clock.time} sound={sound} media={media} />);
+  return { clock, sound, media, user, view };
 }
 
 async function chooseMode(user: ReturnType<typeof userEvent.setup>, mode: string) {
@@ -260,5 +269,63 @@ describe("Workout Timer", () => {
 
     expect(sound.play).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Ton an" })).toBeInTheDocument();
+  });
+
+  it("shows the timer in the media controls of the phone and obeys their buttons", async () => {
+    const { clock, media, user, view } = setup();
+    await chooseMode(user, "Tabata");
+    await user.click(screen.getByRole("button", { name: "Start" }));
+
+    expect(media.start).toHaveBeenCalledOnce();
+    expect(media.show).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: "Gleich geht’s los", playing: true }),
+    );
+
+    // A new phase changes the media controls.
+    clock.time = LEAD_IN_MS + 25_000;
+    expect(await screen.findByRole("heading", { name: "Pause" })).toBeInTheDocument();
+    expect(media.show).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: "Pause · Runde 1 von 8", positionMs: 5_000 }),
+    );
+
+    // The buttons of the phone.
+    const buttons = media.start.mock.calls[0]?.[0];
+    act(() => {
+      buttons?.pause();
+    });
+    expect(screen.getByRole("heading", { name: "Pausiert" })).toBeInTheDocument();
+    expect(media.show).toHaveBeenLastCalledWith(expect.objectContaining({ playing: false }));
+    act(() => {
+      buttons?.play();
+    });
+    expect(screen.getByRole("heading", { name: "Pause" })).toBeInTheDocument();
+    expect(media.show).toHaveBeenLastCalledWith(expect.objectContaining({ playing: true }));
+    act(() => {
+      buttons?.stop();
+    });
+    expect(screen.getByRole("heading", { name: "Beendet" })).toBeInTheDocument();
+    expect(media.clear).toHaveBeenCalled();
+
+    // "Nochmal" starts the media controls again.
+    await user.click(screen.getByRole("button", { name: "Nochmal" }));
+    expect(media.start).toHaveBeenCalledTimes(2);
+
+    // The app closes: the controls go away.
+    media.clear.mockClear();
+    view.unmount();
+    expect(media.clear).toHaveBeenCalledOnce();
+  });
+
+  it("removes the media controls at the end of the timer", async () => {
+    const { clock, media, user } = setup();
+    await chooseMode(user, "AMRAP");
+    await setInput(user, "Dauer in Minuten", "1");
+    await user.click(screen.getByRole("button", { name: "Start" }));
+    media.clear.mockClear();
+
+    clock.time = LEAD_IN_MS + 60_000;
+
+    expect(await screen.findByRole("heading", { name: "Geschafft!" })).toBeInTheDocument();
+    expect(media.clear).toHaveBeenCalled();
   });
 });

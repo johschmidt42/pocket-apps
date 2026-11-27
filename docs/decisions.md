@@ -3,6 +3,23 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-27: Media controls of the phone (workout-timer)
+
+- **Context:** The user wants to see and control the running timer when they swipe down from the top of the phone, like a video from YouTube. Android calls these the media controls.
+- **Decision:** The workout timer uses the Media Session API (`src/media.ts`). The controls show:
+  - the phase and the round as the title, for example "Arbeit · Runde 2 von 8"
+  - the timer as the artist, for example "Tabata 8 × 20 s / 10 s"
+  - the app icon
+  - a progress bar of the phase (For Time without a time cap has no bar: it has no end)
+  - the buttons for pause and play
+- **Decision:** `src/now-playing.ts` computes what the controls show (pure logic). When the timer ends, the controls go away.
+- **Decision:** Chrome on Android shows the media controls only while an `<audio>` element plays. The element must not be muted, and the audio must be at least 5 seconds long. Thus the timer plays a silent WAV file in a loop, from the start until the end. The code makes the file (8-bit, 10 seconds). The tones still come from the Web Audio API.
+- **Decision:** Android can pause the audio, for example for a call or for another app with audio. Then the timer pauses too. Thus the screen and the media controls agree.
+- **Consequence:** Other audio, for example music in Spotify, pauses when the timer starts. The user chose this.
+- **Consequence:** During a pause of the timer, Android lets the user swipe the controls away.
+- **Open:** Maybe Chrome does not slow down a page that plays audio in the background. Chrome can detect silence, so this is not sure. Check it on the phone.
+- **Rejected:** A normal notification (Notifications API). It keeps the music. But the user can swipe it away, it has no progress bar, and Android slows down the page in the background.
+
 ## 2026-11-27: Apps as installable PWAs (vite-config, core)
 
 - **Context:** The user wants the apps on a phone as installed apps, without the Play Store. Chrome on Android installs a Progressive Web App (PWA) as a WebAPK: an app with its own icon, without the address bar. It uses the storage of the web address in Chrome, so the choice of the storage and the login stay.
