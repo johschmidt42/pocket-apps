@@ -99,7 +99,11 @@ export function Figure({
     const p = flat(at);
     for (const [bone, end, width] of ends) {
       const q = flat(end);
-      const part = Math.min(reach / (Math.hypot(q.x - p.x, q.y - p.y) || 1), 1);
+      const length = Math.hypot(q.x - p.x, q.y - p.y);
+      // A bone that points at the camera is shorter in the picture than it is wide. The piece would
+      // cover all of it, and its outline would be gone (the thighs of a wall sit from the front).
+      if (length < width) continue;
+      const part = Math.min(reach / (length || 1), 1);
       parts.push({
         depth: depth + 0.01,
         over,
@@ -120,6 +124,9 @@ export function Figure({
   /** Where a limb leaves the torso: a disc and a short piece of the limb hide the outlines there. */
   const root = (key: string, at: Vec, to: Vec, width: number, depth: number, limb: string) => {
     const p = flat(at);
+    // A limb that points at the camera: the disc would hide all of its outline.
+    const q = flat(to);
+    if (Math.hypot(q.x - p.x, q.y - p.y) < width) return;
     const over = ["torso", limb];
     parts.push({
       depth: depth + 0.01,

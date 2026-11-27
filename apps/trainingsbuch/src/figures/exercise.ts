@@ -15,6 +15,11 @@ export type Equipment =
    */
   | { kind: "medicineball" }
   /**
+   * A sandbag in a bear hug: it lies across the chest, the arms go around it, the hands hold it from
+   * below (`SANDBAG`). From the side it is a circle, from the front a long round shape.
+   */
+  | { kind: "sandbag" }
+  /**
    * Lines on the floor at these x (a shuttle run). From the side, each is a short flat mark on the
    * ground; from the front, a line across. They stay on their spots when the figure turns around.
    */
@@ -157,6 +162,12 @@ export type View = {
   /** x, y, width, height of the SVG view box. */
   box: readonly [number, number, number, number];
 };
+
+/**
+ * A sandbag of 23 kg: its radius, half its length from side to side, and where its center is from
+ * the middle of the hands: `dx` forward (a negative value is toward the body), `above` up.
+ */
+export const SANDBAG = { radius: 15, half: 12, dx: -8, above: 12 };
 
 /** A backpack on the floor, from the side: half its length along the way, and its height. */
 export const BACKPACK = { half: 20, height: 22 };

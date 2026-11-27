@@ -4,6 +4,7 @@ import { AIR_SQUAT } from "./exercises/air-squat.ts";
 import { ALTERNATING_DUMBBELL_SNATCH } from "./exercises/alternating-dumbbell-snatch.ts";
 import { BACK_EXTENSION } from "./exercises/back-extension.ts";
 import { BACK_SQUAT } from "./exercises/back-squat.ts";
+import { BALL_SLAM } from "./exercises/ball-slam.ts";
 import { BAR_FACING_BURPEE } from "./exercises/bar-facing-burpee.ts";
 import { BAR_MUSCLE_UP } from "./exercises/bar-muscle-up.ts";
 import { BEAR_CRAWL } from "./exercises/bear-crawl.ts";
@@ -12,6 +13,7 @@ import { BIKE_EXERCISE } from "./exercises/bike.ts";
 import { BOX_JUMP_OVER } from "./exercises/box-jump-over.ts";
 import { BOX_JUMP } from "./exercises/box-jump.ts";
 import { BOX_STEP_OVER } from "./exercises/box-step-over.ts";
+import { BROAD_JUMP } from "./exercises/broad-jump.ts";
 import { BURPEE_BAR_MUSCLE_UP } from "./exercises/burpee-bar-muscle-up.ts";
 import { BURPEE_BOX_JUMP_OVER } from "./exercises/burpee-box-jump-over.ts";
 import { BURPEE_BOX_JUMP } from "./exercises/burpee-box-jump.ts";
@@ -51,6 +53,7 @@ import { FARMERS_CARRY_BARBELL_SINGLE_ARM } from "./exercises/farmers-carry-barb
 import { FARMERS_CARRY_BARBELL } from "./exercises/farmers-carry-barbell.ts";
 import { FARMERS_CARRY_KETTLEBELL } from "./exercises/farmers-carry-kettlebell.ts";
 import { FARMERS_CARRY } from "./exercises/farmers-carry.ts";
+import { FLUTTER_KICK } from "./exercises/flutter-kick.ts";
 import { FREESTANDING_HANDSTAND_PUSH_UP } from "./exercises/freestanding-handstand-push-up.ts";
 import { FRONT_RACK_CARRY } from "./exercises/front-rack-carry.ts";
 import { FRONT_RACK_LUNGE } from "./exercises/front-rack-lunge.ts";
@@ -64,6 +67,7 @@ import { HANDSTAND } from "./exercises/handstand.ts";
 import { HANG_CLEAN } from "./exercises/hang-clean.ts";
 import { HANG_POWER_CLEAN } from "./exercises/hang-power-clean.ts";
 import { HANG_POWER_SNATCH } from "./exercises/hang-power-snatch.ts";
+import { JUMPING_JACK } from "./exercises/jumping-jack.ts";
 import { KETTLEBELL_CLEAN_AND_JERK } from "./exercises/kettlebell-clean-and-jerk.ts";
 import { KETTLEBELL_SNATCH } from "./exercises/kettlebell-snatch.ts";
 import { KETTLEBELL_SWING_AMERICAN } from "./exercises/kettlebell-swing-american.ts";
@@ -109,6 +113,7 @@ import { RUN_MEDICINE_BALL } from "./exercises/run-medicine-ball.ts";
 import { RUN_PLATE_OVERHEAD } from "./exercises/run-plate-overhead.ts";
 import { RUN_PLATE } from "./exercises/run-plate.ts";
 import { RUN } from "./exercises/run.ts";
+import { SANDBAG_CARRY } from "./exercises/sandbag-carry.ts";
 import { SHOULDER_PRESS } from "./exercises/shoulder-press.ts";
 import { SHUTTLE_RUN } from "./exercises/shuttle-run.ts";
 import { SIT_UP } from "./exercises/sit-up.ts";
@@ -130,6 +135,7 @@ import { WAITER_WALK } from "./exercises/waiter-walk.ts";
 import { WALKING_LUNGE_KETTLEBELLS } from "./exercises/walking-lunge-kettlebells.ts";
 import { WALKING_LUNGE } from "./exercises/walking-lunge.ts";
 import { WALL_BALL } from "./exercises/wall-ball.ts";
+import { WALL_SIT } from "./exercises/wall-sit.ts";
 import { WALL_WALK } from "./exercises/wall-walk.ts";
 import type { Motion } from "./skeleton.ts";
 import { motionOf } from "./turning-motion.ts";
@@ -279,6 +285,12 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "squat-clean-thruster": only(SQUAT_CLEAN_THRUSTER),
   "stiff-legged-deadlift": only(STIFF_LEGGED_DEADLIFT),
   "triple-under": only(TRIPLE_UNDER),
+  "ball-slam": only(BALL_SLAM),
+  "broad-jump": only(BROAD_JUMP),
+  "flutter-kick": only(FLUTTER_KICK),
+  "jumping-jack": only(JUMPING_JACK),
+  "sandbag-carry": only(SANDBAG_CARRY),
+  "wall-sit": only(WALL_SIT),
   "dumbbell-deadlift": only(DUMBBELL_DEADLIFT),
   "dumbbell-squat": only(DUMBBELL_FRONT_SQUAT),
   "ghd-sit-up": only(GHD_SIT_UP),

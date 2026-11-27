@@ -8,6 +8,7 @@ import {
   floorDumbbellZ,
   ringsHeld,
   ROWER_RAIL,
+  SANDBAG,
   type Equipment,
 } from "./exercise.ts";
 import {
@@ -181,9 +182,56 @@ function dumbbell({ joints, flat, fromSide }: Scene, handIndex: 0 | 1): Parts {
 
 /** A medicine ball in both hands: its center is above the middle of the hands. */
 function medicineBall(scene: Scene): Parts {
-  const middle = handsMiddle(scene);
-  const ball = scene.flat(vec(middle.x, middle.y - BALL.above, 0));
+  // In a step with `throw`, the ball is in the air (a ball slam).
+  const ball = scene.flat(ballCenter(scene.joints, scene.thrown));
   return [disc("medicineball", ball.depth, ball, BALL.radius)];
+}
+
+/**
+ * A sandbag in a bear hug: it lies across the chest. From the side its round end with a seam, from
+ * the front a long round shape with a seam where each end begins. So it reads as a roll.
+ */
+function sandbag({ flat, fromSide, joints }: Scene): Parts {
+  const [near, far] = joints.arms;
+  const center = vec(
+    (near.end.x + far.end.x) / 2 + SANDBAG.dx,
+    (near.end.y + far.end.y) / 2 - SANDBAG.above,
+    0,
+  );
+  const c = flat(center);
+  const left = flat(vec(center.x, center.y, -SANDBAG.half));
+  const right = flat(vec(center.x, center.y, SANDBAG.half));
+  const body = bar("sandbag", c.depth - 1, left, right, SANDBAG.radius * 2);
+  const seams = fromSide
+    ? [
+        part(
+          c.depth - 0.9,
+          <circle
+            key="sandbagSeam"
+            cx={c.x}
+            cy={c.y}
+            r={SANDBAG.radius - 5}
+            fill="none"
+            stroke={BACK}
+            strokeWidth={1.5}
+          />,
+        ),
+      ]
+    : [left, right].map((end, index) =>
+        part(
+          c.depth - 0.9,
+          <line
+            key={`sandbagSeam${String(index)}`}
+            x1={end.x}
+            y1={end.y - SANDBAG.radius + 3}
+            x2={end.x}
+            y2={end.y + SANDBAG.radius - 3}
+            stroke={BACK}
+            strokeWidth={1.5}
+          />,
+        ),
+      );
+  return [body, ...seams];
 }
 
 /** A plate in both hands: a thin bar from the side, a circle with a hole from the front. */
@@ -1002,6 +1050,8 @@ export function equipmentParts(equipment: Equipment, scene: Scene): Parts {
       return [];
     case "barbell":
       return barbell(scene, equipment.onBack === true, equipment.empty === true);
+    case "sandbag":
+      return sandbag(scene);
     case "medicineball":
       return medicineBall(scene);
     case "lines":
