@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addIdea, newId, removeIdea } from "./ideas.ts";
+import { addIdea, editIdea, newId, removeIdea } from "./ideas.ts";
 import type { IdeaList } from "./schema.ts";
 
 const list: IdeaList = {
@@ -47,5 +47,25 @@ describe("addIdea", () => {
 describe("removeIdea", () => {
   it("removes the given idea", () => {
     expect(order(removeIdea(list, "b"))).toEqual(["a", "c"]);
+  });
+});
+
+describe("editIdea", () => {
+  it("changes title and description of the given idea, trimmed", () => {
+    const result = editIdea(list, "b", { title: " Kochbuch ", description: " Wochenplan  " });
+
+    expect(result.ideas[1]).toEqual({ id: "b", title: "Kochbuch", description: "Wochenplan" });
+    expect(result.ideas[0]).toBe(list.ideas[0]);
+    expect(order(result)).toEqual(["a", "b", "c"]);
+  });
+
+  it("can clear the description", () => {
+    expect(
+      editIdea(list, "a", { title: "Pflanzen", description: "  " }).ideas[0]?.description,
+    ).toBe("");
+  });
+
+  it("ignores an empty title", () => {
+    expect(editIdea(list, "a", { title: "  ", description: "Text" })).toBe(list);
   });
 });

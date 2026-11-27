@@ -1,7 +1,6 @@
 import { Button } from "@pocket-apps/ui/components/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -13,18 +12,17 @@ import { Textarea } from "@pocket-apps/ui/components/textarea";
 import { DragHandle } from "@pocket-apps/ui/drag-handle";
 import { moveById, moveTo, useDragSort } from "@pocket-apps/ui/drag-sort";
 import { SortHint } from "@pocket-apps/ui/sort-hint";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { flushSync } from "react-dom";
-import { addIdea, newId, removeIdea } from "./ideas.ts";
+import { deleteButtonId, editButtonId, editTitleInputId } from "./dom-ids.ts";
+import { IdeaEditForm } from "./idea-edit-form.tsx";
+import { addIdea, editIdea, newId, removeIdea, type IdeaChanges } from "./ideas.ts";
 import { useDataFile, type Idea } from "./schema.ts";
 
 const TITLE_INPUT_ID = "idea-title";
-
-/** The DOM ID of the delete button of one idea. It lets the list keep the keyboard focus. */
-function deleteButtonId(ideaId: string): string {
-  return `idea-${ideaId}-delete`;
-}
+/** The heading of the list. It gets the focus after the last idea is removed. */
+const LIST_HEADING_ID = "ideas-heading";
 
 function focusElement(id: string): void {
   document.getElementById(id)?.focus();
@@ -35,6 +33,9 @@ export function IdeaListView() {
   const { data, update } = useDataFile();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  // Only one idea at a time has an open edit form. The other edit buttons are disabled:
+  // a tap on them must not lose the changes in the open form.
+  const [editingId, setEditingId] = useState<string | null>(null);
   // Drag and drop with the grip at the left of each idea, or the arrow keys on the grip.
   const sort = useDragSort({
     onDrop: (draggedId, targetId, position) => {
@@ -51,13 +52,40 @@ export function IdeaListView() {
     flushSync(() => {
       update((list) => removeIdea(list, idea.id));
     });
-    focusElement(neighbour ? deleteButtonId(neighbour.id) : TITLE_INPUT_ID);
+    // Not the title input: on a phone, its focus opens the keyboard and scrolls to the top.
+    focusElement(neighbour ? deleteButtonId(neighbour.id) : LIST_HEADING_ID);
+  }
+
+  function startEdit(id: string) {
+    flushSync(() => {
+      setEditingId(id);
+    });
+    focusElement(editTitleInputId(id));
+  }
+
+  function closeEdit(id: string) {
+    focusElement(editButtonId(id));
+  }
+
+  function saveEdit(id: string, changes: IdeaChanges) {
+    flushSync(() => {
+      update((list) => editIdea(list, id, changes));
+      setEditingId(null);
+    });
+    closeEdit(id);
+  }
+
+  function cancelEdit(id: string) {
+    flushSync(() => {
+      setEditingId(null);
+    });
+    closeEdit(id);
   }
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
       <SortHint />
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <CardTitle>
             <h2>Neue Idee</h2>
@@ -103,38 +131,66 @@ export function IdeaListView() {
         </CardContent>
       </Card>
 
-      <h2 className="text-lg font-semibold">Ideen ({data.ideas.length})</h2>
+      <h2 id={LIST_HEADING_ID} tabIndex={-1} className="text-lg font-semibold outline-none">
+        Ideen ({data.ideas.length})
+      </h2>
       {data.ideas.length === 0 ? (
         <p className="text-sm text-muted-foreground">Noch keine Ideen.</p>
       ) : (
-        <ol className="flex flex-col gap-3" {...sort.listProps()}>
+        <ol className="flex flex-col gap-2" {...sort.listProps()}>
           {data.ideas.map((idea, index) => (
             <li key={idea.id} {...sort.rowProps(idea.id)} className={sort.rowClass(idea.id)}>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex min-w-0 items-center gap-2">
-                    <DragHandle name={idea.title} {...sort.handleProps(idea.id)} />
-                    <h3 className="min-w-0 wrap-anywhere">{idea.title}</h3>
-                  </CardTitle>
-                  {idea.description !== "" && (
-                    <CardDescription className="min-w-0 pl-10 wrap-anywhere whitespace-pre-line">
-                      {idea.description}
-                    </CardDescription>
-                  )}
-                  <CardAction className="flex gap-1">
-                    <Button
-                      id={deleteButtonId(idea.id)}
-                      size="icon-sm"
-                      variant="ghost"
-                      aria-label={`${idea.title} löschen`}
-                      onClick={() => {
-                        remove(idea, index);
+              <Card size="sm">
+                <CardContent className="flex items-start gap-2">
+                  {editingId === idea.id ? (
+                    <IdeaEditForm
+                      idea={idea}
+                      onSave={(changes) => {
+                        saveEdit(idea.id, changes);
                       }}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </CardAction>
-                </CardHeader>
+                      onCancel={() => {
+                        cancelEdit(idea.id);
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <DragHandle name={idea.title} {...sort.handleProps(idea.id)} />
+                      <div className="flex min-w-0 flex-1 flex-col gap-1 py-1">
+                        <CardTitle>
+                          <h3 className="wrap-anywhere">{idea.title}</h3>
+                        </CardTitle>
+                        {idea.description !== "" && (
+                          <CardDescription className="wrap-anywhere whitespace-pre-line">
+                            {idea.description}
+                          </CardDescription>
+                        )}
+                      </div>
+                      <Button
+                        id={editButtonId(idea.id)}
+                        size="icon-sm"
+                        variant="ghost"
+                        aria-label={`${idea.title} bearbeiten`}
+                        disabled={editingId !== null}
+                        onClick={() => {
+                          startEdit(idea.id);
+                        }}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        id={deleteButtonId(idea.id)}
+                        size="icon-sm"
+                        variant="ghost"
+                        aria-label={`${idea.title} löschen`}
+                        onClick={() => {
+                          remove(idea, index);
+                        }}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
               </Card>
             </li>
           ))}

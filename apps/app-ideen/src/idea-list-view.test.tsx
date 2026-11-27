@@ -61,6 +61,77 @@ describe("IdeaListView", () => {
     expect(screen.getByLabelText("Beschreibung")).toHaveValue("");
   });
 
+  it("edits an idea in its place and focuses the edit button after save", async () => {
+    const user = await openIdeas();
+
+    await user.click(screen.getByRole("button", { name: "Rezepte bearbeiten" }));
+    const form = screen.getByRole("form", { name: "Rezepte bearbeiten" });
+    const title = within(form).getByLabelText("Titel");
+    expect(title).toHaveFocus();
+    expect(title).toHaveValue("Rezepte");
+
+    await user.clear(title);
+    await user.type(title, " Kochbuch ");
+    await user.type(within(form).getByLabelText("Beschreibung"), "Wochenplan");
+    await user.click(within(form).getByRole("button", { name: "Speichern" }));
+
+    expect(ideaTitles()).toEqual(["Pflanzen", "Kochbuch", "Fahrtenbuch"]);
+    expect(screen.getByText("Wochenplan")).toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: /bearbeiten/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Kochbuch bearbeiten" })).toHaveFocus();
+  });
+
+  it("saves an edit with Enter in the title", async () => {
+    const user = await openIdeas();
+
+    await user.click(screen.getByRole("button", { name: "Rezepte bearbeiten" }));
+    await user.keyboard(" vegan{Enter}");
+
+    expect(ideaTitles()).toEqual(["Pflanzen", "Rezepte vegan", "Fahrtenbuch"]);
+  });
+
+  it("keeps the idea after a cancel with the button", async () => {
+    const user = await openIdeas();
+
+    await user.click(screen.getByRole("button", { name: "Pflanzen bearbeiten" }));
+    await user.keyboard("{Control>}a{/Control}Bäume");
+    await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+
+    expect(ideaTitles()).toEqual(["Pflanzen", "Rezepte", "Fahrtenbuch"]);
+    expect(screen.getByRole("button", { name: "Pflanzen bearbeiten" })).toHaveFocus();
+  });
+
+  it("keeps the idea after Escape in the description", async () => {
+    const user = await openIdeas();
+
+    await user.click(screen.getByRole("button", { name: "Pflanzen bearbeiten" }));
+    await user.click(
+      screen.getByLabelText("Beschreibung", { selector: "#idea-a-edit-description" }),
+    );
+    await user.keyboard("{Control>}a{/Control}Neu{Escape}");
+
+    expect(screen.getByText("Gießplan für alle Pflanzen")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pflanzen bearbeiten" })).toHaveFocus();
+  });
+
+  it("disables the other edit buttons while a form is open", async () => {
+    const user = await openIdeas();
+
+    await user.click(screen.getByRole("button", { name: "Pflanzen bearbeiten" }));
+
+    expect(screen.getByRole("button", { name: "Rezepte bearbeiten" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Fahrtenbuch bearbeiten" })).toBeDisabled();
+  });
+
+  it("disables save without a title", async () => {
+    const user = await openIdeas();
+
+    await user.click(screen.getByRole("button", { name: "Rezepte bearbeiten" }));
+    await user.keyboard("{Control>}a{/Control}{Backspace}");
+
+    expect(screen.getByRole("button", { name: "Speichern" })).toBeDisabled();
+  });
+
   it("disables the add button without a title", async () => {
     await openIdeas();
 
@@ -87,7 +158,7 @@ describe("IdeaListView", () => {
     expect(ideaTitles()).toEqual(["Pflanzen", "Rezepte", "Fahrtenbuch"]);
   });
 
-  it("focuses the previous idea after the last idea is removed, then the title input", async () => {
+  it("focuses the previous idea after the last idea is removed, then the list heading", async () => {
     const user = await openIdeas();
     vi.spyOn(window, "confirm").mockReturnValue(true);
 
@@ -96,7 +167,8 @@ describe("IdeaListView", () => {
 
     await user.click(screen.getByRole("button", { name: "Rezepte löschen" }));
     await user.click(screen.getByRole("button", { name: "Pflanzen löschen" }));
-    expect(screen.getByLabelText("Titel")).toHaveFocus();
+    // Not the title input: on a phone, it would open the keyboard.
+    expect(screen.getByRole("heading", { name: "Ideen (0)" })).toHaveFocus();
   });
 
   it("changes the order with the arrow keys on the grip and keeps the focus on it", async () => {

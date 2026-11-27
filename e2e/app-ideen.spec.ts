@@ -176,6 +176,37 @@ test.describe("app-ideen in Chrome and Edge", () => {
   });
 });
 
+test.describe("app-ideen on a phone", () => {
+  test.use({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true });
+
+  test("edits an idea with taps and saves it in the data folder", async ({ page, pageErrors }) => {
+    await openWithFolder(
+      page,
+      ideasFile([
+        { id: "a1", title: "Tee", description: "Sorten" },
+        { id: "a2", title: "Kaffee", description: "" },
+      ]),
+    );
+
+    await page.getByRole("button", { name: "Tee bearbeiten" }).tap();
+    const form = page.getByRole("form", { name: "Tee bearbeiten" });
+    await expect(form.getByLabel("Titel")).toBeFocused();
+    await form.getByLabel("Titel").fill("Grüner Tee");
+    await form.getByLabel("Beschreibung").fill("Sencha");
+    await form.getByRole("button", { name: "Speichern" }).tap();
+
+    await expect(titles(page)).toHaveText(["Grüner Tee", "Kaffee"]);
+    await expect(page.getByRole("button", { name: "Grüner Tee bearbeiten" })).toBeFocused();
+    const saved = await savedFile(page);
+    expect(saved.data.ideas[0]).toEqual({ id: "a1", title: "Grüner Tee", description: "Sencha" });
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(0);
+    expect(pageErrors).toEqual([]);
+  });
+});
+
 test.describe("app-ideen in browsers without folder access", () => {
   test("offers only the cloud storages", async ({ page, pageErrors }) => {
     await withoutFolderAccess(page);
