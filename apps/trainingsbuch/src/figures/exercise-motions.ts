@@ -25,6 +25,8 @@ import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { BURPEE_OVER_ROWER } from "./exercises/burpee-over-rower.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
 import { BURPEE } from "./exercises/burpee.ts";
+import { BUTTERFLY_CHEST_TO_BAR_PULL_UP } from "./exercises/butterfly-chest-to-bar-pull-up.ts";
+import { BUTTERFLY_PULL_UP } from "./exercises/butterfly-pull-up.ts";
 import { CHEST_TO_BAR_PULL_UP } from "./exercises/chest-to-bar-pull-up.ts";
 import { CLEAN_AND_JERK } from "./exercises/clean-and-jerk.ts";
 import { DEAD_HANG } from "./exercises/dead-hang.ts";
@@ -154,6 +156,8 @@ const form = (label: string, exercise: Exercise): ExerciseVariant => ({
 const only = (exercise: Exercise): ExerciseVariants => [{ key: "only", label: null, exercise }];
 
 const STRICT_PULL_UP = form("Strict", PULL_UP);
+const BUTTERFLY = form("Butterfly", BUTTERFLY_PULL_UP);
+const BUTTERFLY_CHEST_TO_BAR = form("Butterfly", BUTTERFLY_CHEST_TO_BAR_PULL_UP);
 const STRICT_HANDSTAND_PUSH_UP = form("Strict", HANDSTAND_PUSH_UP);
 const KETTLEBELL_CARRY = form("Kettlebell", FARMERS_CARRY_KETTLEBELL);
 const PLATE_LUNGE = form("Plate", OVERHEAD_LUNGE_PLATE);
@@ -196,6 +200,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "burpee-pull-up": only(BURPEE_PULL_UP),
   "chest-to-bar": [
     form("Kipping", KIPPING_CHEST_TO_BAR_PULL_UP),
+    BUTTERFLY_CHEST_TO_BAR,
     form("Strict", CHEST_TO_BAR_PULL_UP),
   ],
   clean: [form("Power", POWER_CLEAN), form("Squat", SQUAT_CLEAN)],
@@ -229,7 +234,7 @@ const EXERCISE_VARIANTS: Partial<Record<ExerciseId, ExerciseVariants>> = {
   "plate-carry": only(PLATE_CARRY),
   "power-clean": only(POWER_CLEAN),
   "power-snatch": only(POWER_SNATCH),
-  "pull-up": [form("Kipping", KIPPING_PULL_UP), STRICT_PULL_UP],
+  "pull-up": [form("Kipping", KIPPING_PULL_UP), BUTTERFLY, STRICT_PULL_UP],
   "push-jerk": only(PUSH_JERK),
   "push-press": only(PUSH_PRESS),
   "push-up": only(PUSH_UP),
@@ -360,7 +365,11 @@ const FORMS_IN_TEXT: Partial<
     { pattern: /\blunges?\b.*\bplate\b/i, variant: PLATE_LUNGE },
     { pattern: /^barbell:|\boverhead walking lunge, \d/i, variant: BARBELL_LUNGE },
   ],
-  "pull-up": [{ pattern: /\b(?:strict|weighted|L)\s+pull-?ups?\b/i, variant: STRICT_PULL_UP }],
+  "pull-up": [
+    { pattern: /\b(?:strict|weighted|L)\s+pull-?ups?\b/i, variant: STRICT_PULL_UP },
+    { pattern: /\bbutterfly pull-?ups?\b/i, variant: BUTTERFLY },
+  ],
+  "chest-to-bar": [{ pattern: /\bbutterfly chest-to-bar\b/i, variant: BUTTERFLY_CHEST_TO_BAR }],
   // Gale Force: over a backpack. Open 16.1: over the barbell.
   burpee: [
     { pattern: /\bburpees? over the backpack\b/i, variant: form("Backpack", BURPEE_OVER_BACKPACK) },

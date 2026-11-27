@@ -17,6 +17,8 @@ import { BURPEE_OVER_BACKPACK } from "./exercises/burpee-over-backpack.ts";
 import { BURPEE_OVER_BAR } from "./exercises/burpee-over-bar.ts";
 import { BURPEE_OVER_DUMBBELL } from "./exercises/burpee-over-dumbbell.ts";
 import { BURPEE_PULL_UP } from "./exercises/burpee-pull-up.ts";
+import { BUTTERFLY_CHEST_TO_BAR_PULL_UP } from "./exercises/butterfly-chest-to-bar-pull-up.ts";
+import { BUTTERFLY_PULL_UP } from "./exercises/butterfly-pull-up.ts";
 import { DUMBBELL_CLEAN_AND_JERK_SINGLE_ARM } from "./exercises/dumbbell-clean-and-jerk-single-arm.ts";
 import { DUMBBELL_CLEAN_AND_JERK } from "./exercises/dumbbell-clean-and-jerk.ts";
 import { DUMBBELL_DEADLIFT } from "./exercises/dumbbell-deadlift.ts";
@@ -99,10 +101,15 @@ describe("variantsOf", () => {
     expect(variantsOf("turkish-get-up", [])).toBeNull();
   });
 
-  it("offers Kipping first and Strict for a plain pull-up", () => {
-    expect(motions("pull-up", ["21-15-9", "Pull-up"])).toEqual([KIPPING_PULL_UP, STRICT_PULL_UP]);
+  it("offers Kipping first, then Butterfly and Strict for a plain pull-up", () => {
+    expect(motions("pull-up", ["21-15-9", "Pull-up"])).toEqual([
+      KIPPING_PULL_UP,
+      BUTTERFLY_PULL_UP,
+      STRICT_PULL_UP,
+    ]);
     expect(variantsOf("pull-up", [])?.map((variant) => variant.label)).toEqual([
       "Kipping",
+      "Butterfly",
       "Strict",
     ]);
   });
@@ -353,7 +360,7 @@ describe("variantsOf", () => {
     ["toes-to-bar", ["Tuck", "Straight"]],
     ["kettlebell-swing", ["American", "Russian"]],
     ["handstand-push-up", ["Kipping", "Strict"]],
-    ["chest-to-bar", ["Kipping", "Strict"]],
+    ["chest-to-bar", ["Kipping", "Butterfly", "Strict"]],
     ["kettlebell-thruster", ["Zwei", "Einarmig"]],
     ["devil-press", ["Snatch", "Clean"]],
   ] as const)("offers the forms of %s", (id, labels) => {
@@ -503,7 +510,15 @@ describe("variantsOf", () => {
   it("does not take the word strict of another exercise", () => {
     expect(motions("pull-up", ["5 strict handstand push-ups", "10 pull-ups"])).toEqual([
       KIPPING_PULL_UP,
+      BUTTERFLY_PULL_UP,
       STRICT_PULL_UP,
+    ]);
+  });
+
+  it("offers only Butterfly when the text asks for butterfly pull-ups", () => {
+    expect(motions("pull-up", ["30 butterfly pull-ups"])).toEqual([BUTTERFLY_PULL_UP]);
+    expect(motions("chest-to-bar", ["15 butterfly chest-to-bar pull-ups"])).toEqual([
+      BUTTERFLY_CHEST_TO_BAR_PULL_UP,
     ]);
   });
 

@@ -147,14 +147,24 @@ export function ExerciseAnimationCard({
           variant="outline"
           size="sm"
           aria-label={`Variante von ${name}`}
-          className={variants.length > 2 ? "grid w-full grid-cols-3" : "grid w-full grid-cols-2"}
+          // Three forms share the width by the length of their names: "Butterfly" needs more than a third of a
+          // narrow card.
+          className={variants.length > 2 ? "flex w-full" : "grid w-full grid-cols-2"}
           value={variant.key}
           onValueChange={(value) => {
             if (value !== "") setChosen(value);
           }}
         >
           {variants.map((item) => (
-            <ToggleGroupItem key={item.key} value={item.key} className="min-w-0 px-1 text-xs">
+            <ToggleGroupItem
+              key={item.key}
+              value={item.key}
+              className={
+                variants.length > 2
+                  ? "min-w-0 flex-auto shrink px-0.5 text-[0.6875rem] sm:px-1 sm:text-xs"
+                  : "min-w-0 px-1 text-xs"
+              }
+            >
               {item.label}
             </ToggleGroupItem>
           ))}

@@ -3,7 +3,7 @@ import type { Exercise, View } from "../exercise.ts";
 import { BODY, up, type Pose } from "../skeleton.ts";
 
 /** The bar is fixed. The hands hold it in each pose. The same numbers as in `pull-up.ts` and `toes-to-bar.ts`. */
-const BAR = { x: 78, y: 30 };
+export const BAR = { x: 78, y: 30 };
 
 const RAD = Math.PI / 180;
 /** The shoulders are this far from the bar in the side view when the arm is straight (61.93 with the grip of 17). */
@@ -117,8 +117,8 @@ const BACK = pose({ swing: 22, lean: -6, bend: 16, legs: 24, head: 0 });
 // The body swings forward through the hang line. The chest leads, the legs trail.
 const THROUGH = pose({ swing: 5, lean: 1, bend: -4, legs: -2, head: 0 });
 
-const SIDE: View = { label: "Seite", yaw: 0, box: [6, -18, 150, 266] };
-const FRONT: View = { label: "Vorn", yaw: 90, box: [-65, -18, 130, 266] };
+export const SIDE: View = { label: "Seite", yaw: 0, box: [6, -18, 150, 266] };
+export const FRONT: View = { label: "Vorn", yaw: 90, box: [-65, -18, 130, 266] };
 
 /**
  * The kipping pull-up, to the top `top`. The kipping chest-to-bar pull-up is the same motion with a higher top
