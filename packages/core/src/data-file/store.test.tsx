@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -361,9 +361,12 @@ describe("save", () => {
     await user.click(screen.getByRole("button", { name: "Jetzt erneut versuchen" }));
     await screen.findByText("Gespeichert");
 
-    const afterSave = new Event("beforeunload", { cancelable: true });
-    window.dispatchEvent(afterSave);
-    expect(afterSave.defaultPrevented).toBe(false);
+    // React removes the warning in an effect after the render that shows "Gespeichert": wait for it.
+    await waitFor(() => {
+      const afterSave = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(afterSave);
+      expect(afterSave.defaultPrevented).toBe(false);
+    });
   });
 });
 
