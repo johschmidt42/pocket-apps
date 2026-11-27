@@ -146,6 +146,11 @@ export default defineConfig([
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },
   },
+  // The service worker runs in the browser, not in Node (release/sw.js).
+  {
+    files: ["packages/vite-config/service-worker.js"],
+    languageOptions: { globals: globals.serviceworker },
+  },
 
   // TypeScript and React.
   {

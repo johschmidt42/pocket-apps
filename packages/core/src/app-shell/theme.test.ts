@@ -5,6 +5,7 @@ import {
   initTheme,
   readSavedTheme,
   saveTheme,
+  THEME_COLORS,
   THEME_STORAGE_KEY,
 } from "./theme.ts";
 
@@ -79,6 +80,22 @@ describe("applyTheme and currentTheme", () => {
 
     expect(document.documentElement).not.toHaveClass("dark");
     expect(currentTheme()).toBe("light");
+  });
+
+  it("gives the theme color to the meta tag of the build", () => {
+    const meta = document.createElement("meta");
+    meta.name = "theme-color";
+    meta.content = THEME_COLORS.light;
+    document.head.append(meta);
+
+    applyTheme("dark");
+
+    expect(meta.content).toBe(THEME_COLORS.dark);
+
+    applyTheme("light");
+
+    expect(meta.content).toBe(THEME_COLORS.light);
+    meta.remove();
   });
 });
 

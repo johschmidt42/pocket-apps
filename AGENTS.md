@@ -3,7 +3,7 @@
 ## Purpose
 
 pocket-apps is a monorepo of small personal apps ("home-cooked software").
-Each app builds into **one self-contained HTML file**. GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/`. There is no server for user data.
+Each app builds into **one self-contained HTML file**. Next to it are its web app manifest and its icons: the user can install each app (PWA). GitHub Pages serves the files: users open the apps at `https://johschmidt42.github.io/pocket-apps/`. There is no server for user data.
 Apps that keep data store it in a **data folder**: a folder on the user's computer (Chrome and Edge) or the app folder in the user's OneDrive or Dropbox (all browsers, also on a phone). The user picks the storage once. Each app has its own JSON file in it. No user data goes to a server of ours.
 Most apps use no online services. An app that needs an external API declares this in its `package.json`.
 
@@ -12,6 +12,7 @@ Most apps use no online services. An app that needs an external API declares thi
 - **App file:** the built HTML file of one app, for example `release/app-ideen.html`.
 - **Launcher:** the start page `release/index.html`. It shows a card for each app, with the version and icons for the data file, the internet and the AI (see `launcher/src/app-card.tsx`). It is also the place to pick the storage. With a folder, the user can change the order of the apps and mark favorites. The launcher keeps them in `launcher/launcher.json` in the data folder. The code is in `launcher/`.
 - **Back link:** the link "Alle Apps" in the header of each app. It opens the launcher.
+- **Installed app:** an app that the user installed from the browser (a PWA). It opens in its own window, without the address bar. It has no back link: each installed app stands alone. The launcher is not installable. See "Apps as installable PWAs" in `docs/decisions.md`.
 - **Storage:** where the data folder is. The user picks it once per browser and web address, on the screen "Wo sollen deine Daten liegen?". There are three kinds:
   - `local`: a folder on this computer, for example "Pocket Apps Daten". The apps use the File System Access API. Thus only Chrome and Edge on a computer offer it.
   - `onedrive` and `dropbox` (the cloud storages): the app folder `/Apps/Pocket Apps` in the OneDrive or the Dropbox of the user. All browsers offer them. The user sees the same data on all devices. Later: Google Drive, also in `/Apps/Pocket Apps`.
@@ -56,7 +57,8 @@ Each shared module has JSDoc. The two large modules have a README: read it befor
 apps/<app>/                One app. Vite + React + TypeScript. Builds to dist/index.html.
 launcher/                  The launcher. Builds to release/index.html.
 packages/core/             Shared code:
-  src/app-shell/           AppHeader (back link, title, version, theme switch) and the theme logic.
+  src/app-shell/           AppHeader (back link, title, version, install button, theme switch), the
+                           theme logic and the install events (install.ts).
   src/data-file/           Data folder and data file: pick, load, save, migrate, validate. README.md.
   src/ai/                  AI for all apps: useAi(), the settings dialog and the notices. README.md.
   src/numbers.ts           parseNumber() for German number inputs ("1.234,5").
@@ -78,8 +80,10 @@ packages/ui/               UI components (vendor code) and the Tailwind theme (g
   src/drag-handle.tsx      DragHandle: the grip at the left of a row (own code).
   src/sort-hint.tsx        SortHint: the screen reader hint for the grips. Once per page (own code).
 packages/vite-config/      Shared Vite config. Reads app info and pocket-apps.config.json.
+  pwa.js                   The PWA files of an app: manifest, icons from the emoji, theme color.
+  service-worker.js        The one service worker of the site (release/sw.js). Network first.
 pocket-apps.config.json    Settings for all apps, for example the back link.
-scripts/build-release.mjs  Copies the built files to release/.
+scripts/build-release.mjs  Copies the built files and the service worker to release/.
 scripts/serve-release.mjs  Serves release/ at http://localhost:4173/pocket-apps/ (`pnpm serve`).
 e2e/                       Browser tests (Playwright) for the files in release/.
 .github/                   GitHub Actions: pipelines in workflows/, shared setup in actions/setup/.
@@ -112,7 +116,7 @@ Each app declares its info in its `package.json`:
 | `version`            | `"1.0.0"`                | App version `1.0`. The third part is always `0`.                       |
 | `description`        | `"Eine einfache Liste."` | German short text for the launcher card.                               |
 | `pocketApp.title`    | `"App-Ideen"`            | German display name.                                                   |
-| `pocketApp.emoji`    | `"💡"`                   | One emoji as the icon on the launcher card.                            |
+| `pocketApp.emoji`    | `"💡"`                   | One emoji: the icon on the launcher card and of the installed app.     |
 | `pocketApp.stateful` | `true`                   | `true` if the app has a data file.                                     |
 | `pocketApp.network`  | `false`                  | `true` if the app needs the internet, for example for an external API. |
 | `pocketApp.connect`  | `["https://api.x.org"]`  | Optional. The origins of the external APIs. See "Internet access".     |
@@ -123,7 +127,8 @@ Each app declares its info in its `package.json`:
 - The build makes this info available as `__POCKET_APP__`. Do not write the title or the version by hand anywhere else.
 - The build also writes the title into `<title>`. It writes name and version into the meta tags `pocket-app-name` and `pocket-app-version`.
 - The build writes a Content Security Policy as the first tag in `<head>`: `connect-src 'self'`, the origins in `pocketApp.connect`, with `"ai": true` the AI providers, and with `"stateful": true` the cloud storages (`STORAGE_ORIGINS` in `packages/vite-config`). The page code can call only these addresses.
-- Every app shows `AppHeader` from `@pocket-apps/core/app-shell` at the top. It holds the back link, the `<h1>`, the version and the theme switch.
+- The build writes the PWA files: `release/<app>.webmanifest`, the icons in `release/icons/` (from the emoji in the Noto set; the build stops if the set has no image for it), the meta tag `theme-color` and a script that registers `release/sw.js`. The launcher gets the icons and the service worker, but no manifest.
+- Every app shows `AppHeader` from `@pocket-apps/core/app-shell` at the top. It holds the back link, the `<h1>`, the version, the button "Installieren" (only when Chrome or Edge can install the app) and the theme switch.
 - A stateless app renders `<AppHeader app={__POCKET_APP__} />` itself.
 - A stateful app gets the header from `DataFileProvider`. Pass `{ app: __POCKET_APP__ }` to `createDataFileStore()`.
 - `main.tsx` contains only `mountApp(App)` from `@pocket-apps/core/app-shell`. `mountApp` loads the styles, applies the saved theme and renders the app.
@@ -134,6 +139,7 @@ Each app declares its info in its `package.json`:
 - `backLink` in `pocket-apps.config.json` controls the back link for all apps: `enabled`, `href` and `label`.
 - To turn the back link off for one app, add `"backLink": false` to the `pocketApp` object in its `package.json`. Keep the other `pocketApp` fields.
 - An app can only turn the back link off. If `enabled` is `false` in the config, no app shows a back link. Apps cannot change `href` or `label`.
+- An installed app shows no back link.
 - `launcher/package.json` has `"backLink": false` in `pocketApp`.
 
 ### Internet access
@@ -282,6 +288,7 @@ Browser tests:
 - The browser tests use the local web server of `pnpm serve`. Playwright starts it.
 - The browser tests run only in Chromium. Edge uses the same engine. We do not support other browsers.
 - `e2e/all-apps.spec.ts` tests every app automatically: start without network, no errors, title and version, Tailwind styles, theme switch, back link, narrow window. It blocks all network requests to other servers. An app with `"network": true` may try requests, but it must start without errors.
+- `e2e/pwa.spec.ts` tests the manifest and the icons of every app, the install button and the start without a connection (service worker).
 - `e2e/launcher.spec.ts` tests the launcher.
 - Add `e2e/<app>.spec.ts` for the main flow of a stateful app: pick the folder, change, save, reload. See `e2e/app-ideen.spec.ts`.
 - Use the helpers in `e2e/helpers.ts`. `withDataFolder(page)` before `page.goto()` gives a data folder in the private file system of the browser (OPFS). `withoutFolderAccess(page)` acts like Firefox or Safari: the app offers only the cloud storages. `e2e/onedrive.spec.ts` and `e2e/dropbox.spec.ts` fake the login and the API of the provider with `page.route()`. `writeDataFile()` and `readDataFile()` change and read files in the folder after `page.goto()`.

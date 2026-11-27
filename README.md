@@ -25,6 +25,16 @@ Each card shows the app version (for example `1.0`) and two icons. Move the mous
 
 The header shows the app version, for example `1.0`. The moon button switches to dark mode. The sun button switches back to light mode.
 
+### Install an app
+
+You can install each app on your phone or computer. Then it has its own icon and opens in its own window, without the address bar. You do not need an app store.
+
+1. Open the app in the browser.
+2. In Chrome and Edge, click "Installieren" in the header. On a phone, the button shows only a download icon. In Safari on an iPhone, tap "Teilen", then "Zum Home-Bildschirm".
+3. Confirm the dialog of the browser.
+
+On Android and on a computer, the installed app uses the same storage choice and login as the browser. On an iPhone, the installed app has its own storage: choose the storage again and log in once. The installed app always loads the newest version. Without a connection, it starts with the version of your last visit. An installed app has no link "Alle Apps": each app stands alone. To find more apps, open the start page in the browser.
+
 ### Keep your data
 
 Some apps keep data, for example a list of ideas. All these apps use one data folder. On the start page or in an app that keeps data, find "Wo sollen deine Daten liegen?". You choose once per browser. All apps in this browser then use your choice.

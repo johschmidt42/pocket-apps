@@ -8,6 +8,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { z } from "zod";
+import { pwaPlugin } from "./pwa.js";
 
 /** The repository root folder. */
 export const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -207,7 +208,8 @@ function cspPlugin(app) {
  * The build output is one self-contained HTML file: dist/index.html.
  *
  * @param {string} configUrl The URL of the vite.config.ts. Use `import.meta.url`.
- * @param {{ withAppList?: boolean }} [options] `withAppList`: also define `__POCKET_APPS__` (launcher).
+ * @param {{ withAppList?: boolean, installable?: boolean }} [options] `withAppList`: also define
+ *   `__POCKET_APPS__` (launcher). `installable: false`: no web app manifest (launcher).
  */
 export function createAppConfig(configUrl, options = {}) {
   const appDir = fileURLToPath(new URL(".", configUrl));
@@ -217,7 +219,14 @@ export function createAppConfig(configUrl, options = {}) {
     root: appDir,
     // Relative paths: the files work on GitHub Pages and from disk (file://, in the browser tests).
     base: "./",
-    plugins: [react(), tailwindcss(), viteSingleFile(), appMetaPlugin(app), cspPlugin(app)],
+    plugins: [
+      react(),
+      tailwindcss(),
+      viteSingleFile(),
+      appMetaPlugin(app),
+      cspPlugin(app),
+      pwaPlugin(app, { installable: options.installable !== false }),
+    ],
     define: {
       __POCKET_APP__: JSON.stringify(app),
       __POCKET_APPS__: JSON.stringify(options.withAppList === true ? listApps() : []),

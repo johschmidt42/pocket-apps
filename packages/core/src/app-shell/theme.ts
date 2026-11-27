@@ -37,11 +37,20 @@ export function currentTheme(): Theme {
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
+/**
+ * The page color of each theme (`--background` in globals.css). An installed app on a phone gives
+ * the status bar this color (the meta tag "theme-color"). The same values are in
+ * packages/vite-config/pwa.js.
+ */
+export const THEME_COLORS: Record<Theme, string> = { light: "#ffffff", dark: "#0c0a09" };
+
 /** Shows the theme on the page. */
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
   root.classList.toggle("dark", theme === "dark");
   root.style.colorScheme = theme;
+  // The build adds the meta tag. The dev server and the unit tests do not have it.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[theme]);
 }
 
 /** Applies the saved theme. Call it in main.tsx before the first render. */

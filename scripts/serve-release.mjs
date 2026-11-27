@@ -11,6 +11,10 @@ const RELEASE_DIR = join(ROOT_DIR, "release");
 const TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
   [".json", "application/json"],
+  // The browser registers a service worker only with a JavaScript type.
+  [".js", "text/javascript; charset=utf-8"],
+  [".webmanifest", "application/manifest+json"],
+  [".png", "image/png"],
 ]);
 
 createServer((request, response) => {

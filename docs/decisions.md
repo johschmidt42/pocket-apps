@@ -3,6 +3,18 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-27: Apps as installable PWAs (vite-config, core)
+
+- **Context:** The user wants the apps on a phone as installed apps, without the Play Store. Chrome on Android installs a Progressive Web App (PWA) as a WebAPK: an app with its own icon, without the address bar. It uses the storage of the web address in Chrome, so the choice of the storage and the login stay.
+- **Decision:** Each app is its own PWA. The build writes `release/<app>.webmanifest` with `start_url` and `scope` = `./<app>.html`, and the icons in `release/icons/`. The launcher has no manifest: its scope `/pocket-apps/` would hold all apps, and an app could not know if it runs alone or in the window of the launcher.
+- **Decision:** An installed app (`display-mode: standalone`) has no back link. Each installed app stands alone. The launcher is the page in the browser where the user finds and installs the apps.
+- **Decision:** `AppHeader` shows the button "Installieren" when Chrome or Edge fires `beforeinstallprompt`. Firefox and Safari do not fire it: there the user installs from the browser menu (Safari on iOS: "Teilen" → "Zum Home-Bildschirm").
+- **Decision:** One service worker for the site (`release/sw.js`, from `packages/vite-config/service-worker.js`). Network first: it gives a copy only without a connection. Thus the user always gets the newest version, and an app also starts offline. It handles only GET requests to the site itself, never the cloud storage, an API or the AI. The Chrome docs say that the install prompt still needs a service worker with a `fetch` handler. In a test with Chromium on a computer, the event also came without it. We keep the worker for Android and for the offline start.
+- **Decision:** The icons come from the emoji of the app: the Noto emoji as SVG (`@iconify-json/noto`, Apache-2.0, the emoji of Android), drawn as PNG with `@resvg/resvg-js` at build time. A light background with a soft gradient. Sizes: 192 and 512 (rounded), 512 maskable (Android cuts the shape), 180 for iOS. The build stops if the Noto set has no image for the emoji.
+- **Decision:** The meta tag `theme-color` follows the theme switch. Then the status bar of an installed app is dark in dark mode.
+- **Changes:** "App and data in separate files" stays true, but an app is no longer only one file: next to the HTML file are its manifest and its icons.
+- **Rejected:** A manifest as a `data:` URL in the HTML file (Chrome does not install it: the manifest must be on the same web address as the page). Emoji drawn with the fonts of the system (Chrome on the CI runner has other emoji fonts than a Mac, or none). One PWA for all apps (the user wants one icon per app). A service worker with "cache first" (old versions after an update).
+
 ## 2026-11-25: CD - Release publishes in a second job (ci)
 
 - **Context:** `CD - Release` failed six times in a row with "Found 0 artifact(s)". The step "Prepare the Pages artifact" had finished the upload. `deploy-pages` lists the artifacts of the run through the artifact service of Actions (`listArtifacts`), not through the REST API. In the job that uploaded the artifact, this list was still empty. A step that waited until the REST API listed the artifact did not help.
@@ -623,4 +635,4 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** The app is one HTML file. The data is a separate JSON file that the user owns. There is no server, no hosting and no browser storage as the source of truth.
 - **Why:** Users can share the app file. Updates replace only the app file. Clearing the browser does not delete data.
 - **Consequence:** Chrome and Edge save directly into the file (File System Access API). Firefox and Safari save by download. ("Apps on GitHub Pages, data in a local folder" replaces this: only Chrome and Edge, with a data folder.)
-- **Consequence:** Phones cannot open a local HTML file reliably. We do not support phones. Layouts must still work in narrow browser windows.
+- **Consequence:** Phones cannot open a local HTML file reliably. We do not support phones. Layouts must still work in narrow browser windows. (Changed: phones use the apps from GitHub Pages with a cloud storage, and can install them. See "OneDrive as a second storage for the data" and "Apps as installable PWAs".)

@@ -50,8 +50,12 @@ export declare function readAppInfo(appDir: string): AppInfo;
 /** Reads the info of all apps in apps/, sorted by title. */
 export declare function listApps(): AppInfo[];
 
-/** Creates the Vite config for one app or the launcher. Pass `import.meta.url`. */
+/**
+ * Creates the Vite config for one app or the launcher. Pass `import.meta.url`.
+ * `withAppList`: also define `__POCKET_APPS__` (launcher). `installable: false`: no web app
+ * manifest (launcher). The build always adds the icons and the service worker.
+ */
 export declare function createAppConfig(
   configUrl: string,
-  options?: { withAppList?: boolean },
+  options?: { withAppList?: boolean; installable?: boolean },
 ): UserConfig;
