@@ -3,6 +3,23 @@
 Short records of why we chose a tool or a pattern. Newest first.
 Read the related entry before you change a decision. Add an entry for each new decision.
 
+## 2026-11-28: A game with three.js (bugfight)
+
+- **Context:** `bugfight` is a shoot 'em up for the PC: the ladybug Seven flies with the mouse and fights a wave of flying ants. The series Chicken Invaders gives the game feel. All figures, names and content are our own. The app has no data file yet. Saving comes with more waves.
+- **Decision:** `apps/bugfight/DESIGN.md` holds each design decision of the game and its reason: the field, the look, the weapons, the numbers. This entry holds only the decisions that matter for the repository.
+- **Decision:** The game began as a prototype in `prototypes/bugfight/` on the branch `prototype/bugfight`. That branch is never merged into `main`. It keeps the tools that the app does not need: a model viewer, a tool that saves pictures of the game at exact ticks, and a tool that measures the balance. Use it as the workshop for new figures.
+- **Decision:** The pattern is that of `attraktor` (see "3D graphics with three.js"). The game logic (`src/sim/`) is plain TypeScript with a fixed tick of 1/120 second and seeded random numbers: the same seed and the same inputs give the same game. three.js only draws (`src/render/`). Thus unit tests cover the logic, and a written player (`src/sim/bot.ts`) proves in a test that the wave is possible.
+- **Decision:** The figures are data (`src/models/`): trees of simple shapes with names. Their motions are functions that return numbers. There are no model files and no animation files. Claude Code can read, change and compare them, and all fits into the one HTML file.
+- **Decision:** `bugfight` is the second app with three.js. The two apps share only the dependency, no code. Thus there is no shared package yet. Check this again when a third app uses three.js.
+- **Decision:** The texts and displays on the field have fixed colors as arbitrary Tailwind values (for example `bg-[#070b08]`), not theme colors. They are a part of the picture, and the picture has its own colors in light and dark mode, as in `attraktor`. The debug panel uses theme colors. The buttons are the `Button` of `packages/ui` with extra classes.
+- **Decision:** The field is a CSS size container. Its texts use the unit `cqw` (1 % of the width of the field). Thus the screens fit a small field with no JavaScript and no inline style.
+- **Decision:** During the game, the browser hides the mouse pointer and keeps it in the window (Pointer Lock API). The Esc key ends the lock, and the game pauses. If the browser refuses the lock, Seven flies to the free pointer.
+- **Decision:** `App` has the optional prop `viewFactory`, as in `attraktor`. The tests of the app give a picture that records the calls. `render/view.test.ts` replaces only the WebGL renderer and the chain of effects with fakes. All other three.js objects are real, and the test reads the scene.
+- **Decision:** `e2e/bugfight.spec.ts` starts Chromium with SwiftShader, as `e2e/attraktor.spec.ts` does. One test lets the bot win the wave (`?bot&level=10`).
+- **Decision:** The address of the page sets options for tests and for the developer: `?debug`, `?hit`, `?bot`, `?level=5`, `?weapon=seeds`, `?spots=1`. The key `#` opens the debug panel.
+- **Cost:** The app file is about 1.1 MB.
+- **Rejected:** A 3D program for the figures (binary files that nobody can review). PixiJS (needs drawn sprites). A game engine (too large for one HTML file).
+
 ## 2026-11-27: Ask before the back gesture ends a timer (workout-timer)
 
 - **Context:** On a phone, the back gesture during a workout closed the installed app or left the page. The running timer was lost.
