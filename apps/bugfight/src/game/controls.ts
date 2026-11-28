@@ -83,7 +83,9 @@ export function createControls(element: HTMLElement, onPause: () => void): Contr
     event.preventDefault();
   };
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.code === "Escape" && !locked()) onPause();
+    // With a locked pointer, a real browser takes the Esc key and ends the lock: then the change
+    // of the lock pauses the game. If the key reaches the page, it pauses the game too.
+    if (event.code === "Escape") onPause();
     if (event.code === "Digit1") chosen = "spray";
     if (event.code === "Digit2") chosen = "seeds";
     if (!KEYS_OF_THE_GAME.includes(event.code)) return;

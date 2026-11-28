@@ -222,19 +222,29 @@ describe("with a locked mouse pointer", () => {
     expect(controls.read(0, 0)).toMatchObject({ moveX: 0, moveY: 0 });
   });
 
-  it("pauses when the player leaves the lock, and not for the Esc key itself", async () => {
-    const { controls, element, onPause, user } = setup();
+  it("pauses when the browser ends the lock", async () => {
+    const { controls, element, onPause } = setup();
     const { loseLock } = fakePointerLock(element);
     controls.lock();
     await vi.waitFor(() => {
       expect(controls.pointer()).toBe("locked");
     });
-    // The browser takes the Esc key: it ends the lock.
-    await user.keyboard("{Escape}");
-    expect(onPause).not.toHaveBeenCalled();
+    // A real browser takes the Esc key and ends the lock. The page gets only the change of the lock.
     loseLock();
     expect(onPause).toHaveBeenCalledTimes(1);
     expect(controls.pointer()).toBe("free");
+  });
+
+  it("pauses with the Esc key when the key reaches the page", async () => {
+    const { controls, element, onPause, user } = setup();
+    fakePointerLock(element);
+    controls.lock();
+    await vi.waitFor(() => {
+      expect(controls.pointer()).toBe("locked");
+    });
+    // A browser test sends the key to the page. The browser does not end the lock then.
+    await user.keyboard("{Escape}");
+    expect(onPause).toHaveBeenCalledTimes(1);
   });
 
   it("gives the pointer back and does not pause for that", async () => {
