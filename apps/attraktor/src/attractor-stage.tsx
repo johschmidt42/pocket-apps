@@ -1,3 +1,4 @@
+import { useFullscreen } from "@pocket-apps/core/use-fullscreen";
 import { Alert, AlertDescription, AlertTitle } from "@pocket-apps/ui/components/alert";
 import { Button } from "@pocket-apps/ui/components/button";
 import { ToggleGroup, ToggleGroupItem } from "@pocket-apps/ui/components/toggle-group";
@@ -78,9 +79,7 @@ export function AttractorStage({
 }) {
   const [supported] = useState(() => viewFactory.supported());
   const [status, setStatus] = useState<SceneStatus | null>(null);
-  // The browser has no Fullscreen API in an iframe without permission, and on an iPhone.
-  const [canFullscreen] = useState(() => document.fullscreenEnabled);
-  const [fullscreen, setFullscreen] = useState(false);
+  const { possible: canFullscreen, active: fullscreen, enter, exit } = useFullscreen();
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<AttractorScene | null>(null);
   const viewRef = useRef<StageView | null>(null);
@@ -128,31 +127,6 @@ export function AttractorStage({
   useEffect(() => {
     viewRef.current?.setPalette(palette);
   }, [palette]);
-
-  // The user can also leave the full screen with Esc. Then only this event tells it.
-  useEffect(() => {
-    function onFullscreenChange(): void {
-      setFullscreen(document.fullscreenElement !== null);
-    }
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-    };
-  }, []);
-
-  // The whole page goes into full screen, and the picture covers it. The tooltips show in an
-  // element at the end of <body>. With only the picture in full screen, they are not visible.
-  function enterFullscreen(): void {
-    document.documentElement.requestFullscreen().catch(() => {
-      // The browser refused the full screen. The picture stays in the page.
-    });
-  }
-
-  function exitFullscreen(): void {
-    document.exitFullscreen().catch(() => {
-      // The full screen ended already.
-    });
-  }
 
   function updatePointer(event: PointerEvent<HTMLDivElement>, pressed: boolean): void {
     const box = event.currentTarget.getBoundingClientRect();
@@ -263,13 +237,9 @@ export function AttractorStage({
               />
               {canFullscreen &&
                 (fullscreen ? (
-                  <PictureButton
-                    label="Vollbild beenden"
-                    icon={Minimize}
-                    onClick={exitFullscreen}
-                  />
+                  <PictureButton label="Vollbild beenden" icon={Minimize} onClick={exit} />
                 ) : (
-                  <PictureButton label="Vollbild" icon={Maximize} onClick={enterFullscreen} />
+                  <PictureButton label="Vollbild" icon={Maximize} onClick={enter} />
                 ))}
             </div>
           </div>

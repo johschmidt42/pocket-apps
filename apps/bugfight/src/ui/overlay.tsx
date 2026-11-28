@@ -1,3 +1,4 @@
+import type { Fullscreen } from "@pocket-apps/core/use-fullscreen";
 import { useEffect, useSyncExternalStore } from "react";
 import type { Game } from "../game/game.ts";
 import { DebugPanel } from "./debug-panel.tsx";
@@ -8,7 +9,7 @@ import { PauseScreen } from "./pause-screen.tsx";
 import { TitleScreen } from "./title-screen.tsx";
 
 /** All that lies on top of the picture: the displays, the screen of the game flow and the debug panel. */
-export function Overlay({ game, fullscreen }: { game: Game; fullscreen: boolean }) {
+export function Overlay({ game, fullscreen }: { game: Game; fullscreen: Fullscreen }) {
   const info = useSyncExternalStore(game.subscribe, game.info);
 
   // "#" or F1 opens and closes the debug panel. On a Mac, F1 needs the fn key, thus the second key.

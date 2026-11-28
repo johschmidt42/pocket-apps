@@ -140,7 +140,7 @@ The sim runs only in `playing`. The sim state has no phase of the wave: each ene
 
 ### Shared code with attraktor
 
-The decision for three.js says: if a second app needs three.js, move shared code into a package. We checked this when Bugfight moved to `apps/`: the two apps share no three.js code, only the dependency. `docs/decisions.md` says to check it again when a third app uses three.js.
+The decision for three.js says: if a second app needs three.js, move shared code into a package. We checked this when Bugfight moved to `apps/`: the two apps share no three.js code, only the dependency. The full screen and the check for WebGL 2, which both apps need, are in `packages/core`. `docs/decisions.md` says to check it again when a third app uses three.js.
 
 ## 4. Look of the figures
 

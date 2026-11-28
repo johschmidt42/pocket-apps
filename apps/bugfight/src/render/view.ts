@@ -1,3 +1,4 @@
+import { supportsWebGL2 } from "@pocket-apps/core/webgl";
 import type { SimEvent } from "../sim/events.ts";
 import type { GameState } from "../sim/state.ts";
 import { createBackground } from "./background.ts";
@@ -106,11 +107,4 @@ export type ViewFactory = {
   create: (container: HTMLElement) => View;
 };
 
-function supportsWebGL(): boolean {
-  const context = document.createElement("canvas").getContext("webgl2");
-  if (context === null) return false;
-  context.getExtension("WEBGL_lose_context")?.loseContext();
-  return true;
-}
-
-export const webglViewFactory: ViewFactory = { supported: supportsWebGL, create: createView };
+export const webglViewFactory: ViewFactory = { supported: supportsWebGL2, create: createView };

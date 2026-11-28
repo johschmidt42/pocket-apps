@@ -1,3 +1,4 @@
+import { supportsWebGL2 } from "@pocket-apps/core/webgl";
 import {
   ACESFilmicToneMapping,
   AdditiveBlending,
@@ -48,13 +49,6 @@ export type ViewFactory = {
     random: () => number,
   ) => StageView;
 };
-
-function supportsWebGL(): boolean {
-  const context = document.createElement("canvas").getContext("webgl2");
-  if (context === null) return false;
-  context.getExtension("WEBGL_lose_context")?.loseContext();
-  return true;
-}
 
 /** Pairs of point indexes: each pair is one short segment of a line. */
 function segmentIndex(lines: Simulation["lines"]): Uint32Array {
@@ -172,4 +166,4 @@ function createView(
   };
 }
 
-export const webglViewFactory: ViewFactory = { supported: supportsWebGL, create: createView };
+export const webglViewFactory: ViewFactory = { supported: supportsWebGL2, create: createView };

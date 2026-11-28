@@ -1,3 +1,4 @@
+import { useFullscreen } from "@pocket-apps/core/use-fullscreen";
 import { Alert, AlertDescription, AlertTitle } from "@pocket-apps/ui/components/alert";
 import { cn } from "@pocket-apps/ui/lib/utils";
 import { useEffect, useRef, useState } from "react";
@@ -13,7 +14,7 @@ export function GameStage({ viewFactory }: { viewFactory: ViewFactory }) {
   const [supported] = useState(() => viewFactory.supported());
   const container = useRef<HTMLDivElement>(null);
   const [game, setGame] = useState<Game | null>(null);
-  const [fullscreen, setFullscreen] = useState(false);
+  const fullscreen = useFullscreen();
 
   // The game is an external system: it runs in requestAnimationFrame and draws with WebGL.
   useEffect(() => {
@@ -29,17 +30,6 @@ export function GameStage({ viewFactory }: { viewFactory: ViewFactory }) {
       setGame(null);
     };
   }, [viewFactory]);
-
-  // The user can also leave the full screen with Esc. Then only this event tells it.
-  useEffect(() => {
-    function onFullscreenChange(): void {
-      setFullscreen(document.fullscreenElement !== null);
-    }
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-    };
-  }, []);
 
   if (!supported) {
     return (
@@ -61,7 +51,7 @@ export function GameStage({ viewFactory }: { viewFactory: ViewFactory }) {
         // The area is a size container: the field measures itself against its width and height.
         "[container-type:size] grid min-h-0 flex-1 place-items-center bg-[#070b08]",
         // The whole page is in full screen, and the game covers it.
-        fullscreen && "fixed inset-0 z-40",
+        fullscreen.active && "fixed inset-0 z-40",
       )}
     >
       {/* The field is a size container too: the texts on it use its width as their unit. */}

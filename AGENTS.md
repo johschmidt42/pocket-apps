@@ -71,6 +71,8 @@ packages/core/             Shared code:
                            only, not remembered, not related to the data folder).
   src/one-of.ts            isOneOf(list, value): narrows a string to one of the list items.
   src/use-width.ts         useWidth(ref): the width of an element in pixels. 0 in jsdom.
+  src/use-fullscreen.ts    useFullscreen(): the full screen for an app that shows a picture.
+  src/webgl.ts             supportsWebGL2(): true if the browser can draw with WebGL 2.
   src/sub-page.ts          useSubPage(): one sub-page of the app in the browser history.
   src/testing.ts           testAppInfo() for unit tests.
 packages/ui/               UI components (vendor code) and the Tailwind theme (globals.css).

@@ -17,7 +17,9 @@
     "./one-of": "./src/one-of.ts",
     "./sub-page": "./src/sub-page.ts",
     "./testing": "./src/testing.ts",
-    "./use-width": "./src/use-width.ts"
+    "./use-fullscreen": "./src/use-fullscreen.ts",
+    "./use-width": "./src/use-width.ts",
+    "./webgl": "./src/webgl.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
