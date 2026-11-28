@@ -35,3 +35,37 @@ export const PLAYER = {
 
 /** An enemy in the gas takes damage this number of times per second. More puffs on it do not hurt more. */
 export const GAS_HITS_PER_SECOND = 10;
+
+/** The pollen that dead enemies drop. All lengths are in field units, all times in seconds. */
+export const LOOT = {
+  /** This part of the dead enemies drops pollen: about each fourth. */
+  chance: 0.25,
+  /**
+   * The pollen comes as one grain or as a clump: [the number of grains, the part of all drops].
+   * One grain is one point of the score.
+   */
+  clumps: [
+    [1, 0.6],
+    [2, 0.25],
+    [3, 0.1],
+    [4, 0.05],
+  ] satisfies [number, number][],
+  /** The radius of one grain, and how much each more grain adds to the radius of the clump. */
+  radius: 9,
+  radiusPerGrain: 2.5,
+  /** A new clump pops up with this speed, and flies to a side with at most this speed. */
+  popSpeed: 220,
+  sideSpeed: 80,
+  /** The fall, in field units per second, per second. */
+  gravity: 900,
+  /** At the bottom edge, the clump keeps this part of its speed. At this number of contacts, it lies still. */
+  bounce: 0.55,
+  bounces: 3,
+  /** A clump that lies still goes away after this time. It blinks in this time. */
+  restSeconds: 1.2,
+  /** Nearer than this to Seven, the clump flies to him with this speed. */
+  magnetDistance: 110,
+  magnetSpeed: 900,
+  /** Seven collects a clump that is this near to his hit area. */
+  catchDistance: 8,
+};

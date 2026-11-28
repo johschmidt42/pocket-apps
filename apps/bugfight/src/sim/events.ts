@@ -13,6 +13,8 @@ export type SimEvent =
   | { type: "enemy-hit"; id: number }
   /** An enemy is dead. It is no longer in the state. */
   | { type: "enemy-died"; id: number; x: number; y: number }
+  /** Seven collected a clump of pollen with this number of grains. */
+  | { type: "loot-collected"; x: number; y: number; grains: number }
   /** Seven lost a spot. */
   | { type: "player-hit" }
   /** Seven lost his last spot. The game is lost. */

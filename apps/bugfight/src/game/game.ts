@@ -41,6 +41,8 @@ export type Hud = {
   seeds: number;
   /** True while the "Kernspucker" is locked after an empty drum. */
   drumLocked: boolean;
+  /** The grains of pollen that Seven collected. */
+  score: number;
 };
 
 /** What the user interface shows. The object is new after each change. */
@@ -188,6 +190,7 @@ export function createGame(
     weapon: state.player.weapon,
     seeds: state.player.seeds,
     drumLocked: state.player.drumLocked,
+    score: state.score,
   });
   const readInfo = (): GameInfo => ({
     screen,

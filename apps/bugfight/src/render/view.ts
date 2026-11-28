@@ -9,6 +9,7 @@ import { createEnemiesView } from "./enemies-view.ts";
 import { createGasView } from "./gas-view.ts";
 import { addLights } from "./lights.ts";
 import { createPlayerView } from "./player-view.ts";
+import { createLootView } from "./loot-view.ts";
 import { createSeedsView } from "./seeds-view.ts";
 import { createStage } from "./stage.ts";
 
@@ -53,6 +54,7 @@ function createView(container: HTMLElement): View {
   const enemies = createEnemiesView();
   const drops = createDropsView();
   const seeds = createSeedsView();
+  const loot = createLootView();
   const player = createPlayerView();
   const debug = createDebugOverlay();
   stage.scene.add(
@@ -61,6 +63,7 @@ function createView(container: HTMLElement): View {
     enemies.object,
     drops.object,
     seeds.object,
+    loot.object,
     effects.particles.object,
     player.object,
     debug.object,
@@ -74,6 +77,7 @@ function createView(container: HTMLElement): View {
       enemies.update(state, moment.alpha, moment.seconds, moment.events);
       drops.update(state.drops, moment.alpha);
       seeds.update(state.seeds, moment.alpha);
+      loot.update(state.loot, moment.alpha, moment.seconds);
       player.update(state.player, moment.seconds, moment.events);
       effects.update(state, moment.events, moment.seconds);
       const shake = effects.shake();
@@ -92,6 +96,7 @@ function createView(container: HTMLElement): View {
       enemies.dispose();
       drops.dispose();
       seeds.dispose();
+      loot.dispose();
       effects.dispose();
       player.dispose();
       debug.dispose();

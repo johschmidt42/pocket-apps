@@ -11,6 +11,7 @@ const FULL: HudValues = {
   weapon: "spray",
   seeds: 24,
   drumLocked: false,
+  score: 0,
 };
 
 it("shows the spots that Seven has left", () => {

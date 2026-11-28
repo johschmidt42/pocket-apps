@@ -2,6 +2,7 @@ import { ANT } from "../content/enemies.ts";
 import { GAS_HITS_PER_SECOND, PLAYER } from "../content/tuning.ts";
 import type { SimEvent } from "./events.ts";
 import { TICKS_PER_SECOND } from "./field.ts";
+import { dropLoot } from "./loot.ts";
 import { PLAYER_HIT_RADIUS, type Enemy, type GameState } from "./state.ts";
 
 /** A touch of the body of an enemy counts only near its center: its legs and wings do not hurt. */
@@ -14,10 +15,11 @@ function touch(ax: number, ay: number, bx: number, by: number, distance: number)
 }
 
 /** Takes hit points from an enemy. Returns true if the enemy is dead. The caller removes it from the state. */
-function hurt(enemy: Enemy, damage: number, events: SimEvent[]): boolean {
+function hurt(state: GameState, enemy: Enemy, damage: number, events: SimEvent[]): boolean {
   enemy.hitPoints -= damage;
   if (enemy.hitPoints <= 0) {
     events.push({ type: "enemy-died", id: enemy.id, x: enemy.x, y: enemy.y });
+    dropLoot(state, enemy.x, enemy.y);
     return true;
   }
   events.push({ type: "enemy-hit", id: enemy.id });
@@ -39,7 +41,7 @@ export function gasHits(state: GameState, events: SimEvent[]): void {
       );
       if (puff !== undefined) {
         enemy.gasTicks = pause;
-        if (hurt(enemy, puff.damage, events)) continue;
+        if (hurt(state, enemy, puff.damage, events)) continue;
       }
     }
     state.enemies[kept] = enemy;
@@ -61,7 +63,7 @@ export function seedHits(state: GameState, events: SimEvent[]): void {
     if (enemy === undefined) {
       state.seeds[kept] = seed;
       kept += 1;
-    } else if (hurt(enemy, seed.damage, events)) {
+    } else if (hurt(state, enemy, seed.damage, events)) {
       state.enemies.splice(index, 1);
     }
   }

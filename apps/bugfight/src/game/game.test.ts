@@ -174,6 +174,11 @@ describe("the game", () => {
     expect(state().enemies).toHaveLength(0);
     const events = view.update.mock.calls.flatMap(([, moment]) => moment.events);
     expect(events).toContainEqual({ type: "wave-cleared" });
+    // The displays have the score: one point for each grain of pollen that Seven collected.
+    const grains = events
+      .filter((event) => event.type === "loot-collected")
+      .reduce((sum, event) => sum + event.grains, 0);
+    expect(game.info().hud.score).toBe(grains);
 
     // A new game: all ants are back, and the level of the debug panel stays.
     game.again();

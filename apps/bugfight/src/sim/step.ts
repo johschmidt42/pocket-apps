@@ -4,6 +4,7 @@ import { FIELD } from "./field.ts";
 import { movePuffs, spray } from "./gas.ts";
 import { checkWon, gasHits, playerHits, seedHits } from "./hits.ts";
 import type { Input } from "./input.ts";
+import { moveLoot } from "./loot.ts";
 import { moveSeeds, shoot } from "./seeds.ts";
 import { PLAYER_MARGIN, type GameState } from "./state.ts";
 
@@ -35,6 +36,7 @@ export function step(state: GameState, input: Input): SimEvent[] {
   gasHits(state, events);
   seedHits(state, events);
   checkWon(state, events);
+  moveLoot(state, events);
   playerHits(state, events);
   state.tick += 1;
   return events;

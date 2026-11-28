@@ -106,6 +106,24 @@ export type Drop = {
   radius: number;
 };
 
+/** One grain of pollen or a clump of grains that a dead enemy dropped. Seven collects it. */
+export type Loot = {
+  x: number;
+  y: number;
+  prevX: number;
+  prevY: number;
+  /** The speed in field units per second. */
+  speedX: number;
+  speedY: number;
+  /** The number of grains, from 1 to 4. Each grain is one point of the score. */
+  grains: number;
+  radius: number;
+  /** The number of contacts with the bottom edge. */
+  bounces: number;
+  /** 0 while the clump moves. Then the ticks since it lies still. */
+  restTicks: number;
+};
+
 /** The full state of the game. `step()` changes it in place. */
 export type GameState = {
   /** The number of ticks since the start of the game. */
@@ -118,6 +136,9 @@ export type GameState = {
   seeds: Seed[];
   enemies: Enemy[];
   drops: Drop[];
+  loot: Loot[];
+  /** The grains of pollen that Seven collected. */
+  score: number;
   /** `null` while the game runs. */
   over: "won" | "lost" | null;
 };
@@ -154,6 +175,8 @@ export function createState(seed = 1, wave: Wave = FIRST_WAVE): GameState {
     seeds: [],
     enemies: createEnemies(wave),
     drops: [],
+    loot: [],
+    score: 0,
     over: null,
   };
 }

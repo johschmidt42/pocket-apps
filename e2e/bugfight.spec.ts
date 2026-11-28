@@ -23,6 +23,7 @@ test.describe("bugfight", () => {
     await page.getByRole("button", { name: "Start" }).click();
     await expect(page.getByRole("img", { name: "Leben: 7 von 7 Punkten" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Bugfight" })).toHaveCount(0);
+    await expect(page.getByText("Pollen: 0")).toBeVisible();
 
     // The space key sprays gas: the pressure of the tank falls.
     const tank = page.getByRole("progressbar", { name: "Druck im Tank" });
@@ -63,6 +64,8 @@ test.describe("bugfight", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Gewonnen" })).toBeVisible({
       timeout: 200_000,
     });
+    // The bot flies under the ants. Thus some of their pollen falls to it, and the end screen has a score.
+    await expect(page.getByText(/^Pollen gesammelt: [1-9]\d*$/)).toBeVisible();
     await page.getByRole("button", { name: "Nochmal" }).click();
     await expect(page.getByRole("heading", { level: 2, name: "Gewonnen" })).toHaveCount(0);
     await expect(page.getByRole("img", { name: /^Leben: \d von 7 Punkten$/ })).toBeVisible();

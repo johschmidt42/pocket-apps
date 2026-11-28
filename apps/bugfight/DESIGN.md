@@ -4,29 +4,29 @@ Bugfight is a shoot 'em up for the PC. A ladybug with the name Seven fights swar
 
 This document holds each design decision and its reason. We decide one topic after the other. We write code only for topics that have a decision.
 
-- **Status:** version 1.0 of the app. It has one wave, two weapons and the effects. The user accepted all five steps of the prototype.
+- **Status:** version 2.0 of the app. It has one wave, two weapons, the effects, and pollen to collect with a score. Version 1.0 was the result of the five steps of the prototype.
 - **Repository:** pocket-apps is a monorepo of small web apps. Each app is in `apps/<name>` and builds into one HTML file. `AGENTS.md` in the repository root has the rules for apps. Two apps are examples in this document: `attraktor` (a 3D picture with three.js) and `trainingsbuch` (a workout log with animated figures).
 - **Place:** the app is in `apps/bugfight/`. It began as a prototype in `prototypes/bugfight/` on the git branch `prototype/bugfight`. That branch is never merged into `main`. It keeps the tools that the app does not need: the model viewer, the frames tool and the balance tool (see topic 14). Use it as the workshop for new figures, then copy the files of a figure into the app.
 - **Reference game:** the series Chicken Invaders gives the game feel. We use the rules of the genre (waves, free flight, growing fire power). We do not copy names, figures, pictures, sounds or wave layouts. All content of Bugfight is our own.
 
 ## Topics
 
-| No. | Topic                 | Status                               |
-| --- | --------------------- | ------------------------------------ |
-| 1   | Scope                 | Decided                              |
-| 2   | Play field and camera | Decided                              |
-| 3   | Architecture          | Decided                              |
-| 4   | Look of the figures   | Accepted by the user in step P2      |
-| 5   | Animation             | Accepted by the user in step P2      |
-| 6   | Effects               | Built in step P5, accepted           |
-| 7   | Controls              | Built in step P1, accepted           |
-| 8   | Weapons and hits      | Built: two weapons, hits (step P4)   |
-| 9   | Enemies and waves     | Built in step P4: the wave of ants   |
-| 10  | Bosses                | Later, not in the prototype          |
-| 11  | Progression           | Later, not in the prototype          |
-| 12  | Displays and menus    | Built. The score comes with the loot |
-| 13  | Saving                | Decided, not in the prototype        |
-| 14  | Tests and tools       | Built, but no replays yet            |
+| No. | Topic                 | Status                                 |
+| --- | --------------------- | -------------------------------------- |
+| 1   | Scope                 | Decided                                |
+| 2   | Play field and camera | Decided                                |
+| 3   | Architecture          | Decided                                |
+| 4   | Look of the figures   | Accepted by the user in step P2        |
+| 5   | Animation             | Accepted by the user in step P2        |
+| 6   | Effects               | Built in step P5, accepted             |
+| 7   | Controls              | Built in step P1, accepted             |
+| 8   | Weapons and hits      | Built: two weapons, hits (step P4)     |
+| 9   | Enemies and waves     | Built in step P4: the wave of ants     |
+| 10  | Bosses                | Later, not in the prototype            |
+| 11  | Progression           | Pollen and score built. The rest later |
+| 12  | Displays and menus    | Built                                  |
+| 13  | Saving                | Decided, not in the prototype          |
+| 14  | Tests and tools       | Built, but no replays yet              |
 
 Parked: sound, phones, play with more than one player, a second ship.
 
@@ -63,7 +63,7 @@ The first version is a prototype with these parts:
 
 The prototype has no sound, no saving, no boss, no loot, no levels of the weapon in normal play and no menus other than its screens.
 
-This was the plan before the first line of code. In the steps P1 to P5, the user asked for more, and version 1.0 has it: a pause screen with a way back to the title, a second weapon (the "Kernspucker") and a button for the full screen.
+This was the plan before the first line of code. Version 2.0 adds the pollen (see topic 11). In the steps P1 to P5, the user asked for more, and version 1.0 has it: a pause screen with a way back to the title, a second weapon (the "Kernspucker") and a button for the full screen.
 
 **Why:** the prototype must answer four questions before we make content. Do the figures look good? Do they move well? Does the mouse control feel right? Does gas feel good as a weapon?
 
@@ -263,18 +263,33 @@ Gas is different from a bullet. This makes Bugfight its own game:
 
 ## 10. Bosses and 11. Progression
 
+### Pollen (built in version 2.0)
+
+The user asked for something that enemies drop and that the player collects: not each enemy, and the drops can hop.
+
+- **What:** golden grains of pollen. All enemies of the game live in the same garden, and nearly all of them feed at flowers. A grain is a round golden ball, and an enemy shot is a long pink drop: the player does not confuse them. Gold shows well on the green garden.
+- **How often:** about each fourth dead enemy drops pollen.
+- **Clumps** (the user's wish): one grain is one point. Sometimes the pollen comes as a clump of 2, 3 or 4 grains. The shares are 60 %, 25 %, 10 % and 5 %.
+- **Motion:** a clump pops up a little, falls, and hops at the bottom edge, each time less high. At the third contact it lies still, blinks for 1.2 seconds and goes away. Thus the player has a second chance, and must go down, away from the enemies, to get it.
+- **Magnet:** nearer than 110 units to Seven, a clump flies to him. The player does not have to hit it exactly.
+- **Score:** the display at the top left shows the grains that Seven collected. The screens "won" and "lost" show the score too.
+- The numbers are in `LOOT` in `src/content/tuning.ts`, and the logic is in `src/sim/loot.ts`.
+- **Rejected:** aphids (ladybugs eat them, and ants keep them, but they are green as the garden), and drops of honeydew (too similar to the drops that the ants spit).
+
+### Later
+
 Not in the prototype. The rules follow the reference game. The numbers come when we build these parts:
 
 - A boss has a bar for its hit points and attack patterns in several phases.
 - A hit costs one spot and levels of the fire power.
-- A capsule of another color changes the weapon. A capsule of the same color adds a level. A grain of pollen, which enemies drop, adds a level too.
-- Dead enemies drop loot. Loot adds to the score and fills the special attack.
+- A capsule of another color changes the weapon. A capsule of the same color adds a level. (The first plan was that a grain of pollen adds a level too. Now pollen is the score.)
+- Later, the pollen also fills the special attack.
 - Ten waves make a chapter. A boss ends the chapter. Then a rating shows score, hit rate, loot and rank.
 - All numbers of the balance are in one file, `content/tuning.ts`.
 
 ## 12. Displays and menus
 
-- Displays during the game are HTML on top of the picture: the spots and the tank pressure (or the stones of the drum) at the bottom left. The score comes to the top left when the enemies drop loot. HTML gives sharp text and can use the UI components of the repository.
+- Displays during the game are HTML on top of the picture: the score at the top left, and the spots and the tank pressure (or the stones of the drum) at the bottom left. HTML gives sharp text and can use the UI components of the repository.
 - React draws them. They change only when a value changes, not at each picture.
 - The player also sees the spots on the back of Seven.
 - Screens: a title with the button "Start", a pause, and "won" and "lost" with the buttons "Nochmal" and "Hauptmenü". The Enter key does the same as the main button of a screen. The text on the screen is German.

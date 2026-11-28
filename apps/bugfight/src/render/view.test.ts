@@ -222,6 +222,33 @@ describe("the picture of the game", () => {
     expect(visible("drops")).toBe(state.drops.length);
   });
 
+  it("shows a clump of pollen with one golden ball for each grain", () => {
+    const { view, scene } = createView();
+    const state = createState();
+    const clump = { x: 50, y: 60, prevX: 50, prevY: 60, speedX: 0, speedY: 0, radius: 14 };
+    state.loot.push({ ...clump, grains: 3, bounces: 0, restTicks: 0 });
+    show(view, state, 0.05, [{ type: "loot-collected", x: 0, y: 0, grains: 4 }]);
+    const group = scene.children.find((child) => child.name === "loot")!;
+    const picture = group.children[0]!;
+    expect(picture.visible).toBe(true);
+    expect(picture.position.x).toBe(50);
+    expect(picture.children.filter((grain) => grain.visible)).toHaveLength(3);
+    // The sparks of the pollen that Seven collected.
+    expect(instanced(scene, "fade").count).toBeGreaterThan(10);
+
+    // A clump that lies still blinks. A clump that is gone has no visible picture.
+    state.loot[0]!.restTicks = 5;
+    const seen = new Set<boolean>();
+    for (let step = 0; step < 20; step++) {
+      show(view, state, 0.03);
+      seen.add(picture.visible);
+    }
+    expect(seen).toEqual(new Set([true, false]));
+    state.loot.length = 0;
+    show(view, state, 0.05);
+    expect(picture.visible).toBe(false);
+  });
+
   it("shakes the camera after a hit of Seven and comes to rest", () => {
     const { view, camera } = createView();
     const state = createState();

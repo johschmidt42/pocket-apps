@@ -77,6 +77,7 @@ export function createDebugOverlay(): DebugOverlay {
   const showEnemies = circles("#ffffff");
   const showDrops = circles("#ff2e88");
   const showSeeds = circles("#9dff5a");
+  const showLoot = circles("#ffcf3a");
   // The center of Seven cannot leave this rectangle.
   object.add(new LineLoop(limitGeometry, line("#ffffff", 0.6)));
 
@@ -94,6 +95,7 @@ export function createDebugOverlay(): DebugOverlay {
       );
       showDrops(state.drops);
       showSeeds(state.seeds);
+      showLoot(state.loot);
     },
     dispose() {
       for (const material of materials) material.dispose();

@@ -1,6 +1,6 @@
 {
   "name": "bugfight",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "description": "Ein Marienkäfer mit Fliegerbrille gegen einen Schwarm Flugameisen. Ein Shoot 'em up für den PC.",

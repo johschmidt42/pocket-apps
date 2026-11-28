@@ -77,6 +77,7 @@ describe("bugfight", () => {
     await user.click(await screen.findByRole("button", { name: "Start" }));
     expect(await lives(7)).toBeVisible();
     expect(screen.getByRole("progressbar", { name: "Druck im Tank" })).toBeVisible();
+    expect(screen.getByText("Pollen: 0")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Bugfight" })).not.toBeInTheDocument();
   });
 

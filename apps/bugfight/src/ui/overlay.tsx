@@ -6,6 +6,7 @@ import { EndScreen } from "./end-screen.tsx";
 import { FullscreenButton } from "./fullscreen-button.tsx";
 import { Hud } from "./hud.tsx";
 import { PauseScreen } from "./pause-screen.tsx";
+import { Score } from "./score.tsx";
 import { TitleScreen } from "./title-screen.tsx";
 
 /** All that lies on top of the picture: the displays, the screen of the game flow and the debug panel. */
@@ -37,10 +38,16 @@ export function Overlay({ game, fullscreen }: { game: Game; fullscreen: Fullscre
   return (
     <>
       {info.screen !== "title" && <Hud hud={info.hud} />}
+      {info.screen !== "title" && <Score score={info.hud.score} />}
       {info.screen === "title" && <TitleScreen onStart={game.start} />}
       {info.screen === "paused" && <PauseScreen onResume={game.resume} onQuit={game.quit} />}
       {(info.screen === "won" || info.screen === "lost") && (
-        <EndScreen won={info.screen === "won"} onAgain={game.again} onQuit={game.quit} />
+        <EndScreen
+          won={info.screen === "won"}
+          score={info.hud.score}
+          onAgain={game.again}
+          onQuit={game.quit}
+        />
       )}
       {/* During the game, the browser keeps the mouse pointer. Then nobody can click this button. */}
       {info.screen !== "playing" && <FullscreenButton fullscreen={fullscreen} />}

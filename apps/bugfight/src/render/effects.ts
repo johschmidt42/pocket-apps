@@ -56,6 +56,15 @@ const PLAYER_BITS: Burst = {
   seconds: 0.5,
   fall: 300,
 };
+/** Golden sparks where Seven collects pollen. */
+const LOOT_SPARKS: Burst = {
+  count: 6,
+  colors: [glow("#ffe27a"), glow("#ffcf3a")],
+  slowest: 60,
+  fastest: 300,
+  size: 4,
+  seconds: 0.35,
+};
 /** The flash at the end of the barrel. */
 const MUZZLE_FLASH: Burst = {
   count: 4,
@@ -100,6 +109,13 @@ export function createEffects(seed: number): Effects {
           case "player-died":
             particles.burst(player.x, player.y, { ...PLAYER_BITS, count: 40, fastest: 800 });
             trauma += TRAUMA.playerDied;
+            break;
+          case "loot-collected":
+            // A bigger clump makes more sparks.
+            particles.burst(event.x, event.y, {
+              ...LOOT_SPARKS,
+              count: LOOT_SPARKS.count + 3 * event.grains,
+            });
             break;
           case "seed-shot":
             particles.burst(player.x, player.y + MUZZLE_Y, MUZZLE_FLASH);
