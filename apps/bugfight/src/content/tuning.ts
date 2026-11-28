@@ -13,6 +13,15 @@ export const TANK = {
 /** The fire power has the levels 1 to this number. */
 export const MAX_LEVEL = 10;
 
+/** The nearest level of the fire power for a number. A value that is no number gives level 1. */
+export function levelOf(level: number): number {
+  if (!Number.isFinite(level)) return 1;
+  return Math.min(Math.max(Math.round(level), 1), MAX_LEVEL);
+}
+
+/** The end of the barrel of the "Kernspucker", in front of the center of Seven. The stones start there. */
+export const MUZZLE_Y = 46;
+
 /** The place of the tip of the spray nozzle, relative to the center of Seven. */
 export const NOZZLE = { x: 0, y: 41 };
 

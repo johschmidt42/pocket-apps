@@ -3,6 +3,7 @@ import { cn } from "@pocket-apps/ui/lib/utils";
 import { PLAYER } from "../content/tuning.ts";
 import { SEED_SHOOTER } from "../content/weapons.ts";
 import type { Hud as HudValues } from "../game/game.ts";
+import { ACTION_FONT } from "./action-font.ts";
 
 const SPOTS = Array.from({ length: PLAYER.spots }, (_, index) => index + 1);
 const STONES = Array.from({ length: SEED_SHOOTER.seeds }, (_, index) => index + 1);
@@ -13,9 +14,14 @@ const STONES = Array.from({ length: SEED_SHOOTER.seeds }, (_, index) => index + 
  * The colors are fixed, as the colors of the picture are.
  */
 export function Hud({ hud }: { hud: HudValues }) {
-  const locked = hud.weapon === "spray" ? hud.locked : hud.drumLocked;
+  const locked = hud.weapon === "spray" ? hud.tankLocked : hud.drumLocked;
   return (
-    <div className="absolute bottom-[2.5%] left-[1.5%] flex flex-col gap-[0.6cqw] rounded-[0.8cqw] bg-[rgb(8_14_10/0.55)] px-[1cqw] py-[0.8cqw] [font-family:Impact,Haettenschweiler,sans-serif] text-[1.2cqw] tracking-wider uppercase">
+    <div
+      className={cn(
+        ACTION_FONT,
+        "absolute bottom-[2.5%] left-[1.5%] flex flex-col gap-[0.6cqw] rounded-[0.8cqw] bg-[rgb(8_14_10/0.55)] px-[1cqw] py-[0.8cqw] text-[1.2cqw] tracking-wider",
+      )}
+    >
       <p
         role="img"
         aria-label={`Leben: ${String(hud.spots)} von ${String(PLAYER.spots)} Punkten`}
@@ -37,7 +43,7 @@ export function Hud({ hud }: { hud: HudValues }) {
       >
         {hud.weapon === "spray" ? (
           <>
-            <span className="w-[6.5cqw]">{hud.locked ? "Tank leer" : "Tank"}</span>
+            <span className="w-[6.5cqw]">{hud.tankLocked ? "Tank leer" : "Tank"}</span>
             <Progress
               aria-label="Druck im Tank"
               // The component does not give its value to assistive tools. This attribute does it.

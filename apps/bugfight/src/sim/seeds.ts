@@ -1,10 +1,8 @@
+import { MUZZLE_Y } from "../content/tuning.ts";
 import { seedsOf, SEED_SHOOTER } from "../content/weapons.ts";
 import type { SimEvent } from "./events.ts";
 import { FIELD, TICK_SECONDS, TICKS_PER_SECOND } from "./field.ts";
 import type { GameState } from "./state.ts";
-
-/** The place of the end of the barrel, in front of the center of Seven. */
-const MUZZLE_Y = 46;
 
 /**
  * The "Kernspucker" for one tick. A shot takes one stone from the drum. Without shots, the drum

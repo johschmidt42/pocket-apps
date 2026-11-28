@@ -1,4 +1,5 @@
 import { Color } from "three";
+import { MUZZLE_Y } from "../content/tuning.ts";
 import type { SimEvent } from "../sim/events.ts";
 import type { GameState } from "../sim/state.ts";
 import { createParticles, type Burst, type Particles } from "./particles.ts";
@@ -70,8 +71,6 @@ const TRAUMA = { enemyDied: 0.14, playerHit: 0.65, playerDied: 1 };
 const TRAUMA_PER_SECOND = 1.7;
 /** The longest move of the camera, in field units. */
 const SHAKE_UNITS = 16;
-/** The end of the barrel, in front of the center of Seven. */
-const MUZZLE_Y = 46;
 
 export function createEffects(seed: number): Effects {
   const particles = createParticles(seed);

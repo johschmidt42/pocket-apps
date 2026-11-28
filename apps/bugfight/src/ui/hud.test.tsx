@@ -5,7 +5,7 @@ import { Hud } from "./hud.tsx";
 
 const FULL: HudValues = {
   pressure: 100,
-  locked: false,
+  tankLocked: false,
   spots: 7,
   level: 1,
   weapon: "spray",
@@ -25,7 +25,7 @@ it("shows the pressure of the tank, and says when the tank is empty", () => {
     "aria-valuenow",
     "40",
   );
-  rerender(<Hud hud={{ ...FULL, pressure: 10, locked: true }} />);
+  rerender(<Hud hud={{ ...FULL, pressure: 10, tankLocked: true }} />);
   expect(screen.getByText("Tank leer")).toBeVisible();
 });
 

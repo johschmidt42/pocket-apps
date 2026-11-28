@@ -12,9 +12,8 @@ export type Frame = {
 export type Loop = {
   /** Call once per picture with the real seconds since the last picture. */
   advance: (realSeconds: number) => Frame;
-  /** 1 is normal speed, 0.25 is slow motion, 0 holds the game. */
+  /** 1 is normal speed, a smaller number is slow motion, 0 holds the game. */
   setTimeFactor: (factor: number) => void;
-  timeFactor: () => number;
   /** Holds the game for this real time. Use it for the moment of a big hit. */
   hitStop: (seconds: number) => void;
 };
@@ -44,7 +43,6 @@ export function createLoop(tickSeconds: number): Loop {
     setTimeFactor(next) {
       factor = Math.max(next, 0);
     },
-    timeFactor: () => factor,
     hitStop(seconds) {
       stop = Math.max(stop, seconds);
     },

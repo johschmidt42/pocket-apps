@@ -36,7 +36,6 @@ test("a long gap counts only as 0.1 second", () => {
 test("slow motion makes fewer ticks", () => {
   const loop = createLoop(TICK);
   loop.setTimeFactor(0.5);
-  expect(loop.timeFactor()).toBe(0.5);
   expect(loop.advance(1 / 60)).toMatchObject({ ticks: 1, seconds: 1 / 120 });
 });
 

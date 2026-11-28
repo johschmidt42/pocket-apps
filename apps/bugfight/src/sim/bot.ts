@@ -9,7 +9,7 @@ const HEIGHT = -140;
 
 /**
  * A simple written player. The tests use it to check that a wave is possible,
- * and the frames tool uses it to make pictures of a fight.
+ * and the address `?bot` lets it play in the browser.
  * It flies under the nearest enemy, sprays in bursts, and moves away from drops.
  */
 export function createBot(): (state: GameState) => Input {
@@ -51,8 +51,7 @@ export function createBot(): (state: GameState) => Input {
     return {
       moveX: dx * part,
       moveY: dy * part,
-      spray: aimed && !resting,
-      special: false,
+      fire: aimed && !resting,
       weapon: null,
     };
   };

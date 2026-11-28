@@ -1,3 +1,4 @@
+import type { WeaponName } from "../content/weapons.ts";
 import type { Pose, Vec3 } from "./pose.ts";
 
 /**
@@ -55,7 +56,7 @@ export type ModelSpec = {
 /** The name and the length of one motion. */
 export type Motion = {
   name: string;
-  /** The German text of the button in the model viewer. */
+  /** The German name of the motion. The model viewer of the prototype branch shows it. */
   label: string;
   /** The length in seconds. `null` for a motion that repeats. */
   seconds: number | null;
@@ -75,8 +76,8 @@ export type FigureInput = {
   look: [number, number];
   /** Only Seven: the number of spots that he has left. */
   spots: number;
-  /** Only Seven: the weapon that he carries, "spray" or "seeds". Without it, he carries the spray. */
-  weapon?: string;
+  /** Only Seven: the weapon that he carries. Without it, he carries the spray. */
+  weapon?: WeaponName;
   /** Only Seven: the stones in the drum of the "Kernspucker". Without it, the drum is full. */
   ammo?: number;
 };
@@ -91,7 +92,7 @@ export type FigurePose = {
 /** A figure with its motions. */
 export type Figure = {
   name: string;
-  /** The German name in the model viewer. */
+  /** The German name of the figure. The model viewer of the prototype branch shows it. */
   label: string;
   spec: ModelSpec;
   /** The first motion is the base motion. A figure returns to it after a motion that happens once. */

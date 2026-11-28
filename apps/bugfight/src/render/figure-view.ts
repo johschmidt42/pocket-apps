@@ -31,7 +31,7 @@ export type FigureView = {
   motion: () => string;
   /** Moves the figure on by this time. */
   update: (seconds: number, live: LiveInput) => void;
-  /** Shows the pose of an exact moment, with no blend from the motion before. For the frames tool. */
+  /** Shows the pose of an exact moment, with no blend from the motion before. */
   show: (input: FigureInput) => void;
   dispose: () => void;
 };

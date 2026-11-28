@@ -2,6 +2,9 @@ import { FIELD, TICK_SECONDS } from "../sim/field.ts";
 import type { WeaponName } from "../content/weapons.ts";
 import type { Input } from "../sim/input.ts";
 
+/** "locked": the browser keeps the pointer. "free": the pointer is visible to the system, and Seven goes to it. */
+export type PointerMode = "locked" | "free";
+
 /** Turns the mouse and the keys into the input of the sim. */
 export type Controls = {
   /** The input for the next tick. Call it once per tick. `x` and `y` are the position of Seven. */
@@ -10,8 +13,7 @@ export type Controls = {
   lock: () => void;
   /** Gives the pointer back. */
   release: () => void;
-  /** "locked": the browser keeps the pointer. "free": the pointer is visible to the system, and Seven goes to it. */
-  pointer: () => "locked" | "free";
+  pointer: () => PointerMode;
   dispose: () => void;
 };
 
@@ -37,8 +39,7 @@ export function createControls(element: HTMLElement, onPause: () => void): Contr
   let pendingY = 0;
   /** The place of the free pointer on the field. Seven goes there. */
   let target: { x: number; y: number } | null = null;
-  let mouseSpray = false;
-  let special = false;
+  let mouseFire = false;
   /** The weapon that the player chose with a key since the last tick. */
   let chosen: WeaponName | null = null;
   let wantLock = false;
@@ -72,13 +73,12 @@ export function createControls(element: HTMLElement, onPause: () => void): Contr
     }
   };
   const onMouseDown = (event: MouseEvent) => {
-    if (event.button === 0) mouseSpray = true;
-    if (event.button === 2) special = true;
+    if (event.button === 0) mouseFire = true;
   };
   const onMouseUp = (event: MouseEvent) => {
-    if (event.button === 0) mouseSpray = false;
-    if (event.button === 2) special = false;
+    if (event.button === 0) mouseFire = false;
   };
+  // The right mouse button has no use yet. It must not open the menu of the browser in a game.
   const onContextMenu = (event: MouseEvent) => {
     event.preventDefault();
   };
@@ -102,8 +102,7 @@ export function createControls(element: HTMLElement, onPause: () => void): Contr
   };
   const onBlur = () => {
     held.clear();
-    mouseSpray = false;
-    special = false;
+    mouseFire = false;
     onPause();
   };
 
@@ -136,7 +135,7 @@ export function createControls(element: HTMLElement, onPause: () => void): Contr
       }
       const weapon = chosen;
       chosen = null;
-      return { moveX, moveY, spray: mouseSpray || held.has("Space"), special, weapon };
+      return { moveX, moveY, fire: mouseFire || held.has("Space"), weapon };
     },
     lock() {
       wantLock = true;

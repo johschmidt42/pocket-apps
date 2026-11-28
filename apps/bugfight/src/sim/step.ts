@@ -27,7 +27,7 @@ export function step(state: GameState, input: Input): SimEvent[] {
   movePuffs(state);
   moveSeeds(state);
   // The weapon that Seven does not use fills again in this time.
-  const fires = alive && input.spray;
+  const fires = alive && input.fire;
   spray(state, fires && player.weapon === "spray", events);
   shoot(state, fires && player.weapon === "seeds", events);
   moveEnemies(state);

@@ -74,8 +74,7 @@ describe("with a free mouse pointer", () => {
     expect(controls.read(10, 20)).toEqual({
       moveX: 0,
       moveY: 0,
-      spray: false,
-      special: false,
+      fire: false,
       weapon: null,
     });
     expect(controls.pointer()).toBe("free");
@@ -117,22 +116,17 @@ describe("with a free mouse pointer", () => {
   it("uses the weapon with the left mouse button or the space key", async () => {
     const { controls, element, user } = setup();
     await user.pointer({ keys: "[MouseLeft>]", target: element });
-    expect(controls.read(0, 0).spray).toBe(true);
+    expect(controls.read(0, 0).fire).toBe(true);
     await user.pointer({ keys: "[/MouseLeft]", target: element });
-    expect(controls.read(0, 0).spray).toBe(false);
+    expect(controls.read(0, 0).fire).toBe(false);
     await user.keyboard("{ >}");
-    expect(controls.read(0, 0).spray).toBe(true);
+    expect(controls.read(0, 0).fire).toBe(true);
     await user.keyboard("{/ }");
-    expect(controls.read(0, 0).spray).toBe(false);
+    expect(controls.read(0, 0).fire).toBe(false);
   });
 
-  it("uses the special attack with the right mouse button, with no menu of the browser", async () => {
-    const { controls, element, user } = setup();
-    await user.pointer({ keys: "[MouseRight>]", target: element });
-    expect(controls.read(0, 0).special).toBe(true);
-    await user.pointer({ keys: "[/MouseRight]", target: element });
-    expect(controls.read(0, 0).special).toBe(false);
-
+  it("does not open the menu of the browser with the right mouse button", () => {
+    const { element } = setup();
     const menu = new MouseEvent("contextmenu", { cancelable: true });
     element.dispatchEvent(menu);
     expect(menu.defaultPrevented).toBe(true);
@@ -156,7 +150,7 @@ describe("with a free mouse pointer", () => {
     window.dispatchEvent(new Event("blur"));
     expect(onPause).toHaveBeenCalledTimes(2);
     // The keys are not down in the other window.
-    expect(controls.read(0, 0)).toMatchObject({ moveX: 0, spray: false });
+    expect(controls.read(0, 0)).toMatchObject({ moveX: 0, fire: false });
   });
 
   it("stays free and tries again when the browser refuses the lock", async () => {
@@ -196,8 +190,7 @@ describe("with a free mouse pointer", () => {
     expect(controls.read(0, 0)).toEqual({
       moveX: 0,
       moveY: 0,
-      spray: false,
-      special: false,
+      fire: false,
       weapon: null,
     });
   });

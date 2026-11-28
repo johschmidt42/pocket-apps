@@ -17,7 +17,7 @@ export type Player = {
   /** The pressure of the gas tank, from 0 (empty) to 1 (full). */
   pressure: number;
   /** True after the tank was empty, until the pressure is back. A locked weapon does not spray. */
-  locked: boolean;
+  tankLocked: boolean;
   /** True in a tick in which Seven sprays. */
   spraying: boolean;
   /** The level of the fire power, from 1 to `MAX_LEVEL`. */
@@ -125,9 +125,6 @@ export type GameState = {
 /** The radius of the hit area of Seven. It is much smaller than his picture, as usual in the genre. */
 export const PLAYER_HIT_RADIUS = 15;
 
-/** The width of the picture of Seven. */
-export const PLAYER_WIDTH = 77;
-
 /** Seven keeps this distance from the edges, so that most of him stays in the picture. */
 export const PLAYER_MARGIN = 28;
 
@@ -144,7 +141,7 @@ export function createState(seed = 1, wave: Wave = FIRST_WAVE): GameState {
       safeTicks: 0,
       immortal: false,
       pressure: 1,
-      locked: false,
+      tankLocked: false,
       spraying: false,
       level: 1,
       weapon: "spray",

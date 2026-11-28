@@ -66,6 +66,7 @@ export function DebugPanel({ game, info }: { game: Game; info: GameInfo }) {
           <Button
             key={factor}
             size="xs"
+            className="pointer-coarse:h-8"
             variant={info.timeFactor === factor ? "default" : "outline"}
             aria-pressed={info.timeFactor === factor}
             onClick={() => {
@@ -82,6 +83,7 @@ export function DebugPanel({ game, info }: { game: Game; info: GameInfo }) {
           <Button
             key={level}
             size="xs"
+            className="pointer-coarse:h-8"
             variant={info.hud.level === level ? "default" : "outline"}
             aria-pressed={info.hud.level === level}
             onClick={() => {
@@ -94,6 +96,7 @@ export function DebugPanel({ game, info }: { game: Game; info: GameInfo }) {
       </fieldset>
       <Button
         size="xs"
+        className="pointer-coarse:h-8"
         variant="outline"
         disabled={info.screen !== "paused"}
         onClick={game.singleTick}

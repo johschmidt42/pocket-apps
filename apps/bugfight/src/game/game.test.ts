@@ -63,8 +63,12 @@ describe("the options in the address", () => {
       spots: 1,
       weapon: "seeds",
     });
-    // An unknown weapon is no option.
-    expect(readOptions("?weapon=laser").weapon).toBeUndefined();
+    // An unknown weapon and a value that is no number are no options.
+    expect(readOptions("?weapon=laser&level=abc&spots=")).toEqual({
+      debug: false,
+      hitAreas: false,
+      bot: false,
+    });
   });
 });
 
@@ -100,7 +104,8 @@ describe("the game", () => {
 
     stop();
     const calls = listener.mock.calls.length;
-    game.pause();
+    await user.keyboard("{/ }{Escape}");
+    expect(game.info().screen).toBe("paused");
     expect(listener).toHaveBeenCalledTimes(calls);
   });
 
@@ -138,14 +143,14 @@ describe("the game", () => {
   });
 
   it("goes back to the title from the pause, with a new game", async () => {
-    const { game, view, state } = setup();
+    const { game, view, state, user } = setup();
     game.start();
     await untilTick(state, 10);
     game.quit();
     // The game runs. Only a paused game can end.
     expect(game.info().screen).toBe("playing");
 
-    game.pause();
+    await user.keyboard("{Escape}");
     game.quit();
     expect(game.info().screen).toBe("title");
     expect(view.reset).toHaveBeenCalledOnce();

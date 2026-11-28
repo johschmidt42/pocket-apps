@@ -1,4 +1,4 @@
-import { MAX_LEVEL } from "./tuning.ts";
+import { levelOf } from "./tuning.ts";
 
 /** A weapon of Seven. It sprays puffs of gas. All lengths are in field units, all times in seconds. */
 export type Weapon = {
@@ -49,7 +49,7 @@ const DEGREES = Math.PI / 180;
  * Each level adds one stream and makes the fan of the streams 6 degrees wider.
  */
 export function streamsOf(level: number): Stream[] {
-  const count = Math.min(Math.max(Math.round(level), 1), MAX_LEVEL);
+  const count = levelOf(level);
   const fan = 6 * (count - 1) * DEGREES;
   return Array.from({ length: count }, (_, index) => ({
     angle: count === 1 ? 0 : -fan / 2 + (fan * index) / (count - 1),
@@ -58,7 +58,7 @@ export function streamsOf(level: number): Stream[] {
 
 /** A higher level makes the puffs larger and stronger. Level 1 gives 1. */
 export function powerOf(level: number): { radius: number; damage: number } {
-  const steps = Math.min(Math.max(Math.round(level), 1), MAX_LEVEL) - 1;
+  const steps = levelOf(level) - 1;
   return { radius: 1 + 0.03 * steps, damage: 1 + 0.1 * steps };
 }
 
@@ -91,6 +91,6 @@ export const SEED_SHOOTER = {
  * The levels 4, 7 and 10 add one stone that flies beside the others.
  */
 export function seedsOf(level: number): { count: number; damage: number } {
-  const steps = Math.min(Math.max(Math.round(level), 1), MAX_LEVEL) - 1;
+  const steps = levelOf(level) - 1;
   return { count: 1 + Math.floor(steps / 3), damage: SEED_SHOOTER.damage * (1 + 0.25 * steps) };
 }

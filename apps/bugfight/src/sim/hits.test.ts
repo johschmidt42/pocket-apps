@@ -134,7 +134,7 @@ test("the last spot ends the game: Seven does not move or spray", () => {
   expect(state.over).toBe("lost");
 
   const place = { x: state.player.x, y: state.player.y };
-  step(state, { ...NO_INPUT, moveX: 50, moveY: 50, spray: true });
+  step(state, { ...NO_INPUT, moveX: 50, moveY: 50, fire: true });
   expect(state.player).toMatchObject({ ...place, spraying: false });
   expect(state.puffs).toHaveLength(0);
   // A lost game stays lost, also when the ant dies later.

@@ -87,8 +87,8 @@ export function createParticles(seed: number): Particles {
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     transparent: true,
+    // The depth test stays on: Seven is nearer to the camera and covers the particles.
     depthWrite: false,
-    depthTest: false,
   });
   const object = new InstancedMesh(geometry, material, MOST);
   object.instanceMatrix.setUsage(DynamicDrawUsage);

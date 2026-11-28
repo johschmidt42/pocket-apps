@@ -8,7 +8,7 @@ import { NO_INPUT, type Input } from "./input.ts";
 import { createState, type GameState } from "./state.ts";
 import { step } from "./step.ts";
 
-const FIRE: Input = { ...NO_INPUT, spray: true };
+const FIRE: Input = { ...NO_INPUT, fire: true };
 
 /** A game with the "Kernspucker" and one ant straight over Seven that never spits. */
 function withSeeds(): GameState {

@@ -26,6 +26,8 @@ test("a level out of the range counts as the nearest level", () => {
   expect(streamsOf(0)).toEqual(streamsOf(1));
   expect(streamsOf(99)).toEqual(streamsOf(10));
   expect(powerOf(-3)).toEqual(powerOf(1));
+  // A value that is no number, for example from a wrong address of the page.
+  expect(streamsOf(Number.NaN)).toEqual(streamsOf(1));
 });
 
 test("a higher level makes the puffs larger and stronger", () => {

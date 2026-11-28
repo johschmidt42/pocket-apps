@@ -17,9 +17,10 @@ export function Overlay({ game, fullscreen }: { game: Game; fullscreen: boolean 
     function onKeyDown(event: KeyboardEvent): void {
       // The Enter key on a button that has the focus presses this button.
       if (event.key === "Enter" && !(event.target instanceof HTMLButtonElement)) {
-        game.start();
-        game.resume();
-        game.again();
+        const { screen } = game.info();
+        if (screen === "title") game.start();
+        if (screen === "paused") game.resume();
+        if (screen === "won" || screen === "lost") game.again();
         return;
       }
       if (event.key !== "F1" && event.key !== "#") return;

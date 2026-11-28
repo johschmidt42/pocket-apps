@@ -1,7 +1,5 @@
 /** A kind of enemy. All lengths are in field units, all times in seconds. */
 export type EnemyKind = {
-  /** The name of its figure in `src/models/`. */
-  figure: string;
   /** The radius of its hit area. */
   radius: number;
   hitPoints: number;
@@ -19,7 +17,6 @@ export type EnemyKind = {
 
 /** The flying ant. It spits drops of formic acid. */
 export const ANT: EnemyKind = {
-  figure: "ant",
   radius: 20,
   hitPoints: 8,
   spit: { everySeconds: 30, seconds: 0.6, leaveSeconds: 0.4, speed: 300, radius: 8 },

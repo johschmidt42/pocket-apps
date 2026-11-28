@@ -11,22 +11,22 @@ This document holds each design decision and its reason. We decide one topic aft
 
 ## Topics
 
-| No. | Topic                 | Status                             |
-| --- | --------------------- | ---------------------------------- |
-| 1   | Scope                 | Decided                            |
-| 2   | Play field and camera | Decided                            |
-| 3   | Architecture          | Decided                            |
-| 4   | Look of the figures   | Accepted by the user in step P2    |
-| 5   | Animation             | Accepted by the user in step P2    |
-| 6   | Effects               | Built in step P5                   |
-| 7   | Controls              | Decided, to prove in step P1       |
-| 8   | Weapons and hits      | Built: two weapons, hits (step P4) |
-| 9   | Enemies and waves     | Built in step P4: the wave of ants |
-| 10  | Bosses                | Later, not in the prototype        |
-| 11  | Progression           | Later, not in the prototype        |
-| 12  | Displays and menus    | Built for the prototype            |
-| 13  | Saving                | Decided, not in the prototype      |
-| 14  | Tests and tools       | Built, but no replays yet          |
+| No. | Topic                 | Status                               |
+| --- | --------------------- | ------------------------------------ |
+| 1   | Scope                 | Decided                              |
+| 2   | Play field and camera | Decided                              |
+| 3   | Architecture          | Decided                              |
+| 4   | Look of the figures   | Accepted by the user in step P2      |
+| 5   | Animation             | Accepted by the user in step P2      |
+| 6   | Effects               | Built in step P5, accepted           |
+| 7   | Controls              | Built in step P1, accepted           |
+| 8   | Weapons and hits      | Built: two weapons, hits (step P4)   |
+| 9   | Enemies and waves     | Built in step P4: the wave of ants   |
+| 10  | Bosses                | Later, not in the prototype          |
+| 11  | Progression           | Later, not in the prototype          |
+| 12  | Displays and menus    | Built. The score comes with the loot |
+| 13  | Saving                | Decided, not in the prototype        |
+| 14  | Tests and tools       | Built, but no replays yet            |
 
 Parked: sound, phones, play with more than one player, a second ship.
 
@@ -61,7 +61,9 @@ The first version is a prototype with these parts:
 - Three screens: a title, "won" and "lost" (see topic 12).
 - The tools of topic 14.
 
-The prototype has no sound, no saving, no boss, no loot, no second weapon, no levels of the weapon in normal play and no menus other than the three screens.
+The prototype has no sound, no saving, no boss, no loot, no levels of the weapon in normal play and no menus other than its screens.
+
+This was the plan before the first line of code. In the steps P1 to P5, the user asked for more, and version 1.0 has it: a pause screen with a way back to the title, a second weapon (the "Kernspucker") and a button for the full screen.
 
 **Why:** the prototype must answer four questions before we make content. Do the figures look good? Do they move well? Does the mouse control feel right? Does gas feel good as a weapon?
 
@@ -112,7 +114,7 @@ Rules of the layers:
 
 - The state of the game is one plain object, `GameState`: Seven, lists of enemies, puffs and enemy shots, the wave, the tick number and the state of the random numbers.
 - One function moves the game: `step(state, input)`. It calculates one tick.
-- `Input` is small: the move that the player wants for Seven in this tick (in field units), "spray" and "special". `game/` makes it from the mouse and the keys. The sim does not know which of the two the player uses.
+- `Input` is small: the move that the player wants for Seven in this tick (in field units), "fire" (use the weapon) and a change of the weapon. `game/` makes it from the mouse and the keys. The sim does not know which of the two the player uses.
 - `step` returns events, for example `{ type: "enemy-died", x, y }`. The picture makes effects from them. Later, the sound uses the same events.
 - Random numbers come from a seeded generator in the state. Thus the same seed and the same inputs always give the same game.
 - A hit area is a circle. With fewer than 500 objects, the sim compares all pairs. A faster search comes only after a measurement.
@@ -129,16 +131,16 @@ Rules of the layers:
 
 ### The game flow
 
-The flow is a state machine in `game/flow.ts`, as a discriminated union:
+The flow is a state machine in `game/flow.ts`: a string union of the screens, and one function that gives the next screen for an event.
 
-- Prototype: `title → playing ⇄ paused → title`, `playing → won | lost → playing`. The pause screen has the button "Hauptmenü": it ends the game and shows the title. The user asked for this way back. The button "Nochmal" on the screens "won" and "lost" starts a new game directly.
+- Version 1.0: `title → playing ⇄ paused → title`, `playing → won | lost`, and from `won` or `lost` to `playing` (the button "Nochmal") or to `title` (the button "Hauptmenü"). The user asked for the way back to the title.
 - Full game, later: also `wave-intro`, `boss-intro` and `chapter-result`.
 
-The sim runs only in `playing`. The phase of a wave (`entering`, `fighting`, `cleared`) is a part of the sim state.
+The sim runs only in `playing`. The sim state has no phase of the wave: each enemy has its own state (`waiting`, `entering`, `formation`, `spitting`), and `over` says if the game is won or lost. This was sufficient for one wave.
 
 ### Shared code with attraktor
 
-The decision for three.js says: if a second app needs three.js, move shared code into a package. Today the two apps share no code, only the dependency. We check this again when Bugfight moves to `apps/`.
+The decision for three.js says: if a second app needs three.js, move shared code into a package. We checked this when Bugfight moved to `apps/`: the two apps share no three.js code, only the dependency. `docs/decisions.md` says to check it again when a third app uses three.js.
 
 ## 4. Look of the figures
 
@@ -204,15 +206,15 @@ The effects live in `render/` and `game/`. All but two are cosmetic and use thei
 | Sparks, splinters | One particle system. All particles are drawn in one call. The computer moves them on the CPU.                                                                                                                          |
 | Glow              | Bloom after the render (`UnrealBloomPass`, as in `attraktor`), at half resolution.                                                                                                                                     |
 | Screen shake      | A "trauma" value from 0 to 1. Big events add to it. It falls with time. The camera moves by its square.                                                                                                                |
-| Hit stop          | The loop holds the sim for 30 to 80 milliseconds.                                                                                                                                                                      |
+| Hit stop          | The loop holds the sim for 80 milliseconds after a hit of Seven, and for 160 milliseconds after his death.                                                                                                             |
 | Slow motion       | The time factor of the loop.                                                                                                                                                                                           |
-| Cinema bars, text | HTML on top of the picture, not WebGL.                                                                                                                                                                                 |
+| Cinema bars, text | Later, with the bosses. They are HTML on top of the picture, not WebGL.                                                                                                                                                |
 | Background        | A garden from above, out of focus (Gaussian blur): greens, spots of flowers, round lights. It moves slowly down, which gives a feeling of flight. The picture is painted in code. The user decided the blurred garden. |
 
 How the effects are built (step P5):
 
 - `src/render/effects.ts` turns the events of the sim into bursts of particles and into the trauma of the screen shake.
-- The glow: the stage draws into a picture that keeps colors brighter than white. Only these colors glow. A color gets brighter than white with the factor `GLOW` of `src/render/stage.ts`. The sparks, the core of an enemy shot and the white flash of a hit use it. Thus the eyes of an ant and other white parts do not glow.
+- The glow: the stage draws into a picture that keeps colors brighter than white. Only these colors glow. A color gets brighter than white with the factor `GLOW` of `src/render/stage.ts`. The sparks and the core of an enemy shot use it. The white flash of a hit adds white light to the color of the figure, which makes it brighter than white too. Thus the eyes of an ant and other white parts do not glow.
 - The hit stop is only for a hit of Seven (0.08 second) and for his death (0.16 second). A stop for each dead ant would make the game jerk, because the gas kills many ants in a short time.
 - Slow motion: after the last enemy, the game runs at about one eighth of its speed for 0.9 second and returns to the normal speed in 0.9 second more. The first version (a quarter of the speed, back to normal in one second) was nearly not visible for the user.
 
@@ -239,7 +241,7 @@ Gas is different from a bullet. This makes Bugfight its own game:
 - A puff does not stop at an enemy. Gas is an area of damage: an enemy in a puff takes damage 10 times per second, and more puffs on it do not hurt more. The first plan was a wait time for each pair of puff and enemy. The area is simpler, and the damage does not depend on the number of puffs, which makes the balance easy.
 - Thus gas is strong against a group and weak against one hard enemy.
 - **The weapon shows on Seven** (the user's rule): the part on his back is the weapon. Each weapon has its own part on the back, its own nozzle and its own color. The spray is the yellow tank with the spray nozzle.
-- **"Kernspucker"**, the second weapon: a revolver drum with 24 cherry stones on his back, and a long barrel. The first drum had 6 stones, and the user found that too few. The user tried 12 and then 24, and 24 feels good. The drum on Seven shows 12 stones, and each one stands for two: 24 stones are too small to see. The display at the bottom left shows all 24. A stone is fast and hard, hits only the first enemy and is gone. It is the opposite of the gas: strong against one enemy, weak against a group. Each shot takes one stone, and the player sees the stones in the drum. An empty drum locks the weapon until it is full again (1.2 seconds), as the tank does. A higher level makes a stone stronger, and the levels 4, 7 and 10 add a stone that flies beside the others.
+- **"Kernspucker"**, the second weapon: a revolver drum with 24 cherry stones on his back, and a long barrel. The first drum had 6 stones, and the user found that too few. The user tried 12 and then 24, and 24 feels good. The drum on Seven shows 12 stones, and each one stands for two: 24 stones are too small to see. The display at the bottom left shows all 24. A stone is fast and hard, hits only the first enemy and is gone. It is the opposite of the gas: strong against one enemy, weak against a group. Each shot takes one stone, and the player sees the stones in the drum. An empty drum locks the weapon until it is full again (1.2 seconds), as the tank does. A drum that is not empty starts to fill again after 0.4 second without a shot. A higher level makes a stone stronger, and the levels 4, 7 and 10 add a stone that flies beside the others.
 - The weapon that Seven does not carry fills again in the background.
 - In the prototype, the keys 1 and 2 change the weapon. In the full game, capsules that enemies drop do this.
 - More ideas for weapons, each with its own part on the back: a burning glass (a sun ray through a big lens), a dandelion (slow seeds that find their target), thorns (a wide fan with a short reach), a fizz bottle (a flash that jumps from enemy to enemy).
@@ -250,7 +252,7 @@ Gas is different from a bullet. This makes Bugfight its own game:
 ## 9. Enemies and waves
 
 - A kind of enemy is data in `content/`: figure, size, hit points, behavior, attack.
-- A wave is data too: which enemies, on which paths they come in, which formation they make, how the formation moves, how often they attack. A new wave must be a new data object, not new code.
+- A wave is data too (`src/content/waves.ts`): the size of the block, the distances, how the block moves, the times of the entry. Version 1.0 has one wave of one kind of enemy. Thus the kind of the enemy and the curve of the entry are still in the code of `src/sim/enemies.ts`. They become data with the second wave: then a new wave must be a new data object, not new code.
 - The prototype wave: 40 flying ants in 4 rows of 10. They come in on two curves from the top corners, take their places, then move left and right as one block. Single ants spit a drop of acid straight down.
 - On its way in, an ant dives deep into the field, down to the height where Seven flies. The player must get out of its way: the body of an ant hurts Seven too.
 - An ant has 8 hit points: 1.6 seconds in the gas, or 1 cherry stone. The first numbers were 0.8 second and 2 stones. The user found the gas too strong and the "Kernspucker" much too weak. Each ant in the block spits one time in 30 seconds on average. Thus a full block spits more than a small rest.
@@ -270,10 +272,11 @@ Not in the prototype. The rules follow the reference game. The numbers come when
 
 ## 12. Displays and menus
 
-- Displays during the game are HTML on top of the picture: the score at the top left, the spots and the tank pressure at the bottom left. HTML gives sharp text and can use the UI components of the repository.
+- Displays during the game are HTML on top of the picture: the spots and the tank pressure (or the stones of the drum) at the bottom left. The score comes to the top left when the enemies drop loot. HTML gives sharp text and can use the UI components of the repository.
 - React draws them. They change only when a value changes, not at each picture.
 - The player also sees the spots on the back of Seven.
-- Prototype screens: a title with the button "Start", and "won" and "lost" with the button "Nochmal". The text on the screen is German.
+- Screens: a title with the button "Start", a pause, and "won" and "lost" with the buttons "Nochmal" and "Hauptmenü". The Enter key does the same as the main button of a screen. The text on the screen is German.
+- A button in the top right corner of the field puts the page into full screen. It is not there during the game, because the browser keeps the mouse pointer then.
 
 ## 13. Saving
 
@@ -292,12 +295,12 @@ Tests:
 
 - **Unit tests** (Vitest) for the sim and the animators, from the first day. Example: "a puff that touches an ant hurts it".
 - **Scenario tests:** the test runs the sim for some thousand ticks with a written input and checks the result. Examples: "a player that does nothing loses", "the same seed and input give the same state".
-- **A bot:** a simple written player that avoids shots and aims (`src/sim/bot.ts`). Each wave must be possible for the bot, and impossible for a player that does not move. The tests play the wave with 5 seeds. The address `?bot` lets the bot play in the browser, and the frames tool uses the bot for its pictures of a fight.
+- **A bot:** a simple written player that avoids shots and aims (`src/sim/bot.ts`). Each wave must be possible for the bot, and impossible for a player that does nothing. The tests play the wave with 5 seeds. The address `?bot` lets the bot play in the browser, and the frames tool uses the bot for its pictures of a fight.
 - **Replays:** the game can record the inputs of a game. A bug report is then a seed and an input list, and the bug shows again each time.
 
 Tools:
 
-- **Debug panel** (key F1 or #): no damage for Seven, show the hit areas, time factor from 0.1 to 4, pause and single tick, level of the weapon, counters for pictures per second and objects. The choice of a wave comes with the second wave.
+- **Debug panel** (key F1 or #): no damage for Seven, show the hit areas, time factor from 0.1 to 4, single tick in the pause (the Esc key pauses), level of the weapon, counters for pictures per second and objects. The choice of a wave comes with the second wave.
 - **Model viewer** (`viewer.html`): one figure, large, turnable, with a button for each motion. Here the user judges look and motion.
 - **Frames tool** (`tools/frames.mjs`): opens the game or the viewer in a browser without a window at an exact tick and saves a picture. With it, Claude Code looks at its own work before it shows something.
 
@@ -323,7 +326,7 @@ The user looks at the result after each step.
 | P2   | Done. The model viewer with Seven and the ant, with all motions of the prototype. The game shows the real Seven.                             |
 | P3   | Done. Seven sprays gas. The tank pressure works. The displays show the spots and the tank. The debug panel sets the level of the fire power. |
 | P4   | Done. The wave: ants fly in, make a formation, spit. Hits, spots, "won" and "lost". Also the second weapon, the "Kernspucker".               |
-| P5   | Built. Effects: particles, glow, screen shake, hit stop, slow motion after the last enemy.                                                   |
+| P5   | Done. Effects: particles, glow, screen shake, hit stop, slow motion after the last enemy.                                                    |
 
 The debug panel and the frames tool grow with each step.
 

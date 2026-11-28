@@ -5,12 +5,11 @@ export type Input = {
   /** The move that the player wants for Seven in this tick, in field units. */
   moveX: number;
   moveY: number;
-  /** Use the weapon: spray gas or shoot stones. */
-  spray: boolean;
-  special: boolean;
+  /** Use the weapon that Seven carries: spray gas or shoot stones. */
+  fire: boolean;
   /** Change to this weapon. `null` keeps the weapon. */
   weapon: WeaponName | null;
 };
 
 /** The input of a player that does nothing. */
-export const NO_INPUT: Input = { moveX: 0, moveY: 0, spray: false, special: false, weapon: null };
+export const NO_INPUT: Input = { moveX: 0, moveY: 0, fire: false, weapon: null };

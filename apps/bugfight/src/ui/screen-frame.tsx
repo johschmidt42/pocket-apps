@@ -1,5 +1,6 @@
 import { cn } from "@pocket-apps/ui/lib/utils";
 import type { ReactNode } from "react";
+import { ACTION_FONT } from "./action-font.ts";
 
 /**
  * The frame of a screen that lies on the field: a short line, a big title and the buttons.
@@ -38,8 +39,9 @@ export function ScreenFrame({
       )}
       <h2
         className={cn(
+          ACTION_FONT,
           // The color of the text is a background. Without room at the sides, it cuts the slanted last letter.
-          "-skew-x-6 bg-[linear-gradient(180deg,#fff9c9_0%,#ffd83a_32%,#ff7a1a_58%,#d0122a_78%,#5a0717_100%)] bg-clip-text px-[0.2em] [font-family:Impact,Haettenschweiler,sans-serif] leading-none tracking-wide text-transparent uppercase italic drop-shadow-[0_0.05em_0_#1a0508]",
+          "-skew-x-6 bg-[linear-gradient(180deg,#fff9c9_0%,#ffd83a_32%,#ff7a1a_58%,#d0122a_78%,#5a0717_100%)] bg-clip-text px-[0.2em] leading-none tracking-wide text-transparent italic drop-shadow-[0_0.05em_0_#1a0508]",
           large ? "text-[13cqw]" : "text-[8cqw]",
         )}
       >

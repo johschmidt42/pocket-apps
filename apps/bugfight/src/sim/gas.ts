@@ -43,8 +43,8 @@ function emit(state: GameState, weapon: Weapon): void {
  */
 export function spray(state: GameState, wanted: boolean, events: SimEvent[]): void {
   const { player } = state;
-  if (player.locked && player.pressure >= TANK.unlockAt) player.locked = false;
-  player.spraying = wanted && !player.locked;
+  if (player.tankLocked && player.pressure >= TANK.unlockAt) player.tankLocked = false;
+  player.spraying = wanted && !player.tankLocked;
   if (!player.spraying) {
     player.pressure = Math.min(player.pressure + TICK_SECONDS / TANK.refillSeconds, 1);
     return;
@@ -52,7 +52,7 @@ export function spray(state: GameState, wanted: boolean, events: SimEvent[]): vo
   emit(state, ZITRONELLA);
   player.pressure = Math.max(player.pressure - TICK_SECONDS / TANK.spraySeconds, 0);
   if (player.pressure === 0) {
-    player.locked = true;
+    player.tankLocked = true;
     events.push({ type: "tank-empty" });
   }
 }

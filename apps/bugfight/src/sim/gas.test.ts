@@ -7,7 +7,7 @@ import { NO_INPUT, type Input } from "./input.ts";
 import { createState, type GameState } from "./state.ts";
 import { step } from "./step.ts";
 
-const SPRAY: Input = { ...NO_INPUT, spray: true };
+const SPRAY: Input = { ...NO_INPUT, fire: true };
 
 /** Runs the sim for this time with one input. Returns all events. */
 function run(state: GameState, seconds: number, input: Input): SimEvent[] {
@@ -69,17 +69,17 @@ test("an empty tank locks the weapon until the tank is full again", () => {
   const state = createState();
   const events = run(state, TANK.spraySeconds + 0.1, SPRAY);
   expect(events.filter((event) => event.type === "tank-empty")).toHaveLength(1);
-  expect(state.player.locked).toBe(true);
+  expect(state.player.tankLocked).toBe(true);
   expect(state.player.spraying).toBe(false);
 
   // The player holds the button. The tank fills, but Seven does not spray.
   const before = state.puffs.length;
   run(state, 0.3, SPRAY);
-  expect(state.player.locked).toBe(true);
+  expect(state.player.tankLocked).toBe(true);
   expect(state.puffs.length).toBeLessThan(before);
 
   run(state, TANK.refillSeconds * TANK.unlockAt, SPRAY);
-  expect(state.player.locked).toBe(false);
+  expect(state.player.tankLocked).toBe(false);
   expect(state.player.spraying).toBe(true);
 });
 
@@ -99,7 +99,7 @@ test("the same seed and the same inputs give the same gas, another seed gives ot
   const play = (seed: number) => {
     const state = createState(seed);
     for (let tick = 0; tick < 400; tick++) {
-      step(state, { ...NO_INPUT, moveX: Math.sin(tick / 20) * 5, spray: tick % 90 < 60 });
+      step(state, { ...NO_INPUT, moveX: Math.sin(tick / 20) * 5, fire: tick % 90 < 60 });
     }
     return state;
   };
