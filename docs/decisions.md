@@ -16,8 +16,8 @@ Read the related entry before you change a decision. Add an entry for each new d
 - **Decision:** The field is a CSS size container. Its texts use the unit `cqw` (1 % of the width of the field). Thus the screens fit a small field with no JavaScript and no inline style.
 - **Decision:** During the game, the browser hides the mouse pointer and keeps it in the window (Pointer Lock API). The Esc key ends the lock, and the game pauses. If the browser refuses the lock, Seven flies to the free pointer.
 - **Decision:** `App` has the optional prop `viewFactory`, as in `attraktor`. The tests of the app give a picture that records the calls. `render/view.test.ts` replaces only the WebGL renderer and the chain of effects with fakes. All other three.js objects are real, and the test reads the scene.
-- **Decision:** `e2e/bugfight.spec.ts` starts Chromium with SwiftShader, as `e2e/attraktor.spec.ts` does. One test lets the bot win the wave (`?bot&level=10`).
-- **Decision:** The address of the page sets options for tests and for the developer: `?debug`, `?hit`, `?bot`, `?level=5`, `?weapon=seeds`, `?spots=1`. The key `#` opens the debug panel.
+- **Decision:** `e2e/bugfight.spec.ts` starts Chromium with SwiftShader, as `e2e/attraktor.spec.ts` does. One test lets the bot win the wave (`?bot&level=10`). The two tests run one after the other, and the first one uses a wave of one row (`?rows=1`): a fight with all 40 ants has only 2 to 4 pictures per second in software, and two fights at the same time made the page so slow on the CI computer that it did not answer to keys.
+- **Decision:** The address of the page sets options for tests and for the developer: `?debug`, `?hit`, `?bot`, `?level=5`, `?weapon=seeds`, `?spots=1`, `?rows=1`. The key `#` opens the debug panel.
 - **Cost:** The app file is about 1.1 MB.
 - **Rejected:** A 3D program for the figures (binary files that nobody can review). PixiJS (needs drawn sprites). A game engine (too large for one HTML file).
 

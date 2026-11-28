@@ -55,16 +55,17 @@ describe("the options in the address", () => {
   });
 
   it("come from the query", () => {
-    expect(readOptions("?debug&hit&bot&level=5&spots=1&weapon=seeds")).toEqual({
+    expect(readOptions("?debug&hit&bot&level=5&spots=1&rows=2&weapon=seeds")).toEqual({
       debug: true,
       hitAreas: true,
       bot: true,
       level: 5,
       spots: 1,
+      rows: 2,
       weapon: "seeds",
     });
     // An unknown weapon and a value that is no number are no options.
-    expect(readOptions("?weapon=laser&level=abc&spots=")).toEqual({
+    expect(readOptions("?weapon=laser&level=abc&spots=&rows=x")).toEqual({
       debug: false,
       hitAreas: false,
       bot: false,
@@ -204,6 +205,27 @@ describe("the game", () => {
     expect(game.info().screen).toBe("title");
     expect(game.info().hud.spots).toBe(1);
   }, 20000);
+
+  it("can have a small wave, for a computer that draws slowly", async () => {
+    const { game, state, user } = setup({ rows: 1 });
+    game.start();
+    await untilTick(state, 3);
+    expect(state().enemies).toHaveLength(10);
+    // A new game has the same small wave.
+    await user.keyboard("{Escape}");
+    game.quit();
+    await vi.waitFor(() => {
+      expect(state().tick).toBe(0);
+    });
+    expect(state().enemies).toHaveLength(10);
+  });
+
+  it("uses the nearest number of rows for a number out of the range", async () => {
+    const { state } = setup({ rows: 99 });
+    await vi.waitFor(() => {
+      expect(state().enemies).toHaveLength(40);
+    });
+  });
 
   it("starts a new game only after a game that is over", () => {
     const { game, view } = setup();

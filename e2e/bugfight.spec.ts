@@ -5,13 +5,18 @@ import { releaseUrl, test } from "./helpers.ts";
 test.use({ launchOptions: { args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] } });
 
 test.describe("bugfight", () => {
+  // Each test draws a game with WebGL in software. Two games at the same time are too much for a CI computer.
+  test.describe.configure({ mode: "serial" });
+
   test("starts a game, uses both weapons, pauses and goes back to the title", async ({
     page,
     pageErrors,
   }) => {
     // WebGL in software is slow. On a slow CI computer, this test needs more than 30 seconds.
-    test.setTimeout(90_000);
-    await page.goto(releaseUrl("bugfight.html"));
+    test.setTimeout(180_000);
+    // This test is about the controls and the weapons. One row of ants is sufficient for it, and it
+    // is much less work: the 40 ants of the full wave are about 2400 objects to draw.
+    await page.goto(releaseUrl("bugfight.html?rows=1"));
     await expect(page.getByRole("heading", { level: 2, name: "Bugfight" })).toBeVisible();
     await expect(page.locator("canvas")).toBeVisible();
 
@@ -49,14 +54,14 @@ test.describe("bugfight", () => {
 
   test("the bot wins the wave, and a new game starts", async ({ page, pageErrors }) => {
     // A full fight with WebGL in software.
-    test.setTimeout(180_000);
+    test.setTimeout(240_000);
     await page.goto(releaseUrl("bugfight.html?bot&level=10&debug"));
     await expect(page.getByRole("complementary", { name: "Debug" })).toBeVisible();
     await page.getByRole("button", { name: "4×" }).click();
     await page.getByRole("button", { name: "Start" }).click();
 
     await expect(page.getByRole("heading", { level: 2, name: "Gewonnen" })).toBeVisible({
-      timeout: 150_000,
+      timeout: 200_000,
     });
     await page.getByRole("button", { name: "Nochmal" }).click();
     await expect(page.getByRole("heading", { level: 2, name: "Gewonnen" })).toHaveCount(0);

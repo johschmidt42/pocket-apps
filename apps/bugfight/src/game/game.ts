@@ -1,4 +1,5 @@
 import { levelOf } from "../content/tuning.ts";
+import { FIRST_WAVE } from "../content/waves.ts";
 import type { WeaponName } from "../content/weapons.ts";
 import type { View } from "../render/view.ts";
 import { createBot } from "../sim/bot.ts";
@@ -91,6 +92,11 @@ export type GameOptions = {
   spots?: number;
   /** The bot plays in place of the player. */
   bot?: boolean;
+  /**
+   * The number of rows of the wave, from 1 to the rows of the full wave. A small wave is much less
+   * work for a computer with no graphics card. The browser tests use it.
+   */
+  rows?: number;
 };
 
 /** The debug panel gets new numbers after this time. */
@@ -115,7 +121,7 @@ function numberOf(query: URLSearchParams, name: string): number | undefined {
   return Number.isFinite(value) ? value : undefined;
 }
 
-/** Reads the options from the address: `?debug`, `?hit`, `?level=5`, `?weapon=seeds`, `?spots=1`, `?bot`. */
+/** Reads the options from the address: `?debug`, `?hit`, `?level=5`, `?weapon=seeds`, `?spots=1`, `?rows=1`, `?bot`. */
 export function readOptions(search: string): GameOptions {
   const query = new URLSearchParams(search);
   const options: GameOptions = {
@@ -125,6 +131,8 @@ export function readOptions(search: string): GameOptions {
   };
   const level = numberOf(query, "level");
   if (level !== undefined) options.level = level;
+  const rows = numberOf(query, "rows");
+  if (rows !== undefined) options.rows = rows;
   const spots = numberOf(query, "spots");
   if (spots !== undefined) options.spots = spots;
   if (query.get("weapon") === "seeds") options.weapon = "seeds";
@@ -140,7 +148,14 @@ export function createGame(
   const view = createView(container);
   /** Each game has another seed. Thus the ants spit at other moments. */
   let games = 1;
-  const state = createState(games);
+  const wave =
+    options.rows === undefined
+      ? FIRST_WAVE
+      : {
+          ...FIRST_WAVE,
+          rows: Math.min(Math.max(Math.round(options.rows), 1), FIRST_WAVE.rows),
+        };
+  const state = createState(games, wave);
   state.player.level = levelOf(options.level ?? 1);
   if (options.spots !== undefined) state.player.spots = options.spots;
   if (options.weapon !== undefined) state.player.weapon = options.weapon;
@@ -215,7 +230,7 @@ export function createGame(
   const newGame = () => {
     const { level, immortal, weapon } = state.player;
     games += 1;
-    Object.assign(state, createState(games));
+    Object.assign(state, createState(games, wave));
     if (options.spots !== undefined) state.player.spots = options.spots;
     state.player.level = level;
     state.player.immortal = immortal;

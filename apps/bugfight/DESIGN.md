@@ -220,6 +220,8 @@ How the effects are built (step P5):
 
 Measured on the computer of the user in step P4: 120 pictures per second with 40 ants, each ant drawn as its own group. Thus we do not need shared drawing (instancing) for the prototype.
 
+Measured with WebGL in software (a computer with no graphics card, as the CI computer): the title has 30 to 40 pictures per second, but a fight with 40 ants has only 2 to 4. The glow effect is not the reason: without it, the number is the same. Each ant is about 60 objects to draw, thus the full wave is about 2400. The game needs a graphics card. The first browser test uses a wave of one row (`?rows=1`). If the game must run on weak computers, all ants must share their parts (instancing).
+
 Budget: 60 pictures per second at 1920 x 1080 on a laptop without a graphics card of its own, with 300 enemies and 2000 particles. The prototype wave has only 40 enemies. The 300 are for the swarms of the full game.
 
 A figure of 15 parts needs 15 draw calls, and its outline needs 15 more. The prototype draws each figure as its own group and measures. If this is too slow, all figures of one kind share their parts (instancing): 15 calls for all ants.
@@ -312,7 +314,7 @@ Tools:
 | `pnpm check`                 | Typecheck, lint, format check and unit tests of the repository.                  |
 | `pnpm e2e`                   | Build all apps and run the browser tests. `e2e/bugfight.spec.ts` tests the game. |
 
-Options in the address: `?debug` opens the debug panel, `?hit` shows the hit areas, `?level=5` sets the level of the fire power, `?weapon=seeds` starts with the second weapon, `?spots=1` sets the spots of Seven, `?bot` lets the bot play.
+Options in the address: `?debug` opens the debug panel, `?hit` shows the hit areas, `?level=5` sets the level of the fire power, `?weapon=seeds` starts with the second weapon, `?spots=1` sets the spots of Seven, `?rows=1` makes the wave smaller, `?bot` lets the bot play.
 
 The model viewer, the frames tool (`tools/frames.mjs`) and the balance tool (`tools/balance.ts`) are on the branch `prototype/bugfight`, in `prototypes/bugfight/`. Its `DESIGN.md` says how to run them.
 
