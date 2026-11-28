@@ -55,14 +55,14 @@ describe("the options in the address", () => {
   });
 
   it("come from the query", () => {
-    expect(readOptions("?debug&hit&bot&level=5&spots=1&rows=2&weapon=seeds")).toEqual({
+    expect(readOptions("?debug&hit&bot&level=5&spots=1&rows=2&weapon=spray")).toEqual({
       debug: true,
       hitAreas: true,
       bot: true,
       level: 5,
       spots: 1,
       rows: 2,
-      weapon: "seeds",
+      weapon: "spray",
     });
     // An unknown weapon and a value that is no number are no options.
     expect(readOptions("?weapon=laser&level=abc&spots=&rows=x")).toEqual({
@@ -96,10 +96,10 @@ describe("the game", () => {
     expect(listener).toHaveBeenCalledTimes(1);
     await untilTick(state, 5);
 
-    // The player sprays: the pressure of the tank falls, and the displays get it.
+    // The player shoots: the drum loses stones, and the displays get it.
     await user.keyboard("{ >}");
     await vi.waitFor(() => {
-      expect(game.info().hud.pressure).toBeLessThan(100);
+      expect(game.info().hud.seeds).toBeLessThan(24);
     });
     expect(listener.mock.calls.length).toBeGreaterThan(1);
 
@@ -242,16 +242,20 @@ describe("the game", () => {
     expect(view.reset).not.toHaveBeenCalled();
   });
 
-  it("changes the weapon with a key and shows the stones", async () => {
-    const { game, state, user } = setup({ weapon: "seeds" });
-    expect(game.info().hud.weapon).toBe("seeds");
+  it("starts with the weapon of the option and changes it with a key", async () => {
+    const { game, state, user } = setup({ weapon: "spray" });
+    expect(game.info().hud.weapon).toBe("spray");
     game.start();
     await untilTick(state, 5);
     await user.keyboard("{ >}");
     await vi.waitFor(() => {
-      expect(game.info().hud.seeds).toBeLessThan(24);
+      expect(game.info().hud.pressure).toBeLessThan(100);
     });
     await user.keyboard("{/ }1");
+    await vi.waitFor(() => {
+      expect(game.info().hud.weapon).toBe("seeds");
+    });
+    await user.keyboard("2");
     await vi.waitFor(() => {
       expect(game.info().hud.weapon).toBe("spray");
     });

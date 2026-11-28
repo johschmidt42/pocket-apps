@@ -150,7 +150,7 @@ describe("the picture of the game", () => {
     expect(renderer.dispose).toHaveBeenCalledOnce();
   });
 
-  it("shows Seven at the place of the sim, with his 7 spots and the tank of the spray", () => {
+  it("shows Seven at the place of the sim, with his 7 spots and his weapon on his back", () => {
     const { view, scene } = createView();
     const state = createState();
     state.player.x = 120;
@@ -160,21 +160,23 @@ describe("the picture of the game", () => {
     expect(figure.position.x).toBeCloseTo(120, 0);
     expect(figure.position.y).toBeCloseTo(-80, 0);
     expect(figure.getObjectByName("spot-center")!.scale.x).toBe(1);
-    expect(figure.getObjectByName("tank")!.scale.x).toBe(1);
-    expect(figure.getObjectByName("drum")!.scale.x).toBe(0);
+    // Seven starts with the drum of the "Kernspucker".
+    expect(figure.getObjectByName("drum")!.scale.x).toBe(1);
+    expect(figure.getObjectByName("tank")!.scale.x).toBe(0);
 
     // The other weapon shows on his back, and a lost spot is gone.
-    state.player.weapon = "seeds";
+    state.player.weapon = "spray";
     state.player.spots = 6;
     show(view, state, 0.1);
-    expect(figure.getObjectByName("tank")!.scale.x).toBe(0);
-    expect(figure.getObjectByName("drum")!.scale.x).toBe(1);
+    expect(figure.getObjectByName("tank")!.scale.x).toBe(1);
+    expect(figure.getObjectByName("drum")!.scale.x).toBe(0);
     expect(figure.getObjectByName("spot-right-3")!.scale.x).toBe(0);
   });
 
   it("shows one figure for each ant in the field, and the gas of Seven", () => {
     const { view, scene } = createView();
     const state = createState();
+    state.player.weapon = "spray";
     play(view, state, 240, true);
     const inField = state.enemies.filter((enemy) => enemy.state !== "waiting");
     expect(inField.length).toBeGreaterThan(5);
@@ -189,6 +191,9 @@ describe("the picture of the game", () => {
     expect(figures(scene).length).toBeGreaterThanOrEqual(state.enemies.length + 1);
     expect(figures(scene).length).toBeLessThanOrEqual(state.enemies.length + 1 + 6);
     expect(instanced(scene, "puff").count).toBe(state.puffs.length);
+    expect(events.some((event) => event.type === "tank-empty") || state.puffs.length > 0).toBe(
+      true,
+    );
 
     // After some time with no new death, only the living ants and Seven have a figure.
     show(view, state, 1);

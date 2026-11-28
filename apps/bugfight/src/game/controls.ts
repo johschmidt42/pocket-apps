@@ -86,8 +86,8 @@ export function createControls(element: HTMLElement, onPause: () => void): Contr
     // With a locked pointer, a real browser takes the Esc key and ends the lock: then the change
     // of the lock pauses the game. If the key reaches the page, it pauses the game too.
     if (event.code === "Escape") onPause();
-    if (event.code === "Digit1") chosen = "spray";
-    if (event.code === "Digit2") chosen = "seeds";
+    if (event.code === "Digit1") chosen = "seeds";
+    if (event.code === "Digit2") chosen = "spray";
     if (!KEYS_OF_THE_GAME.includes(event.code)) return;
     held.add(event.code);
     // With the keys, Seven does not go to the pointer.

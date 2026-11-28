@@ -4,8 +4,12 @@ import type { GameState } from "./state.ts";
 
 /** The speed of the bot in field units per second. A person with a mouse is much faster. */
 const SPEED = 700;
-/** The bot flies at this height. From here, the gas reaches the top row. */
+/** The bot flies at this height with the "Kernspucker". Its stones reach each row from here. */
 const HEIGHT = -140;
+/** With the gas, the bot flies this far under the lowest enemy of its column: the gas has a short reach. */
+const GAS_DISTANCE = 230;
+/** Two enemies are in the same column if their x places differ by less than this. */
+const COLUMN_WIDTH = 60;
 
 /**
  * A simple written player. The tests use it to check that a wave is possible,
@@ -34,6 +38,11 @@ export function createBot(): (state: GameState) => Input {
       if (Math.hypot(enemy.x - player.x, enemy.y - player.y) < 110) wantY = HEIGHT - 200;
     }
     const aimed = nearest < 50;
+    if (player.weapon === "spray" && wantY === HEIGHT) {
+      const column = targets.filter((enemy) => Math.abs(enemy.x - wantX) < COLUMN_WIDTH);
+      const lowest = Math.min(...column.map((enemy) => enemy.y));
+      if (Number.isFinite(lowest)) wantY = lowest - GAS_DISTANCE;
+    }
 
     // A drop over the bot: go to the side.
     for (const drop of state.drops) {

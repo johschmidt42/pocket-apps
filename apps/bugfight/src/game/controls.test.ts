@@ -135,10 +135,10 @@ describe("with a free mouse pointer", () => {
   it("changes the weapon with the keys 1 and 2, one time per key", async () => {
     const { controls, user } = setup();
     await user.keyboard("2");
-    expect(controls.read(0, 0).weapon).toBe("seeds");
+    expect(controls.read(0, 0).weapon).toBe("spray");
     expect(controls.read(0, 0).weapon).toBeNull();
     await user.keyboard("1");
-    expect(controls.read(0, 0).weapon).toBe("spray");
+    expect(controls.read(0, 0).weapon).toBe("seeds");
   });
 
   it("pauses with the Esc key and when the window loses the focus", async () => {

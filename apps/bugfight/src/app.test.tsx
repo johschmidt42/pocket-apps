@@ -72,11 +72,12 @@ describe("bugfight", () => {
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
-  it("starts the game with the button and shows the spots and the tank", async () => {
+  it("starts the game with the button and shows the spots, the stones and the score", async () => {
     const { user } = setup();
     await user.click(await screen.findByRole("button", { name: "Start" }));
     expect(await lives(7)).toBeVisible();
-    expect(screen.getByRole("progressbar", { name: "Druck im Tank" })).toBeVisible();
+    // Seven starts with the "Kernspucker".
+    expect(screen.getByRole("img", { name: "Kerne: 24 von 24" })).toBeVisible();
     expect(screen.getByText("Pollen: 0")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Bugfight" })).not.toBeInTheDocument();
   });
@@ -114,11 +115,14 @@ describe("bugfight", () => {
     expect(await screen.findByRole("heading", { name: "Bugfight" })).toBeVisible();
   });
 
-  it("shows the stones of the drum after the key 2", async () => {
+  it("shows the tank of the gas after the key 2, and the stones again after the key 1", async () => {
     const { user } = setup();
     await user.click(await screen.findByRole("button", { name: "Start" }));
     await lives(7);
     await user.keyboard("2");
+    expect(await screen.findByRole("progressbar", { name: "Druck im Tank" })).toBeVisible();
+    expect(screen.queryByRole("img", { name: /^Kerne/ })).not.toBeInTheDocument();
+    await user.keyboard("1");
     expect(await screen.findByRole("img", { name: "Kerne: 24 von 24" })).toBeVisible();
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
@@ -161,12 +165,12 @@ describe("bugfight", () => {
   });
 
   it("reads the options from the address", async () => {
-    window.history.replaceState(null, "", "?debug&weapon=seeds&spots=3");
+    window.history.replaceState(null, "", "?debug&weapon=spray&spots=3");
     const { user } = setup();
     expect(await screen.findByRole("complementary", { name: "Debug" })).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Start" }));
     expect(await lives(3)).toBeVisible();
-    expect(screen.getByRole("img", { name: "Kerne: 24 von 24" })).toBeVisible();
+    expect(screen.getByRole("progressbar", { name: "Druck im Tank" })).toBeVisible();
   });
 
   it("shows a message in a browser with no WebGL 2", () => {

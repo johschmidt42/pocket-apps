@@ -32,13 +32,18 @@ const count = (events: SimEvent[], type: SimEvent["type"]) =>
 
 test("a key changes the weapon, and each weapon is used only when Seven carries it", () => {
   const state = createState();
+  // Seven starts with the "Kernspucker".
+  expect(state.player.weapon).toBe("seeds");
+  step(state, FIRE);
+  expect(state.seeds).toHaveLength(1);
+  expect(state.puffs).toHaveLength(0);
+  step(state, { ...FIRE, weapon: "spray" });
   expect(state.player.weapon).toBe("spray");
+  expect(state.player.spraying).toBe(true);
+  expect(state.seeds).toHaveLength(1);
   step(state, { ...FIRE, weapon: "seeds" });
   expect(state.player.weapon).toBe("seeds");
-  expect(state.puffs).toHaveLength(0);
-  expect(state.seeds).toHaveLength(1);
-  step(state, { ...FIRE, weapon: "spray" });
-  expect(state.player.spraying).toBe(true);
+  expect(state.player.spraying).toBe(false);
 });
 
 test("the weapon shoots at its rate, one stone of the drum per shot", () => {

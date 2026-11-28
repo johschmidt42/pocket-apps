@@ -165,7 +165,7 @@ export function createState(seed = 1, wave: Wave = FIRST_WAVE): GameState {
       tankLocked: false,
       spraying: false,
       level: 1,
-      weapon: "spray",
+      weapon: "seeds",
       seeds: SEED_SHOOTER.seeds,
       drumLocked: false,
       shotTicks: 0,

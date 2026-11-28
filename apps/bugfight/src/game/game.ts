@@ -123,7 +123,7 @@ function numberOf(query: URLSearchParams, name: string): number | undefined {
   return Number.isFinite(value) ? value : undefined;
 }
 
-/** Reads the options from the address: `?debug`, `?hit`, `?level=5`, `?weapon=seeds`, `?spots=1`, `?rows=1`, `?bot`. */
+/** Reads the options from the address: `?debug`, `?hit`, `?level=5`, `?weapon=spray`, `?spots=1`, `?rows=1`, `?bot`. */
 export function readOptions(search: string): GameOptions {
   const query = new URLSearchParams(search);
   const options: GameOptions = {
@@ -137,7 +137,8 @@ export function readOptions(search: string): GameOptions {
   if (rows !== undefined) options.rows = rows;
   const spots = numberOf(query, "spots");
   if (spots !== undefined) options.spots = spots;
-  if (query.get("weapon") === "seeds") options.weapon = "seeds";
+  const weapon = query.get("weapon");
+  if (weapon === "spray" || weapon === "seeds") options.weapon = weapon;
   return options;
 }
 

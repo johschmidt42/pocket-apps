@@ -9,6 +9,13 @@ import { step } from "./step.ts";
 
 const SPRAY: Input = { ...NO_INPUT, fire: true };
 
+/** A game in which Seven carries the gas spray. */
+function withGas(seed?: number): GameState {
+  const state = createState(seed);
+  state.player.weapon = "spray";
+  return state;
+}
+
 /** Runs the sim for this time with one input. Returns all events. */
 function run(state: GameState, seconds: number, input: Input): SimEvent[] {
   const events: SimEvent[] = [];
@@ -19,7 +26,7 @@ function run(state: GameState, seconds: number, input: Input): SimEvent[] {
 }
 
 test("Seven sprays only while the player wants it", () => {
-  const state = createState();
+  const state = withGas();
   run(state, 0.5, NO_INPUT);
   expect(state.puffs).toHaveLength(0);
   expect(state.player.spraying).toBe(false);
@@ -30,7 +37,7 @@ test("Seven sprays only while the player wants it", () => {
 });
 
 test("a puff starts at the nozzle, flies up, becomes slower and larger, and goes away", () => {
-  const state = createState();
+  const state = withGas();
   const startY = state.player.y;
   step(state, SPRAY);
   const puff = state.puffs[0]!;
@@ -38,7 +45,7 @@ test("a puff starts at the nozzle, flies up, becomes slower and larger, and goes
   expect(puff.y).toBeGreaterThan(startY);
   const first = { y: puff.y, speedY: puff.speedY, radius: puff.radius };
   run(state, 0.5, NO_INPUT);
-  expect(puff.y).toBeGreaterThan(first.y + 200);
+  expect(puff.y).toBeGreaterThan(first.y + 120);
   expect(puff.speedY).toBeLessThan(first.speedY / 2);
   expect(puff.speedY).toBeGreaterThan(0);
   expect(puff.radius).toBeGreaterThan(first.radius * 2);
@@ -47,18 +54,18 @@ test("a puff starts at the nozzle, flies up, becomes slower and larger, and goes
   expect(state.puffs).toHaveLength(0);
 });
 
-test("the gas reaches about a half of the height of the field", () => {
-  const state = createState();
+test("the gas has a short reach: about a quarter of the height of the field", () => {
+  const state = withGas();
   const startY = state.player.y;
   step(state, SPRAY);
   const puff = state.puffs[0]!;
   run(state, ZITRONELLA.seconds - 0.05, NO_INPUT);
-  expect(puff.y - startY).toBeGreaterThan(400);
-  expect(puff.y - startY).toBeLessThan(650);
+  expect(puff.y - startY).toBeGreaterThan(220);
+  expect(puff.y - startY).toBeLessThan(340);
 });
 
 test("spraying uses the pressure, and a pause brings it back", () => {
-  const state = createState();
+  const state = withGas();
   run(state, 1, SPRAY);
   expect(state.player.pressure).toBeCloseTo(1 - 1 / TANK.spraySeconds);
   run(state, TANK.refillSeconds, NO_INPUT);
@@ -66,7 +73,7 @@ test("spraying uses the pressure, and a pause brings it back", () => {
 });
 
 test("an empty tank locks the weapon until the tank is full again", () => {
-  const state = createState();
+  const state = withGas();
   const events = run(state, TANK.spraySeconds + 0.1, SPRAY);
   expect(events.filter((event) => event.type === "tank-empty")).toHaveLength(1);
   expect(state.player.tankLocked).toBe(true);
@@ -85,7 +92,7 @@ test("an empty tank locks the weapon until the tank is full again", () => {
 
 test("a higher level sprays more streams in a wider fan", () => {
   const spread = (level: number) => {
-    const state = createState();
+    const state = withGas();
     state.player.level = level;
     run(state, 0.6, SPRAY);
     const xs = state.puffs.map((puff) => puff.x);
@@ -97,7 +104,7 @@ test("a higher level sprays more streams in a wider fan", () => {
 
 test("the same seed and the same inputs give the same gas, another seed gives other gas", () => {
   const play = (seed: number) => {
-    const state = createState(seed);
+    const state = withGas(seed);
     for (let tick = 0; tick < 400; tick++) {
       step(state, { ...NO_INPUT, moveX: Math.sin(tick / 20) * 5, fire: tick % 90 < 60 });
     }
@@ -108,7 +115,7 @@ test("the same seed and the same inputs give the same gas, another seed gives ot
 });
 
 test("the number of puffs stays small when the player sprays without end", () => {
-  const state = createState();
+  const state = withGas();
   state.player.level = 10;
   let most = 0;
   for (let tick = 0; tick < 30 * TICKS_PER_SECOND; tick++) {

@@ -22,18 +22,21 @@ export type Weapon = {
   damage: number;
 };
 
-/** "Zitronella-Nebel": a wide cloud. Strong against a group, weak against one hard enemy. */
+/**
+ * "Zitronella-Nebel": a wide cloud for a short distance. Strong against a group, weak against one
+ * hard enemy. It reaches about 260 units: Seven must fly near to the enemies.
+ */
 export const ZITRONELLA: Weapon = {
   name: "Zitronella-Nebel",
   puffsPerSecond: 30,
-  speed: 1250,
+  speed: 625,
   speedSpread: 0.12,
   angleSpread: 0.05,
   drag: 2.2,
   seconds: 1.1,
   startRadius: 18,
   endRadius: 56,
-  damage: 0.5,
+  damage: 0.65,
 };
 
 /** One stream of puffs. All streams start at the one nozzle of Seven. */

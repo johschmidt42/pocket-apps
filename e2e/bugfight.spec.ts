@@ -25,20 +25,20 @@ test.describe("bugfight", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Bugfight" })).toHaveCount(0);
     await expect(page.getByText("Pollen: 0")).toBeVisible();
 
-    // The space key sprays gas: the pressure of the tank falls.
-    const tank = page.getByRole("progressbar", { name: "Druck im Tank" });
-    await expect(tank).toHaveAttribute("aria-valuenow", "100");
-    await page.keyboard.down("Space");
-    await expect(tank).not.toHaveAttribute("aria-valuenow", "100", { timeout: 30_000 });
-    await page.keyboard.up("Space");
-
-    // The key 2 changes to the second weapon. The display shows its stones.
-    await page.keyboard.press("2");
+    // Seven starts with the "Kernspucker". The space key shoots: the drum loses stones.
     await expect(page.getByRole("img", { name: "Kerne: 24 von 24" })).toBeVisible();
     await page.keyboard.down("Space");
     await expect(page.getByRole("img", { name: "Kerne: 24 von 24" })).toHaveCount(0, {
       timeout: 30_000,
     });
+    await page.keyboard.up("Space");
+
+    // The key 2 changes to the gas spray. The display shows the tank, and spraying uses its pressure.
+    await page.keyboard.press("2");
+    const tank = page.getByRole("progressbar", { name: "Druck im Tank" });
+    await expect(tank).toHaveAttribute("aria-valuenow", "100");
+    await page.keyboard.down("Space");
+    await expect(tank).not.toHaveAttribute("aria-valuenow", "100", { timeout: 30_000 });
     await page.keyboard.up("Space");
 
     // Esc pauses the game: with a locked pointer, the browser ends the lock, else the game gets the key.

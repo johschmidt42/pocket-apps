@@ -239,13 +239,14 @@ A figure of 15 parts needs 15 draw calls, and its outline needs 15 more. The pro
 Gas is different from a bullet. This makes Bugfight its own game:
 
 - A nozzle makes puffs while the player sprays. A puff flies up, becomes slower, grows and goes away after about one second.
-- "Zitronella-Nebel" reaches about 500 units, a little more than a half of the height of the field. The player must fly near to the enemies to reach the top rows. The numbers of a weapon are in `src/content/weapons.ts`.
+- "Zitronella-Nebel" reaches about 260 units, a little more than a quarter of the height of the field. The player must fly near to the enemies. The first reach was about 500 units. The user asked for a half of it, and for a gas that is a little stronger in return. The numbers of a weapon are in `src/content/weapons.ts`.
 - A puff does not stop at an enemy. Gas is an area of damage: an enemy in a puff takes damage 10 times per second, and more puffs on it do not hurt more. The first plan was a wait time for each pair of puff and enemy. The area is simpler, and the damage does not depend on the number of puffs, which makes the balance easy.
 - Thus gas is strong against a group and weak against one hard enemy.
 - **The weapon shows on Seven** (the user's rule): the part on his back is the weapon. Each weapon has its own part on the back, its own nozzle and its own color. The spray is the yellow tank with the spray nozzle.
 - **"Kernspucker"**, the second weapon: a revolver drum with 24 cherry stones on his back, and a long barrel. The first drum had 6 stones, and the user found that too few. The user tried 12 and then 24, and 24 feels good. The drum on Seven shows 12 stones, and each one stands for two: 24 stones are too small to see. The display at the bottom left shows all 24. A stone is fast and hard, hits only the first enemy and is gone. It is the opposite of the gas: strong against one enemy, weak against a group. Each shot takes one stone, and the player sees the stones in the drum. An empty drum locks the weapon until it is full again (1.2 seconds), as the tank does. A drum that is not empty starts to fill again after 0.4 second without a shot. A higher level makes a stone stronger, and the levels 4, 7 and 10 add a stone that flies beside the others.
 - The weapon that Seven does not carry fills again in the background.
-- In the prototype, the keys 1 and 2 change the weapon. In the full game, capsules that enemies drop do this.
+- Seven starts with the "Kernspucker": the user asked that the gas is not the first weapon. The key 1 is the "Kernspucker", the key 2 is the gas.
+- In version 2.0, the keys change the weapon. In the full game, capsules that enemies drop do this.
 - More ideas for weapons, each with its own part on the back: a burning glass (a sun ray through a big lens), a dandelion (slow seeds that find their target), thorns (a wide fan with a short reach), a fizz bottle (a flash that jumps from enemy to enemy).
 - **Tank pressure:** spraying uses pressure. Without spraying, the pressure comes back. A full tank lasts 4.5 seconds of spraying and fills again in 2.2 seconds (`src/content/tuning.ts`). At zero, the weapon is locked until the tank is full again. The first value was 30 %, and the user asked for a harder penalty. The lock is the penalty for an empty tank. Thus short bursts are better than a long one. This replaces the heat of the weapon in the reference game.
 - Fire power has 10 levels. Seven has one nozzle under his head. Level 1 has one stream of puffs straight up: the user asked for one stream, not two. Each level adds one stream, makes the fan of the streams 6 degrees wider and makes the puffs a little larger and stronger. In the prototype, only the debug panel changes the level.
@@ -257,7 +258,7 @@ Gas is different from a bullet. This makes Bugfight its own game:
 - A wave is data too (`src/content/waves.ts`): the size of the block, the distances, how the block moves, the times of the entry. Version 1.0 has one wave of one kind of enemy. Thus the kind of the enemy and the curve of the entry are still in the code of `src/sim/enemies.ts`. They become data with the second wave: then a new wave must be a new data object, not new code.
 - The prototype wave: 40 flying ants in 4 rows of 10. They come in on two curves from the top corners, take their places, then move left and right as one block. Single ants spit a drop of acid straight down.
 - On its way in, an ant dives deep into the field, down to the height where Seven flies. The player must get out of its way: the body of an ant hurts Seven too.
-- An ant has 8 hit points: 1.6 seconds in the gas, or 1 cherry stone. The first numbers were 0.8 second and 2 stones. The user found the gas too strong and the "Kernspucker" much too weak. Each ant in the block spits one time in 30 seconds on average. Thus a full block spits more than a small rest.
+- An ant has 8 hit points: 1.3 seconds in the gas, or 1 cherry stone. The first numbers were 0.8 second and 2 stones. The user found the gas too strong and the "Kernspucker" much too weak. Each ant in the block spits one time in 30 seconds on average. Thus a full block spits more than a small rest.
 - A hit costs Seven one spot. Then nothing can hurt him for 1.5 seconds, and he blinks. Without spots, the game is lost. The game is won when the last ant is dead.
 - Ants fly because winged ants are real. Their attack is formic acid, which is real too.
 
@@ -329,7 +330,7 @@ Tools:
 | `pnpm check`                 | Typecheck, lint, format check and unit tests of the repository.                  |
 | `pnpm e2e`                   | Build all apps and run the browser tests. `e2e/bugfight.spec.ts` tests the game. |
 
-Options in the address: `?debug` opens the debug panel, `?hit` shows the hit areas, `?level=5` sets the level of the fire power, `?weapon=seeds` starts with the second weapon, `?spots=1` sets the spots of Seven, `?rows=1` makes the wave smaller, `?bot` lets the bot play.
+Options in the address: `?debug` opens the debug panel, `?hit` shows the hit areas, `?level=5` sets the level of the fire power, `?weapon=spray` starts with the gas spray, `?spots=1` sets the spots of Seven, `?rows=1` makes the wave smaller, `?bot` lets the bot play.
 
 The model viewer, the frames tool (`tools/frames.mjs`) and the balance tool (`tools/balance.ts`) are on the branch `prototype/bugfight`, in `prototypes/bugfight/`. Its `DESIGN.md` says how to run them.
 
